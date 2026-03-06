@@ -35,7 +35,7 @@ if not st.session_state.authenticated:
     with col2:
         st.title("🔒 VTSNET Project Access")
         pwd = st.text_input("Project Access Code:", type="password")
-        correct_password = st.secrets.get("PROJECT_PASSWORD", "9660")
+        correct_password = st.secrets.get("PROJECT_PASSWORD", "vtsnet2026")
         
         if st.button("Unlock Dashboard", use_container_width=True):
             if pwd == correct_password:
