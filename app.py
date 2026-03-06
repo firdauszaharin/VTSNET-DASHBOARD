@@ -83,6 +83,13 @@ if dark_mode:
             -webkit-text-fill-color: #FFFFFF !important;
             font-weight: 700 !important;
         }
+        /* 2.2 BAGI NAMPAK LINE (DIVIDER & BORDER) */
+        /* Tukar warna garisan st.divider() */
+        hr {
+            border-top: 2px solid rgba(255, 255, 255, 0.2) !important;
+            margin-top: 20px !important;
+            margin-bottom: 20px !important;
+        }
         
 
         /* 3. FIX LOG OUT BUTTON (Dalam Sidebar) */
