@@ -51,15 +51,18 @@ if dark_mode:
             -webkit-text-fill-color: {text_color} !important;
         }}
 
-        /* 3. FIX INPUT & SELECTBOX */
-        input {{
-            color: {text_color} !important;
-            background-color: rgba(255,255,255,0.1) !important;
-            -webkit-text-fill-color: {text_color} !important;
+        /* 3. FIX DROPDOWN LIST (Masa menu tu terbuka/tersembul keluar) */
+        div[data-baseweb="popover"] ul {{
+            background-color: #262730 !important;
+            border: 1px solid #454d5e !important;
+        }}
+        
+        div[data-baseweb="popover"] li {{
+            color: white !important;
         }}
 
-        [data-baseweb="select"] > div {{
-            color: {text_color} !important;
+        div[data-baseweb="popover"] li:hover {{
+            background-color: #0984E3 !important;
         }}
         
         /* 4. DROPDOWN LIST VISIBILITY */
