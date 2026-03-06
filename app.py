@@ -251,7 +251,7 @@ elif menu_selection == "⚙️ Equipment Status":
                 )
                 
                 fig_donut.update_layout(
-                    title_x=0.35, # Center-kan tajuk relatif kepada donut
+                    title_x=0.4, # Center-kan tajuk relatif kepada donut
                     showlegend=True,
                     legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
                     margin=dict(l=20, r=20, t=60, b=20)
