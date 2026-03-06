@@ -25,6 +25,7 @@ st.markdown("""
     [data-testid="stSidebar"] { background-color: rgba(255, 255, 255, 0.8) !important; backdrop-filter: blur(10px); }
     [data-testid="stMetric"] { background: white !important; padding: 20px !important; border-radius: 20px !important; box-shadow: 0 10px 25px rgba(0,0,0,0.03) !important; }
     header { visibility: hidden; }
+    footer { visibility: hidden; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -50,76 +51,104 @@ def load_data(url):
 df_raw = load_data(SHEET_REPORT_URL)
 df_equip = load_data(SHEET_EQUIP_URL)
 
-# --- NAVIGATION SIDEBAR ---
+# --- HELPER FUNCTION FOR STYLING ---
+def color_status(val):
+    if val == 'APPROVED': return 'background-color: #d4edda; color: #155724;'
+    if val == 'REJECTED': return 'background-color: #f8d7da; color: #721c24;'
+    return ''
+
+# --- SIDEBAR NAVIGATION ---
 with st.sidebar:
     if os.path.exists("logo.png"):
         st.image("logo.png", use_container_width=True)
     
-    st.title("📌 NAVIGATION")
-    # INI ADALAH MENU PENUKAR (REPLACING TABS)
-    menu_selection = st.sidebar.radio(
-        "Pilih Paparan:",
-        ["📝 Maintenance Reports", "⚙️ Equipment Status"],
-        index=0
-    )
-    
+    st.title("📌 MENU")
+    menu_selection = st.radio("Pilih Paparan:", ["📝 Maintenance Reports", "⚙️ Equipment Status"])
     st.divider()
     st.markdown(f"🕒 **Last Sync:** {waktu_msia.strftime('%H:%M:%S')}")
-    
-    st.markdown("### 🔍 GLOBAL FILTERS")
-    search_report = st.text_input("🔎 Search Report/Site:", placeholder="e.g. RSS, MET")
-    search_staff = st.text_input("👤 Performed by:")
-    st.divider()
-    st.link_button("📂 Open Drive Folder", "https://drive.google.com/...link...", use_container_width=True)
+    search_report = st.text_input("🔎 Search Site/Type:")
+    search_staff = st.text_input("👤 Search Staff Name:")
 
 # --- HEADER BANNER ---
 st.markdown(f"""
     <div style="background: linear-gradient(90deg, #0984E3, #6c5ce7); padding: 30px; border-radius: 20px; color: white; margin-bottom: 25px;">
         <h1 style="color: white; margin: 0;">VTSNET ASSET MONITORING CENTER</h1>
-        <p style="opacity: 0.9;">Mode: {menu_selection}</p>
+        <p style="opacity: 0.9;">System Management Dashboard 2026</p>
     </div>
 """, unsafe_allow_html=True)
 
-# --- LOGIC PEMILIHAN MENU ---
-
-# PAGE 1: MAINTENANCE REPORTS
+# --- PAGE 1: MAINTENANCE REPORTS ---
 if menu_selection == "📝 Maintenance Reports":
     if not df_raw.empty:
         df = df_raw.copy()
-        if search_report: 
-            df = df[df['REPORT CHECKLIST'].str.contains(search_report, case=False, na=False)]
         
+        # Filter Logic
+        if search_report: df = df[df['REPORT CHECKLIST'].str.contains(search_report, case=False, na=False)]
+        if search_staff: df = df[df['Name'].str.contains(search_staff, case=False, na=False)]
+        
+        # Metrics
         m1, m2, m3 = st.columns(3)
         m1.metric("Total Reports", len(df))
         m2.metric("Approved ✅", len(df[df['STATUS'] == 'APPROVED']) if 'STATUS' in df.columns else 0)
         m3.metric("Pending ⏳", len(df[~df['STATUS'].isin(['APPROVED', 'REJECTED'])]) if 'STATUS' in df.columns else 0)
 
-        st.subheader("📋 Submitted Reports Record")
-        st.dataframe(df, use_container_width=True, hide_index=True)
-    else:
-        st.warning("Data laporan tidak dijumpai.")
+        # Graphs
+        c1, c2 = st.columns(2)
+        with c1:
+            st.plotly_chart(px.pie(df, names='STATUS', hole=0.4, title="Status Distribution", 
+                                   color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}), use_container_width=True)
+        with c2:
+            st.plotly_chart(px.histogram(df, x='REPORT CHECKLIST', color='STATUS', title="Reports by Type",
+                                         color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}), use_container_width=True)
 
-# PAGE 2: EQUIPMENT STATUS
+        st.subheader("📋 Record Table")
+        
+        # --- FIX: STYLING & PDF LINK ---
+        styled_df = df.style.map(color_status, subset=['STATUS']) if 'STATUS' in df.columns else df
+        
+        st.dataframe(
+            styled_df,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                PDF_COL: st.column_config.LinkColumn("Report File", display_text="OPEN PDF 📄")
+            }
+        )
+    else:
+        st.info("Waiting for data...")
+
+# --- PAGE 2: EQUIPMENT STATUS ---
 elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
-        st.subheader("⚙️ Inventory & Equipment Condition")
-        
         month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026"])]
         if month_cols:
             selected_month = st.selectbox("📅 Pilih Bulan Laporan:", month_cols, index=len(month_cols)-1)
             
-            # Status Metrics
-            status_series = df_equip[selected_month].astype(str).str.strip().str.upper()
-            c1, c2, c3 = st.columns(3)
-            c1.metric("Condition: OK", len(df_equip[status_series == 'OK']))
-            c2.metric("Condition: FAULTY", len(df_equip[status_series == 'FAULTY']))
-            c3.metric("Condition: MISSING", len(df_equip[status_series == 'MISSING']))
+            df_q = df_equip.copy()
+            if search_report:
+                df_q = df_q[df_q.astype(str).apply(lambda x: x.str.contains(search_report, case=False)).any(axis=1)]
+
+            status_series = df_q[selected_month].astype(str).str.strip().str.upper()
             
+            e1, e2, e3 = st.columns(3)
+            e1.metric("OK", len(df_q[status_series == 'OK']))
+            e2.metric("FAULTY", len(df_q[status_series == 'FAULTY']))
+            e3.metric("MISSING", len(df_q[status_series == 'MISSING']))
+
+            st.plotly_chart(px.pie(df_q, names=selected_month, hole=0.5, title=f"Health Status: {selected_month}",
+                                   color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}), use_container_width=True)
+
             st.divider()
-            # Search for assets
-            if search_report: # Reuse search bar from sidebar for asset name/site
-                df_equip = df_equip[df_equip.astype(str).apply(lambda x: x.str.contains(search_report, case=False)).any(axis=1)]
-                
-            st.dataframe(df_equip[["Site", "Type", "Serial No", selected_month]], use_container_width=True, hide_index=True)
-    else:
-        st.warning("Data peralatan tidak dijumpai.")
+            
+            # Styling untuk table inventori
+            def color_equip(val):
+                if val == 'OK': return 'background-color: #d4edda;'
+                if val == 'FAULTY': return 'background-color: #fff3cd;'
+                if val == 'MISSING': return 'background-color: #f8d7da;'
+                return ''
+
+            st.dataframe(
+                df_q.style.map(color_equip, subset=[selected_month]), 
+                use_container_width=True, 
+                hide_index=True
+            )
