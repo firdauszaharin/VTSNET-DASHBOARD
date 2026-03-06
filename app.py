@@ -83,10 +83,7 @@ if not st.session_state.authenticated:
             margin-top: 10px;
         }
 
-        div.stButton > button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
-        }
+        
         </style>
     """, unsafe_allow_html=True)
 
