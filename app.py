@@ -160,90 +160,92 @@ elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
         st.subheader("⚙️ Inventory & Equipment Status")
         
-        # Detect kolum bulan (2025/2026)
+        # 1. DETECT KOLUM (Bulan & Site)
         month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026"])]
+        site_col = next((c for c in df_equip.columns if c.lower() == 'site'), None)
         
         if not month_cols:
-            st.warning("Tiada kolum bulan (2025/2026) dijumpai dalam fail Equipment.")
+            st.warning("Tiada kolum bulan (2025/2026) dijumpai.")
         else:
-            c_sel, _ = st.columns([0.4, 0.6])
-            with c_sel:
+            # --- ROW FILTER (BULAN & SITE) ---
+            c1, c2 = st.columns(2)
+            with c1:
                 selected_month = st.selectbox("📅 Select Report Month:", month_cols, index=len(month_cols)-1)
             
+            df_working = df_equip.copy()
+            if site_col:
+                unique_sites = ["ALL SITES"] + sorted(df_working[site_col].dropna().unique().tolist())
+                with c2:
+                    selected_site = st.selectbox("🏗️ Select Site:", unique_sites)
+                
+                if selected_site != "ALL SITES":
+                    df_working = df_working[df_working[site_col] == selected_site]
+
             st.divider()
 
-            # Clean data untuk charting
-            status_series = df_equip[selected_month].astype(str).str.strip().str.upper()
-            df_plot = df_equip.copy()
+            # Clean status untuk charting
+            status_series = df_working[selected_month].astype(str).str.strip().str.upper()
+            df_plot = df_working.copy()
             df_plot[selected_month] = status_series
             
-            # 1. METRICS
+            # 2. METRICS
             me1, me2, me3 = st.columns(3)
-            me1.metric("Equipment OK", len(df_equip[status_series == 'OK']))
-            me2.metric("Faulty ⚠️", len(df_equip[status_series == 'FAULTY']))
-            me3.metric("Missing ❌", len(df_equip[status_series == 'MISSING']))
+            me1.metric("🟢 Equipment OK", len(df_working[status_series == 'OK']))
+            me2.metric("🟡 Faulty ⚠️", len(df_working[status_series == 'FAULTY']))
+            me3.metric("🔴 Missing ❌", len(df_working[status_series == 'MISSING']))
 
-            st.markdown(f"### 🎯 Performance Overview ({selected_month})")
+            # 3. VISUALISASI (DONUT & HISTOGRAM)
+            st.markdown(f"### 🎯 Performance Overview: {selected_site}")
+            col_chart1, col_chart2 = st.columns([0.4, 0.6]) # Donut kecil sedikit, Histogram lebar
             
-            # 2. CHARTS (BY SITE & CATEGORY)
-            col_left, col_right = st.columns(2)
-            
-            with col_left:
-                # Donut Chart
+            with col_chart1:
+                # --- DONUT CHART (OVERALL CONDITION) ---
                 fig_donut = px.pie(
-                    df_plot, names=selected_month, hole=0.55, title='Overall Condition',
+                    df_plot, names=selected_month, hole=0.6, 
+                    title=f'Overall Condition ({selected_month})',
                     color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}
                 )
+                fig_donut.update_traces(textposition='inside', textinfo='percent+label')
                 st.plotly_chart(fig_donut, use_container_width=True)
 
-            with col_right:
-                # Site Chart (Guna 'Site' atau 'SITE')
-                site_col = next((c for c in df_plot.columns if c.lower() == 'site'), None)
+            with col_chart2:
+                # --- HISTOGRAM (DETAIL STATUS BY SITE) ---
                 if site_col:
-                    fig_site = px.histogram(
-                        df_plot, x=site_col, color=selected_month, barmode='group', title='Status by Location',
-                        color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}
+                    fig_site_hist = px.histogram(
+                        df_plot, 
+                        x=site_col, 
+                        color=selected_month, 
+                        barmode='group',
+                        title=f'Status Distribution by Site',
+                        color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'},
+                        text_auto=True # Tunjuk jumlah terus atas bar
                     )
-                    st.plotly_chart(fig_site, use_container_width=True)
+                    fig_site_hist.update_layout(yaxis_title="Quantity", xaxis_title="Location")
+                    st.plotly_chart(fig_site_hist, use_container_width=True)
 
-            # Category/Type Chart
+            # --- HISTOGRAM CATEGORY (IF APPLICABLE) ---
             type_col = next((c for c in df_plot.columns if c.lower() in ['type', 'category']), None)
             if type_col:
+                st.markdown(f"### 🗂️ Status by Equipment Category")
                 fig_type = px.histogram(
-                    df_plot, x=type_col, color=selected_month, barmode='group', title='Status by Equipment Category',
-                    color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}
+                    df_plot, x=type_col, color=selected_month, barmode='group',
+                    color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'},
+                    text_auto=True
                 )
                 st.plotly_chart(fig_type, use_container_width=True)
             
-            # 3. DATA TABLE (DITAPIS MENGIKUT STATUS BULAN DIPILIH)
+            # 4. DATA TABLE
             st.divider()
-            st.subheader(f"📦 Inventory Asset List ({selected_month})")
+            st.subheader(f"📦 Inventory Asset List ({selected_site})")
+            search_eq = st.text_input("🔍 Carian Pantas (SN, Nama, IP):", key="search_eq_box")
             
-            # Carian tambahan (Search box)
-            search_eq = st.text_input("🔍 Carian Pantas (SN, Nama, Site):", key="search_eq_box")
-            
-            # Kita buat salinan data untuk ditapis
-            df_filtered = df_equip.copy()
-            
-            # Filter 1: Hanya tunjuk baris yang ada status pada bulan tersebut (Buang baris kosong)
-            df_filtered = df_filtered[df_filtered[selected_month].notna() & (df_filtered[selected_month].str.strip() != "")]
-            
-            # Filter 2: Jika user guna search box
+            df_filtered = df_working[df_working[selected_month].notna() & (df_working[selected_month].str.strip() != "")]
             if search_eq:
                 df_filtered = df_filtered[df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
 
-            # Pilih kolum penting sahaja untuk dipaparkan supaya kemas
-            # Kita cari nama kolum secara dinamik (case-insensitive)
-            display_cols = []
-            for c in ["Site", "Type", "Equipment", "Serial No", "IP Address"]:
-                match = next((col for col in df_filtered.columns if col.lower() == c.lower()), None)
-                if match: display_cols.append(match)
-            
-            # Tambah kolum bulan yang dipilih di hujung
-            if selected_month in df_filtered.columns:
-                display_cols.append(selected_month)
+            display_cols = [c for c in ["Site", "Type", "Equipment", "Serial No", "IP Address"] if any(col.lower() == c.lower() for col in df_filtered.columns)]
+            if selected_month in df_filtered.columns: display_cols.append(selected_month)
 
-            # Paparkan Jadual
             if not df_filtered.empty:
                 st.dataframe(
                     df_filtered[display_cols].style.map(
@@ -252,9 +254,7 @@ elif menu_selection == "⚙️ Equipment Status":
                                    ('background-color: #FFF3CD; color: #856404;' if str(x).upper() == 'FAULTY' else '')), 
                         subset=[selected_month]
                     ), 
-                    use_container_width=True, 
-                    hide_index=True
+                    use_container_width=True, hide_index=True
                 )
-                st.caption(f"Menunjukkan {len(df_filtered)} aset bagi bulan {selected_month}")
             else:
-                st.info(f"Tiada rekod status dijumpai untuk bulan {selected_month}.")
+                st.info(f"Tiada rekod status untuk {selected_site} pada bulan {selected_month}.")
