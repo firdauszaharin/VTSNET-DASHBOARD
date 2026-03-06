@@ -100,24 +100,22 @@ st.markdown(f"""
     <style>
     .stApp {{ background: {bg_style}; font-family: 'Inter', sans-serif; color: {text_color}; }}
     {custom_dark_css}
-    /* Naikkan Title ke atas & Besarkan Font */
-    .main .block-container h1 {
+    
+    /* --- ADJUST TITLE POSITION & SIZE --- */
+    .main .block-container h1 {{
         padding-top: 0rem !important;
-        margin-top: -30px !important; /* Nilai negatif untuk tarik lagi ke atas */
-        font-size: 3.5rem !important; /* Besarkan saiz tulisan */
-        font-weight: 800 !important;
-        letter-spacing: -1px;
-    }
+        margin-top: -50px !important; /* Lagi besar nilai negatif, lagi tinggi dia naik */
+        font-size: 3.2rem !important; /* Adjust saiz kat sini (rem atau px) */
+        text-shadow: 2px 2px 10px rgba(0,0,0,0.2); /* Bagi nampak 3D sikit */
+    }}
+
     [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
     [data-testid="stMetric"] {{ background: {card_bg} !important; padding: 20px !important; border-radius: 20px !important; box-shadow: {shadow} !important; }}
-    [data-testid="stMetricValue"] {{ color: {text_color} !important; }}
-    [data-testid="stMetricLabel"] {{ color: {text_color} !important; opacity: 0.8; }}
-    header[data-testid="stHeader"] {{ background-color: rgba(0,0,0,0) !important; }}
+    header[data-testid="stHeader"] {{ background-color: rgba(0,0,0,0) !important; height: 0px; }} /* Kecilkan header bar */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     </style>
 """, unsafe_allow_html=True)
-
 # --- DATA LOAD ---
 msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
 waktu_msia = datetime.now(msia_tz)
