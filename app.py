@@ -17,6 +17,110 @@ st.set_page_config(
 
 # --- AUTO REFRESH (5 MINIT) ---
 st_autorefresh(interval=300000, key="vts_refresh")
+# --- 2. INTERACTIVE LOGIN PAGE (GLASSMORPHISM) ---
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+if not st.session_state.authenticated:
+    # Full-screen Dark Theme for Login
+    st.markdown("""
+        <style>
+        /* Hide Streamlit elements during login */
+        header {visibility: hidden;}
+        [data-testid="stSidebar"] {display: none;}
+        
+        /* Interactive Background Gradient */
+        .stApp {
+            background: radial-gradient(circle at 20% 30%, #1a0a2e 0%, #0f0a19 100%) !important;
+        }
+
+        /* Glassmorphism Login Card */
+        .login-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .login-title {
+            color: #FFFFFF;
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
+        }
+
+        .login-subtitle {
+            color: #a29bfe;
+            font-size: 14px;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        /* Input Styling */
+        .stTextInput input {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 12px !important;
+            height: 45px !important;
+        }
+
+        /* Button Styling */
+        div.stButton > button {
+            background: linear-gradient(90deg, #6c5ce7 0%, #a29bfe 100%) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 12px !important;
+            font-weight: 700 !important;
+            height: 45px !important;
+            transition: all 0.3s ease !important;
+            margin-top: 10px;
+        }
+
+        div.stButton > button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Centering the Login UI
+    _, col_mid, _ = st.columns([1, 1.5, 1])
+
+    with col_mid:
+        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+        
+        # Branding Header
+        if os.path.exists("logo.png"):
+            st.image("logo.png", width=180)
+        else:
+            st.markdown('<p class="login-title">VTSNET PROJECT</p>', unsafe_allow_html=True)
+        
+        st.markdown('<p class="login-subtitle">Admin & Asset Management Portal 2026</p>', unsafe_allow_html=True)
+        
+        # Input Section
+        pwd = st.text_input("Enter Access Token", type="password", placeholder="••••••••", label_visibility="collapsed")
+        
+        # Security Logic
+        correct_password = st.secrets.get("PROJECT_PASSWORD", "vtsnet2026")
+        
+        if st.button("Unlock Dashboard", use_container_width=True):
+            if pwd == correct_password:
+                st.session_state.authenticated = True
+                st.balloons()
+                st.rerun()
+            else:
+                st.error("Access Denied: Invalid Project Token.")
+        
+        st.markdown('<p style="color: grey; font-size: 11px; margin-top: 20px;">SYSTEM VERSION 4.0.26 | SECURE ACCESS</p>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    st.stop()
 
 # --- 2. LOGIN SECURITY ---
 if "authenticated" not in st.session_state:
