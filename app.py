@@ -227,15 +227,26 @@ elif menu_selection == "⚙️ Equipment Status":
                 st.plotly_chart(fig_donut, use_container_width=True)
 
             with col_chart2:
-                if site_col:
-                    fig_site_hist = px.histogram(
-                        df_plot, x=site_col, color=selected_month, barmode='group',
-                        title=f'Status Distribution by Site',
-                        color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'},
+                # --- HISTOGRAM BY TYPE (MCM DALAM SCREENSHOT) ---
+                type_col = next((c for c in df_visual.columns if c.lower() == 'type'), None)
+                if type_col:
+                    # Kira jumlah ikut Type
+                    df_type_count = df_visual.groupby(type_col).size().reset_index(name='count')
+                    df_type_count = df_type_count.sort_values('count', ascending=False)
+
+                    fig_type = px.bar(
+                        df_type_count, 
+                        x=type_col, 
+                        y='count',
+                        title=f'Equipment Detail by Type ({st.session_state.filter_status})',
+                        color_discrete_sequence=['#ffaaaa' if st.session_state.filter_status == 'MISSING' else '#0984E3'],
                         text_auto=True
                     )
-                    st.plotly_chart(fig_site_hist, use_container_width=True)
-
+                    fig_type.update_layout(xaxis_tickangle=-45, yaxis_title="Quantity", xaxis_title=None)
+                    st.plotly_chart(fig_type, use_container_width=True)
+                else:
+                    st.info("Kolum 'Type' tidak dijumpai untuk paparan carta detail.")
+                    
             # --- 4. DATA TABLE (DIKEMASKINI DENGAN FILTER) ---
             st.divider()
             st.subheader(f"📦 Inventory Asset List ({selected_site}) - {st.session_state.filter_status}")
