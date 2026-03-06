@@ -109,7 +109,7 @@ st.markdown(f"""
     h1 {{
         margin-top: 40px !important; /* Tarik naik melepasi header */
         padding-top: 0px !important;
-        font-size: 3.5rem !important; /* Saiz besar */
+        font-size: 2.2rem !important; /* Saiz besar */
         font-weight: 800 !important;
         line-height: 1.2 !important;
     }}
