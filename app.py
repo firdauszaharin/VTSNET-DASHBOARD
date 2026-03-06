@@ -240,6 +240,7 @@ elif menu_selection == "⚙️ Equipment Status":
             col_chart1, col_chart2 = st.columns([0.3, 0.7])
             with col_chart1:
                 fig_donut = px.pie(df_working, names=selected_month, hole=0.6, template=plotly_theme,
+                                   title="Status Overall", # <--- Letak tajuk kat sini
                                    color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'})
                 fig_donut.update_layout(
         showlegend=True,
