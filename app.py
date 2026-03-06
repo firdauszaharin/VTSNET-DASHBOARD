@@ -195,7 +195,7 @@ if menu_selection == "📝 Maintenance Reports":
             st.plotly_chart(px.histogram(df, x='REPORT CHECKLIST', color='STATUS', title="Reports by Type",
                                          color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}, template=plotly_theme), use_container_width=True)
 
-        st.subheader("📋 Record Table")
+        st.subheader("📋 Report Tracking Status")
         styled_df = df.style.map(color_status, subset=['STATUS']) if 'STATUS' in df.columns else df
         st.dataframe(styled_df, use_container_width=True, hide_index=True,
                      column_config={PDF_COL: st.column_config.LinkColumn("Report File", display_text="OPEN PDF 📄")})
