@@ -37,29 +37,30 @@ if dark_mode:
         }}
 
         custom_dark_css = f"""
-        /* 1. FIX KOTAK INPUT & SELECTBOX (Jan 2025 / ALL SITES) */
-        /* Kita paksa kotak tu jadi gelap sikit */
+        /* 1. SIDEBAR & TEXT GENERAL */
+        [data-testid="stSidebar"] {{ color: {text_color} !important; }}
+        [data-testid="stSidebar"] .stWidgetLabel p, 
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] span {{ 
+            color: {text_color} !important; 
+            opacity: 1 !important; 
+        }}
+
+        /* 2. FIX SELECTBOX & INPUT (Guna selector paling dalam) */
+        /* Kita paksa latar belakang kotak input jadi gelap sikit supaya tulisan putih nampak */
         div[data-baseweb="select"] > div, 
         div[data-baseweb="input"] > div,
         input {{
-            background-color: #1e293b !important; 
+            background-color: #262730 !important; /* Warna kelabu gelap Streamlit */
             color: white !important;
             -webkit-text-fill-color: white !important;
-            border: 1px solid #3e4e63 !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
         }}
 
-        /* 2. FIX BUTANG (🟢 OK, 🟡 FAULTY, etc.) */
-        /* Gambar ke-2 kau tunjuk butang ni jadi putih melepak. Kita paksa dia jadi gelap. */
-        .stButton > button {{
-            background-color: #1e293b !important;
+        /* Tulisan label di atas kotak (Contoh: Select Site) */
+        .stWidgetLabel p, label {{
             color: white !important;
-            border: 1px solid #3e4e63 !important;
-            border-radius: 10px !important;
-        }}
-        
-        .stButton > button:hover {{
-            border-color: #0984E3 !important;
-            color: #0984E3 !important;
+            opacity: 1 !important;
         }}
         /* 3. FIX DROPDOWN LIST (Masa menu tu terbuka/tersembul keluar) */
         div[data-baseweb="popover"] ul {{
