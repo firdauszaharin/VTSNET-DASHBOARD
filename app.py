@@ -173,7 +173,7 @@ with st.sidebar:
         search_staff = ""
         search_id = ""
 
-st.title("VTSNET Management Dashboard")
+st.title("VTSNET: Maintenance & Asset Lifecycle Tracker")
 
 # --- PAGE 1: MAINTENANCE REPORTS ---
 if menu_selection == "📝 Maintenance Reports":
