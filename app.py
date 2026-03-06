@@ -188,10 +188,6 @@ if "selected_row_idx" not in st.session_state:
 
 # ========= 6. SIDEBAR =========
 with st.sidebar:
-    # Logo
-    if os.path.exists("logo.png"):
-        st.image("logo.png", use_container_width=True)
-    else:
         st.markdown("### GreenFinder VTMS")
 
     st.divider()
