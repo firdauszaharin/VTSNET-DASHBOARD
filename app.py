@@ -244,7 +244,6 @@ elif menu_selection == "⚙️ Equipment Status":
                         subset=[selected_month] if selected_month in display_cols else None
                     ), use_container_width=True, hide_index=True
                 )
-
 # --- FOOTER SECTION (PASTIKAN DUDUK LUAR BLOK IF/ELIF) ---
 st.write("##") 
 st.write("##") 
