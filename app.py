@@ -128,40 +128,64 @@ else:
     shadow = "0 10px 25px rgba(0,0,0,0.03)"
     plotly_theme = "plotly_white"
     custom_dark_css = ""
-# --- INI BAHAGIAN YANG AKU KEMASKAN (LAYOUT FIX) ---
+# --- INI BAHAGIAN YANG AKU KEMASKAN (LAYOUT FIX - VERSION FINAL) ---
 st.markdown(f"""
     <style>
+    /* 1. LAYOUT SPACING */
     .block-container {{
-        padding-top: 0.5rem !important;
+        padding-top: 1rem !important;
         padding-bottom: 0rem !important;
     }}
 
     h1 {{
-        margin-top: 45px !important; 
-        font-size: 3.2rem !important;
+        margin-top: 30px !important; 
+        font-size: 2.8rem !important;
         font-weight: 800 !important;
     }}
 
-    /* FIX HEADER UNTUK PHONE - SUPAYA MENU TAK HILANG */
+    /* 2. FORCE MOBILE BUTTON TO APPEAR */
+    /* Kita paksa header sentiasa ada (tapi transparent) supaya butang menu tak ghaib */
     header[data-testid="stHeader"] {{
         background-color: rgba(0,0,0,0) !important;
         visibility: visible !important;
+        display: flex !important;
     }}
 
+    /* Paksa butang sidebar (hamburger menu) muncul dengan warna yang terang */
     button[data-testid="baseButton-headerNoPadding"] {{
+        visibility: visible !important;
+        display: flex !important;
         color: #a29bfe !important; 
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        border-radius: 10px !important;
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        border-radius: 8px !important;
+        z-index: 9999999 !important; /* Letak paling atas supaya tak kena tindih */
     }}
 
-    .stApp {{ background: {bg_style}; font-family: 'Inter', sans-serif; color: {text_color}; }}
+    /* 3. THEME DYNAMIC STYLES */
+    .stApp {{ 
+        background: {bg_style}; 
+        font-family: 'Inter', sans-serif; 
+        color: {text_color}; 
+    }}
+    
     {custom_dark_css}
     
-    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
-    [data-testid="stMetric"] {{ background: {card_bg} !important; padding: 20px !important; border-radius: 20px !important; box-shadow: {shadow} !important; }}
+    [data-testid="stSidebar"] {{ 
+        background-color: {sidebar_bg} !important; 
+        backdrop-filter: blur(10px); 
+    }}
     
+    [data-testid="stMetric"] {{ 
+        background: {card_bg} !important; 
+        padding: 20px !important; 
+        border-radius: 20px !important; 
+        box-shadow: {shadow} !important; 
+    }}
+    
+    /* Buang menu 'Deploy' dan footer tapi kekalkan butang sidebar */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
+    [data-testid="stDecoration"] {{display:none;}}
     </style>
 """, unsafe_allow_html=True)
 # --- DATA LOAD ---
