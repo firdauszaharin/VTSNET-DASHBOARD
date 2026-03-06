@@ -215,25 +215,46 @@ elif menu_selection == "⚙️ Equipment Status":
                 )
                 st.plotly_chart(fig_type, use_container_width=True)
             
-            # 3. DATA TABLE
+            # 3. DATA TABLE (DITAPIS MENGIKUT STATUS BULAN DIPILIH)
             st.divider()
-            st.subheader("📦 Inventory Asset List")
-            search_eq = st.text_input("🔍 Search Asset (SN, Name, Site):", key="search_eq_box")
+            st.subheader(f"📦 Inventory Asset List ({selected_month})")
             
-            df_eq_show = df_equip.copy()
+            # Carian tambahan (Search box)
+            search_eq = st.text_input("🔍 Carian Pantas (SN, Nama, Site):", key="search_eq_box")
+            
+            # Kita buat salinan data untuk ditapis
+            df_filtered = df_equip.copy()
+            
+            # Filter 1: Hanya tunjuk baris yang ada status pada bulan tersebut (Buang baris kosong)
+            df_filtered = df_filtered[df_filtered[selected_month].notna() & (df_filtered[selected_month].str.strip() != "")]
+            
+            # Filter 2: Jika user guna search box
             if search_eq:
-                df_eq_show = df_eq_show[df_eq_show.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
+                df_filtered = df_filtered[df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
 
-            # Styling untuk table
-            st.dataframe(
-                df_eq_show.style.map(
-                    lambda x: 'background-color: #D4EDDA' if x=='OK' else 
-                              ('background-color: #F8D7DA' if x=='MISSING' else 
-                               ('background-color: #FFF3CD' if x=='FAULTY' else '')), 
-                    subset=[selected_month]
-                ), 
-                use_container_width=True, 
-                hide_index=True
-            )
-    else:
-        st.info("Sila pastikan SHEET_EQUIP_URL disambungkan dengan betul.")
+            # Pilih kolum penting sahaja untuk dipaparkan supaya kemas
+            # Kita cari nama kolum secara dinamik (case-insensitive)
+            display_cols = []
+            for c in ["Site", "Type", "Equipment", "Serial No", "IP Address"]:
+                match = next((col for col in df_filtered.columns if col.lower() == c.lower()), None)
+                if match: display_cols.append(match)
+            
+            # Tambah kolum bulan yang dipilih di hujung
+            if selected_month in df_filtered.columns:
+                display_cols.append(selected_month)
+
+            # Paparkan Jadual
+            if not df_filtered.empty:
+                st.dataframe(
+                    df_filtered[display_cols].style.map(
+                        lambda x: 'background-color: #D4EDDA; color: #155724;' if str(x).upper() == 'OK' else 
+                                  ('background-color: #F8D7DA; color: #721C24;' if str(x).upper() == 'MISSING' else 
+                                   ('background-color: #FFF3CD; color: #856404;' if str(x).upper() == 'FAULTY' else '')), 
+                        subset=[selected_month]
+                    ), 
+                    use_container_width=True, 
+                    hide_index=True
+                )
+                st.caption(f"Menunjukkan {len(df_filtered)} aset bagi bulan {selected_month}")
+            else:
+                st.info(f"Tiada rekod status dijumpai untuk bulan {selected_month}.")
