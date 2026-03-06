@@ -243,8 +243,9 @@ elif menu_selection == "⚙️ Equipment Status":
                                    ('background-color: #FFF3CD; color: #856404;' if str(x).upper() == 'FAULTY' else '')), 
                         subset=[selected_month] if selected_month in display_cols else None
                     ), use_container_width=True, hide_index=True
-                
+                )
 # --- FOOTER SECTION ---
+st.write("##") # Tambah ruang sikit supaya data tak kena tutup dengan footer
 st.markdown(f"""
     <style>
     .footer {{
