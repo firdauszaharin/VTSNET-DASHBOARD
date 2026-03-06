@@ -23,13 +23,13 @@ with st.sidebar:
 
 # --- DYNAMIC CSS LOGIC (FIX VISIBILITY & SIDEBAR) ---
 if dark_mode:
-    # --- TEMA UNGU GELAP (PREMIUM) ---
-    bg_style = "radial-gradient(circle at top right, #2d3436, #1a0a2e, #0f0817)" # Ungu Midnight
-    sidebar_bg = "rgba(26, 10, 46, 0.95)" # Ungu pekat untuk sidebar
-    card_bg = "#24123a"                 # Ungu untuk kotak Metric
-    text_color = "#FFFFFF"              # Tulisan kekal Putih
-    shadow = "0 10px 25px rgba(108, 92, 231, 0.2)" # Shadow ada glow ungu sikit
-    plotly_theme = "plotly_dark"
+    # --- TEMA SILVER METALLIC (CLEAN & PRO) ---
+    bg_style = "linear-gradient(135deg, #bdc3c7, #2c3e50)" # Gradient Silver ke Steel
+    sidebar_bg = "rgba(44, 62, 80, 0.95)"                # Kelabu gelap untuk sidebar
+    card_bg = "#f5f6fa"                                  # Kotak putih mutiara (Silver cerah)
+    text_color = "#2f3640"                               # Tulisan kelabu gelap supaya nampak kontra
+    shadow = "0 8px 32px rgba(0, 0, 0, 0.1)"
+    plotly_theme = "plotly_white"
     
     custom_dark_css = f"""
         /* 1. PAKSA SEMUA TULISAN UTAMA TERMASUK SIDEBAR */
