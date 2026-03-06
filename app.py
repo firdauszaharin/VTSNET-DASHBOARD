@@ -36,16 +36,6 @@ if dark_mode:
             color: {text_color} !important; 
         }}
 
-        custom_dark_css = f"""
-        /* 1. SIDEBAR & TEXT GENERAL */
-        [data-testid="stSidebar"] {{ color: {text_color} !important; }}
-        [data-testid="stSidebar"] .stWidgetLabel p, 
-        [data-testid="stSidebar"] label,
-        [data-testid="stSidebar"] span {{ 
-            color: {text_color} !important; 
-            opacity: 1 !important; 
-        }}
-
         /* 2. FIX SELECTBOX & INPUT (Guna selector paling dalam) */
         /* Kita paksa latar belakang kotak input jadi gelap sikit supaya tulisan putih nampak */
         div[data-baseweb="select"] > div, 
