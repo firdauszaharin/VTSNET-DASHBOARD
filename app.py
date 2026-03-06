@@ -31,15 +31,10 @@ if dark_mode:
     plotly_theme = "plotly_dark"
     
     custom_dark_css = f"""
-        /* 1. FIX KOTAK INPUT & SELECTBOX (Jan 2025 / ALL SITES) */
-        /* Kita paksa kotak tu jadi gelap sikit */
-        div[data-baseweb="select"] > div, 
-        div[data-baseweb="input"] > div,
-        input {{
-            background-color: #1e293b !important; 
-            color: white !important;
-            -webkit-text-fill-color: white !important;
-            border: 1px solid #3e4e63 !important;
+        /* 1. PAKSA SEMUA TULISAN UTAMA TERMASUK SIDEBAR */
+        .stApp, .stMarkdown p, h1, h2, h3, h4, label, .stWidgetLabel p, [data-testid="stSidebar"] p {{ 
+            color: white !important; 
+            opacity: 1 !important;
         }}
 
         /* 2. FIX BUTANG (🟢 OK, 🟡 FAULTY, etc.) */
