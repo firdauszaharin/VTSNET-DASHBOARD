@@ -77,6 +77,12 @@ if dark_mode:
             color: #000000 !important;
             border: 2px solid #6c5ce7 !important;
         }
+        /* 2.1 FIX METRIC VALUE (Contoh: Angka '1' yang pudar tu) */
+        [data-testid="stMetricValue"] {
+            color: #FFFFFF !important;
+            -webkit-text-fill-color: #FFFFFF !important;
+            font-weight: 700 !important;
+        }
         
 
         /* 3. FIX LOG OUT BUTTON (Dalam Sidebar) */
