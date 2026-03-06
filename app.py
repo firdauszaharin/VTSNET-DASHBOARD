@@ -226,37 +226,55 @@ elif menu_selection == "⚙️ Equipment Status":
             # --- HISTOGRAM CATEGORY (MERUJUK KOLUM C / TYPE Buang) ---
           
             
-            # 4. DATA TABLE (DENGAN AUTO-REMARK Q1-Q4)
+           # --- 4. DATA TABLE (REMARK SHOW FIX) ---
             st.divider()
             st.subheader(f"📦 Inventory Asset List ({selected_site})")
+            
             search_eq = st.text_input("🔍 Carian Pantas (SN, Nama, IP, Remark):", key="search_eq_box")
             
-            # --- LOGIK AUTO-QUARTER & YEAR ---
-            month_up = selected_month.upper()
+            # Tapis data yang ada status pada bulan tersebut
+            df_filtered = df_working[df_working[selected_month].notna()].copy()
+
+            # --- LOGIK CARI KOLUM REMARK ---
+            # 1. Kenalpasti Tahun (e.g. 2025 atau 2026)
             year_match = re.search(r'202\d', selected_month)
-            curr_yr = year_match.group(0) if year_match else "2026"
+            curr_yr = year_match.group(0) if year_match else "2025"
             
-            if any(m in month_up for m in ['JAN', 'FEB', 'MAR']): q = "Q1"
-            elif any(m in month_up for m in ['APR', 'MAY', 'MEI', 'JUN']): q = "Q2"
-            elif any(m in month_up for m in ['JUL', 'AUG', 'SEP', 'OGO']): q = "Q3"
+            # 2. Tentukan Quarter (Q1-Q4)
+            m_up = selected_month.upper()
+            if any(m in m_up for m in ['JAN', 'FEB', 'MAR']): q = "Q1"
+            elif any(m in m_up for m in ['APR', 'MAY', 'MEI', 'JUN']): q = "Q2"
+            elif any(m in m_up for m in ['JUL', 'AUG', 'SEP', 'OGO']): q = "Q3"
             else: q = "Q4"
+
+            # 3. CARI KOLUM REMARK SECARA SMART
+            # Kita cari kolum yang ada perkataan "REMARK" DAN "2025/2026" DAN "Q1/Q2/Q3/Q4"
+            actual_remark_col = None
+            for col in df_filtered.columns:
+                c_up = col.upper()
+                if "REMARK" in c_up and q in c_up and curr_yr in c_up:
+                    actual_remark_col = col
+                    break
             
-            target_remark = f"REMARK {q} {curr_yr}" # Contoh: REMARK Q2 2026
-            
-            # Filter baris yang ada data pada bulan dipilih
-            df_filtered = df_working[df_working[selected_month].notna() & (df_working[selected_month].str.strip() != "")].copy()
+            # --- PROSES CARIAN (SEARCH) ---
             if search_eq:
                 df_filtered = df_filtered[df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
 
-            # Pilih kolum untuk dipaparkan
-            base_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
-            display_cols = [c for c in base_cols if any(col.lower() == c.lower() for col in df_filtered.columns)]
-            if selected_month in df_filtered.columns: display_cols.append(selected_month)
+            # --- SUSUN KOLUM UNTUK PAPARAN ---
+            # Kolum asas yang wajib ada
+            display_cols = []
+            for c in ["Site", "Type", "Equipment", "Serial No", "IP Address"]:
+                match = next((col for col in df_filtered.columns if col.lower() == c.lower()), None)
+                if match: display_cols.append(match)
             
-            # Detect kolum Remark QX 202X dalam sheet
-            actual_remark = next((c for c in df_filtered.columns if target_remark.upper() in c.upper()), None)
-            if actual_remark: display_cols.append(actual_remark)
+            # Tambah Status Bulan & Remark (Jika jumpa)
+            if selected_month in df_filtered.columns:
+                display_cols.append(selected_month)
+            
+            if actual_remark_col:
+                display_cols.append(actual_remark_col)
 
+            # --- PAPARKAN JADUAL ---
             if not df_filtered.empty:
                 st.dataframe(
                     df_filtered[display_cols].style.map(
@@ -264,9 +282,13 @@ elif menu_selection == "⚙️ Equipment Status":
                                   ('background-color: #F8D7DA; color: #721C24;' if str(x).upper() == 'MISSING' else 
                                    ('background-color: #FFF3CD; color: #856404;' if str(x).upper() == 'FAULTY' else '')), 
                         subset=[selected_month]
-                    ), use_container_width=True, hide_index=True
+                    ), 
+                    use_container_width=True, 
+                    hide_index=True
                 )
-                if actual_remark:
-                    st.caption(f"📌 Menunjukkan nota bagi suku tahun: **{actual_remark}**")
+                if actual_remark_col:
+                    st.success(f"✅ Menunjukkan maklumat daripada: `{actual_remark_col}`")
+                else:
+                    st.warning(f"⚠️ Kolum Remark untuk {q} {curr_yr} tidak dijumpai dalam Google Sheets.")
             else:
-                st.info(f"Tiada rekod status untuk {selected_site} pada {selected_month}.")
+                st.info(f"Tiada rekod ditemui.")
