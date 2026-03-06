@@ -115,11 +115,14 @@ df_equip = load_data(SHEET_EQUIP_URL)
 
 # --- REPORT ICON MAPPING ---
 icon_map = {
-    "MET REPORT": "https://cdn-icons-png.flaticon.com/512/1146/1146869.png",
-    "OPERATOR WORKSTATION": "https://cdn-icons-png.flaticon.com/512/689/689382.png",
+    "MARDEP MONITORING": "https://cdn-icons-png.flaticon.com/512/689/689382.png",
+    "VTS KLANG": "https://cdn-icons-png.flaticon.com/512/689/689382.png",
     "WALL DISPLAY REPORT": "https://cdn-icons-png.flaticon.com/512/1035/1035688.png",
-    "VHF PTP FLOOR 8": "https://cdn-icons-png.flaticon.com/512/3126/3126505.png",
-    "SERVER ROOM REPORT (PTP/LPJ)": "https://cdn-icons-png.flaticon.com/512/2333/2333241.png"
+    "RSS JLM": "https://cdn-icons-png.flaticon.com/512/3126/3126505.png",
+    "RSS APMM": "https://cdn-icons-png.flaticon.com/512/3126/3126505.png",
+    "RSS LPJ": "https://cdn-icons-png.flaticon.com/512/3126/3126505.png",
+    "APPLICATION SERVER": "https://cdn-icons-png.flaticon.com/512/2333/2333241.png"
+    "DATABASE SERVER": "https://cdn-icons-png.flaticon.com/512/2333/2333241.png"
 }
 
 if "selected_row_idx" not in st.session_state:
