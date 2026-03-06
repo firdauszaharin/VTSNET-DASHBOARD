@@ -52,7 +52,7 @@ if not st.session_state.authenticated:
     with col_mid:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         
-        st.markdown('<p class="login-subtitle">Admin & Asset Management Portal 2026</p>', unsafe_allow_html=True)
+        st.markdown('<p class="login-subtitle">VTSNET Admin & Inventory Dashboard</p>', unsafe_allow_html=True)
         
         # Input Section
         pwd = st.text_input("Enter Access Token", type="password", placeholder="••••••••", label_visibility="collapsed")
