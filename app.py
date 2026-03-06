@@ -96,13 +96,11 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# --- 5. DATA LOAD & MAIN CONTENT ---
-msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
-waktu_msia = datetime.now(msia_tz)
-
-SHEET_REPORT_URL = "https://docs.google.com/spreadsheets/d/1cJAnZVhxY_Nqjkfo39ze9DCAIZwWd_6dIdFgw0a2j_s/export?format=csv"
-SHEET_EQUIP_URL = "https://docs.google.com/spreadsheets/d/1IvOj5FqviwhZU7tGdnuh7zK5WUf-RsjUrVVa6HalkVU/export?format=csv"
-PDF_COL = "UPLOAD REPORT" 
+# --- 5. HELPER FUNCTIONS ---
+def color_status(val):
+    if val == 'APPROVED': return 'background-color: #d4edda; color: #155724;'
+    if val == 'REJECTED': return 'background-color: #f8d7da; color: #721c24;'
+    return ''
 
 @st.cache_data(ttl=60)
 def load_data(url):
@@ -112,11 +110,18 @@ def load_data(url):
         return data
     except: return pd.DataFrame()
 
+# --- 6. DATA LOAD ---
+msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
+waktu_msia = datetime.now(msia_tz)
+
+SHEET_REPORT_URL = "https://docs.google.com/spreadsheets/d/1cJAnZVhxY_Nqjkfo39ze9DCAIZwWd_6dIdFgw0a2j_s/export?format=csv"
+SHEET_EQUIP_URL = "https://docs.google.com/spreadsheets/d/1IvOj5FqviwhZU7tGdnuh7zK5WUf-RsjUrVVa6HalkVU/export?format=csv"
+PDF_COL = "UPLOAD REPORT" 
+
 df_raw = load_data(SHEET_REPORT_URL)
 df_equip = load_data(SHEET_EQUIP_URL)
 
-# ... (Bahagian bawah ni sambung balik kod asal kau: Navigation, Maintenance Reports, Equipment Status) ...
-
+# --- 7. SIDEBAR NAVIGATION ---
 with st.sidebar:
     menu_selection = st.radio("Select Category:", ["📝 Maintenance Reports", "⚙️ Equipment Status"])
     st.divider()
@@ -130,7 +135,6 @@ with st.sidebar:
 
 st.title("VTSNET: Maintenance & Asset Lifecycle Tracker")
 
-# Seterusnya masukkan Page 1 & Page 2 macam biasa...
 # --- PAGE 1: MAINTENANCE REPORTS ---
 if menu_selection == "📝 Maintenance Reports":
     if not df_raw.empty:
@@ -149,7 +153,7 @@ if menu_selection == "📝 Maintenance Reports":
                                    color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}, template=plotly_theme), use_container_width=True)
         with c2:
             st.plotly_chart(px.histogram(df, x='REPORT CHECKLIST', color='STATUS', title="Reports by Type",
-                                         color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}, template=plotly_theme), use_container_width=True)
+                                           color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}, template=plotly_theme), use_container_width=True)
 
         st.subheader("📋 Report Tracking Status")
         styled_df = df.style.map(color_status, subset=['STATUS']) if 'STATUS' in df.columns else df
@@ -192,48 +196,22 @@ elif menu_selection == "⚙️ Equipment Status":
             if st.session_state.filter_status != "ALL":
                 df_filtered = df_filtered[df_filtered[selected_month].astype(str).str.strip().str.upper() == st.session_state.filter_status]
 
-            # Charts
-            # Charts
-            col_chart1, col_chart2 = st.columns([0.4, 0.6]) # Adjust ratio sikit bagi donut ada ruang
-            
+            col_chart1, col_chart2 = st.columns([0.4, 0.6])
             with col_chart1:
-                fig_donut = px.pie(
-                    df_working, 
-                    names=selected_month, 
-                    hole=0.55, 
-                    template=plotly_theme,
-                    title="Status Overall",
-                    color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}
-                )
-                
-                fig_donut.update_layout(
-                    title_x=0.4, # Center-kan tajuk relatif kepada donut
-                    showlegend=True,
-                    legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
-                    margin=dict(l=20, r=20, t=60, b=20)
-                )
+                fig_donut = px.pie(df_working, names=selected_month, hole=0.55, template=plotly_theme, title="Status Overall",
+                                   color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'})
+                fig_donut.update_layout(title_x=0.4, showlegend=True, legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5))
                 st.plotly_chart(fig_donut, use_container_width=True)
 
             with col_chart2:
                 type_col = next((c for c in df_filtered.columns if c.lower() == 'type'), None)
                 if type_col and not df_filtered.empty:
-                    fig_type = px.bar(
-                        df_filtered.groupby([type_col, selected_month]).size().reset_index(name='count'), 
-                        x=type_col, 
-                        y='count', 
-                        color=selected_month, 
-                        template=plotly_theme,
-                        title=f"Analysis Equipment: {selected_month}",
-                        color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}, 
-                        barmode='group'
-                    )
-                    
-                    fig_type.update_layout(
-                        title_x=0.4, # Bar chart title betul-betul tengah
-                        margin=dict(l=20, r=20, t=60, b=20)
-                    )
+                    fig_type = px.bar(df_filtered.groupby([type_col, selected_month]).size().reset_index(name='count'), 
+                                      x=type_col, y='count', color=selected_month, template=plotly_theme, title=f"Analysis: {selected_month}",
+                                      color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}, barmode='group')
+                    fig_type.update_layout(title_x=0.4)
                     st.plotly_chart(fig_type, use_container_width=True)
-            # --- INVENTORY ASSET LIST ---
+
             st.divider()
             st.subheader(f"📦 Inventory Asset List")
             search_eq = st.text_input("🔍 Quick Search (SN, Name, IP):", key="search_eq_box")
