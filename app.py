@@ -187,49 +187,9 @@ if not df_equip.empty:
                 letter-spacing: -1px;
                 line-height: 1.1;
             ">
-                EDM VTMS LPJ/PTP<br>
-                <span style="font-weight: 300; opacity: 0.8; font-size: 20px;">Management Dashboard</span>
-            </h1>
-        </div>
 
-        <div style="text-align: right; border-left: 2px solid rgba(255,255,255,0.2); padding-left: 30px;">
-            <h2 id="clock" style="
-                color: white; 
-                margin: 0; 
-                font-family: 'Courier New', monospace; 
-                font-size: 45px; 
-                font-weight: 900;
-            ">00:00:00</h2>
-            <p id="date" style="
-                color: rgba(255,255,255,0.8); 
-                margin: 5px 0 0 0; 
-                font-size: 14px; 
-                text-transform: uppercase;
-                letter-spacing: 1px;
-            "></p>
-        </div>
-    </div>
-
-    <script>
-    function updateClock() {
-        const now = new Date();
-        const tOpt = { timeZone: "Asia/Kuala_Lumpur", hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
-        const dOpt = { timeZone: "Asia/Kuala_Lumpur", weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' };
-        
-        document.getElementById('clock').textContent = new Intl.DateTimeFormat('en-GB', tOpt).format(now);
-        document.getElementById('date').textContent = new Intl.DateTimeFormat('ms-MY', dOpt).format(now);
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-    </script>
 """, unsafe_allow_html=True)
             
-            st.download_button(
-                label="📥 Download Faulty Assets List (CSV)",
-                data=faulty_data.to_csv(index=False).encode('utf-8'),
-                file_name=f'Faulty_Assets_{latest_month}.csv',
-                mime='text/csv',
-            )
 
 # 7. MAIN CONTENT TABS
 tab1, tab2 = st.tabs(["📝 Maintenance Reports", "⚙️ Equipment Status"])
