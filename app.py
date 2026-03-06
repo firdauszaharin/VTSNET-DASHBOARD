@@ -293,55 +293,61 @@ elif menu_selection == "⚙️ Equipment Status":
                     fig_site_hist.update_layout(yaxis_title="Quantity", xaxis_title="Location")
                     st.plotly_chart(fig_site_hist, use_container_width=True)
 
-            # --- 4. DATA TABLE (REMARK TETAP MUNCUL DI SINI) ---
+           # --- 4. DATA TABLE (FIX: JADUAL HILANG) ---
             st.divider()
             st.subheader(f"📦 Inventory Asset List ({selected_site})")
             
             search_eq = st.text_input("🔍 Carian Pantas (SN, Nama, IP, Remark):", key="search_eq_box")
             
-            df_filtered = df_working[df_working[selected_month].notna()].copy()
-
-            # LOGIK CARI KOLUM REMARK (Sistem cari di belakang tabir)
+            # Tentukan Quarter & Tahun berdasarkan selected_month
             year_match = re.search(r'202\d', selected_month)
             curr_yr = year_match.group(0) if year_match else "2025"
             m_up = selected_month.upper()
+            
             if any(m in m_up for m in ['JAN', 'FEB', 'MAR']): q = "Q1"
-            elif any(m in m_up for m in ['APR', 'MAY', 'MEI', 'JUN']): q = "Q2"
-            elif any(m in m_up for m in ['JUL', 'AUG', 'SEP', 'OGO']): q = "Q3"
+            elif any(m in month_up for m in ['APR', 'MAY', 'MEI', 'JUN']): q = "Q2"
+            elif any(m in month_up for m in ['JUL', 'AUG', 'SEP', 'OGO']): q = "Q3"
             else: q = "Q4"
 
-            actual_remark_col = None
-            for col in df_equip.columns: # Cari dalam df_equip asal supaya remark tak terlepas
-                c_up = col.upper()
-                if "REMARK" in c_up and q in c_up and curr_yr in c_up:
-                    actual_remark_col = col
-                    break
+            # 1. Kenalpasti Kolum Remark (Cari dalam df_equip asal)
+            target_remark = f"REMARK {q} {curr_yr}"
+            actual_remark_col = next((c for c in df_equip.columns if "REMARK" in c.upper() and q in c.upper() and curr_yr in c.upper()), None)
+
+            # 2. Filter data ikut Site & Status Month
+            df_filtered = df_working.copy()
             
+            # 3. Proses Carian (Search)
             if search_eq:
                 df_filtered = df_filtered[df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
 
+            # 4. Bina Senarai Kolum yang WUJUD sahaja dalam DataFrame
             display_cols = []
-            for c in ["Site", "Type", "Equipment", "Serial No", "IP Address"]:
-                match = next((col for col in df_filtered.columns if col.lower() == c.lower()), None)
-                if match: display_cols.append(match)
-            
-            if selected_month in df_filtered.columns:
-                display_cols.append(selected_month)
-            
-            if actual_remark_col and actual_remark_col in df_filtered.columns:
-                display_cols.append(actual_remark_col)
+            cols_to_check = ["Site", "Type", "Equipment", "Serial No", "IP Address", selected_month]
+            if actual_remark_col:
+                cols_to_check.append(actual_remark_col)
 
+            # Pastikan kolum betul-betul ada sebelum masukkan dalam list
+            for c in cols_to_check:
+                if c in df_filtered.columns:
+                    display_cols.append(c)
+
+            # 5. Paparkan Jadual
             if not df_filtered.empty:
+                # Guna display_cols yang telah disemak
                 st.dataframe(
                     df_filtered[display_cols].style.map(
                         lambda x: 'background-color: #D4EDDA; color: #155724;' if str(x).upper() == 'OK' else 
                                   ('background-color: #F8D7DA; color: #721C24;' if str(x).upper() == 'MISSING' else 
                                    ('background-color: #FFF3CD; color: #856404;' if str(x).upper() == 'FAULTY' else '')), 
-                        subset=[selected_month]
+                        subset=[selected_month] if selected_month in display_cols else None
                     ), 
-                    use_container_width=True, hide_index=True
+                    use_container_width=True, 
+                    hide_index=True
                 )
+                
                 if actual_remark_col:
-                    st.success(f"✅ Nota suku tahun dikesan: `{actual_remark_col}`")
+                    st.caption(f"📌 Menunjukkan nota daripada kolum: **{actual_remark_col}**")
+                else:
+                    st.info(f"ℹ️ Kolum `{target_remark}` tidak dijumpai di Google Sheets.")
             else:
-                st.info(f"Tiada rekod ditemui.")
+                st.warning(f"Tiada data ditemui untuk tapisan/carian ini.")
