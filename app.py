@@ -232,10 +232,23 @@ elif menu_selection == "⚙️ Equipment Status":
                 fig_donut.update_traces(textposition='inside', textinfo='percent+label')
                 st.plotly_chart(fig_donut, use_container_width=True)
 
-            if 'Type' in df_pie.columns:
-                st.plotly_chart(px.histogram(df_pie, x='Type', color=selected_month, barmode='group', title='Status by Equipment Category',
-                                            color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}), use_container_width=True)
+            with col_chart2:
+                # Histogram mengikut Type (Guna data yang dah ditapis butang)
+                type_col = next((c for c in df_filtered.columns if c.lower() == 'type'), None)
+                if type_col and not df_filtered.empty:
+                    df_type_count = df_filtered.groupby(type_col).size().reset_index(name='count')
+                    df_type_count = df_type_count.sort_values('count', ascending=False)
 
+                    fig_type = px.bar(
+                        df_type_count, x=type_col, y='count',
+                        title=f'Equipment Detail by Type',
+                        color_discrete_sequence=['#0984E3'],
+                        text_auto=True
+                    )
+                    fig_type.update_layout(xaxis_tickangle=-45, yaxis_title="Quantity")
+                    st.plotly_chart(fig_type, use_container_width=True)
+                else:
+                    st.info("Tiada data untuk dipaparkan dalam carta bar.")
             # --- 4. DATA TABLE ---
             st.divider()
             st.subheader(f"📦 Inventory Asset List")
