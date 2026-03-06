@@ -18,25 +18,6 @@ st.set_page_config(
 msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
 waktu_msia = datetime.now(msia_tz)
 
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-from datetime import datetime
-import pytz
-import re
-import os
-
-# 1. PAGE CONFIGURATION
-st.set_page_config(
-    page_title="VTSNET Admin & Inventory Dashboard",
-    layout="wide",
-    page_icon="📊",
-    initial_sidebar_state="expanded"
-)
-
-# --- SET MALAYSIA TIMEZONE ---
-msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
-waktu_msia = datetime.now(msia_tz)
 
 # 2. DARK MODE MODERN CSS
 st.markdown("""
