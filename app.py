@@ -226,17 +226,36 @@ elif menu_selection == "⚙️ Equipment Status":
             # --- HISTOGRAM CATEGORY (MERUJUK KOLUM C / TYPE Buang) ---
           
             
-            # 4. DATA TABLE
+            # 4. DATA TABLE (DENGAN AUTO-REMARK Q1-Q4)
             st.divider()
             st.subheader(f"📦 Inventory Asset List ({selected_site})")
-            search_eq = st.text_input("🔍 Carian Pantas (SN, Nama, IP):", key="search_eq_box")
+            search_eq = st.text_input("🔍 Carian Pantas (SN, Nama, IP, Remark):", key="search_eq_box")
             
-            df_filtered = df_working[df_working[selected_month].notna() & (df_working[selected_month].str.strip() != "")]
+            # --- LOGIK AUTO-QUARTER & YEAR ---
+            month_up = selected_month.upper()
+            year_match = re.search(r'202\d', selected_month)
+            curr_yr = year_match.group(0) if year_match else "2026"
+            
+            if any(m in month_up for m in ['JAN', 'FEB', 'MAR']): q = "Q1"
+            elif any(m in month_up for m in ['APR', 'MAY', 'MEI', 'JUN']): q = "Q2"
+            elif any(m in month_up for m in ['JUL', 'AUG', 'SEP', 'OGO']): q = "Q3"
+            else: q = "Q4"
+            
+            target_remark = f"REMARK {q} {curr_yr}" # Contoh: REMARK Q2 2026
+            
+            # Filter baris yang ada data pada bulan dipilih
+            df_filtered = df_working[df_working[selected_month].notna() & (df_working[selected_month].str.strip() != "")].copy()
             if search_eq:
                 df_filtered = df_filtered[df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
 
-            display_cols = [c for c in ["Site", "Type", "Equipment", "Serial No", "IP Address"] if any(col.lower() == c.lower() for col in df_filtered.columns)]
+            # Pilih kolum untuk dipaparkan
+            base_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
+            display_cols = [c for c in base_cols if any(col.lower() == c.lower() for col in df_filtered.columns)]
             if selected_month in df_filtered.columns: display_cols.append(selected_month)
+            
+            # Detect kolum Remark QX 202X dalam sheet
+            actual_remark = next((c for c in df_filtered.columns if target_remark.upper() in c.upper()), None)
+            if actual_remark: display_cols.append(actual_remark)
 
             if not df_filtered.empty:
                 st.dataframe(
@@ -245,8 +264,9 @@ elif menu_selection == "⚙️ Equipment Status":
                                   ('background-color: #F8D7DA; color: #721C24;' if str(x).upper() == 'MISSING' else 
                                    ('background-color: #FFF3CD; color: #856404;' if str(x).upper() == 'FAULTY' else '')), 
                         subset=[selected_month]
-                    ), 
-                    use_container_width=True, hide_index=True
+                    ), use_container_width=True, hide_index=True
                 )
+                if actual_remark:
+                    st.caption(f"📌 Menunjukkan nota bagi suku tahun: **{actual_remark}**")
             else:
-                st.info(f"Tiada rekod status untuk {selected_site} pada bulan {selected_month}.")
+                st.info(f"Tiada rekod status untuk {selected_site} pada {selected_month}.")
