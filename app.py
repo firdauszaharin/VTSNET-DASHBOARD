@@ -77,12 +77,7 @@ if dark_mode:
             color: #000000 !important;
             border: 2px solid #6c5ce7 !important;
         }
-        /* 2. FIX BUTTON STATUS (OK/FAULTY/MISSING) */
-        div[data-testid="stVerticalBlock"] .stButton > button {
-            color: #000000 !important; 
-            background-color: #FFFFFF !important;
-            font-weight: 900 !important;
-        }
+        
 
         /* 3. FIX LOG OUT BUTTON (Dalam Sidebar) */
         /* Kita kekalkan tulisan putih supaya nampak atas butang merah */
