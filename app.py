@@ -239,15 +239,23 @@ elif menu_selection == "⚙️ Equipment Status":
             # Charts
             col_chart1, col_chart2 = st.columns([0.3, 0.7])
             with col_chart1:
-                fig_donut = px.pie(df_working, names=selected_month, hole=0.6, template=plotly_theme,
-                                   title="Status Overall", # <--- Letak tajuk kat sini
-                                   color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'})
-                fig_donut.update_layout(
-        showlegend=True,
-        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
-        margin=dict(l=20, r=20, t=20, b=20) # Kecilkan margin putih
+                fig_donut = px.pie(
+        df_working, 
+        names=selected_month, 
+        hole=0.6, 
+        template=plotly_theme,
+        title="Status Overall", # <--- Letak tajuk kat sini
+        color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}
     )
-                st.plotly_chart(fig_donut, use_container_width=True)
+    
+    # 2. Update layout untuk center-kan tajuk & legend
+    fig_donut.update_layout(
+        title_x=0.25, # Center-kan tajuk (0.5 adalah tengah-tengah)
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5), # Legend kat bawah
+        margin=dict(l=20, r=20, t=50, b=20) # Ruang atas (t=50) untuk tajuk
+    )
+    
+    st.plotly_chart(fig_donut, use_container_width=True)
             with col_chart2:
                 type_col = next((c for c in df_filtered.columns if c.lower() == 'type'), None)
                 if type_col and not df_filtered.empty:
