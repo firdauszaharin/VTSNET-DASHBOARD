@@ -149,7 +149,7 @@ st.markdown(f"""
     
     /* Tambahan: Kalau nak adjust saiz Title tu sendiri */
     h1 {{
-        margin-top: -60px !important; /* Gunakan nombor negatif untuk paksa Title naik atas */
+        margin-top: -80px !important; /* Gunakan nombor negatif untuk paksa Title naik atas */
         padding-top: 0px !important;
     }}
     
