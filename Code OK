@@ -209,7 +209,7 @@ elif menu_selection == "⚙️ Equipment Status":
         
         if month_cols:
             c1, c2 = st.columns(2)
-            with c1: selected_month = st.selectbox("📅 Select Report Month:", month_cols, index=len(month_cols)-1)
+            with c1: selected_month = st.selectbox("📅 Select Report Month:", month_cols, index=0)
             
             df_working = df_equip.copy()
             if site_col:
