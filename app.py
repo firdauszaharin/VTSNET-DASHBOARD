@@ -5,7 +5,6 @@ from datetime import datetime
 import pytz
 import re
 import os
-from streamlit_autorefresh import st_autorefresh
 
 # 1. PAGE CONFIGURATION
 st.set_page_config(
@@ -14,35 +13,6 @@ st.set_page_config(
     page_icon="📊",
     initial_sidebar_state="expanded"
 )
-# --- 1. AUTO REFRESH (5 MINIT) ---
-st_autorefresh(interval=300000, key="vts_refresh")
-
-# --- 2. LOGIN SECURITY (USING SECRETS) ---
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-
-# Paparan Login jika belum authenticated
-if not st.session_state.authenticated:
-    with st.sidebar:
-        st.title("🔒 Project Access")
-        pwd = st.text_input("Project Access Code:", type="password")
-        
-        # Ambil password dari Streamlit Secrets (Key: PROJECT_PASSWORD)
-        # Default backup jika Secrets belum di-set: "9660"
-        correct_password = st.secrets.get("PROJECT_PASSWORD", "9660")
-        
-        if st.button("Unlock Dashboard"):
-            if pwd == correct_password:
-                st.session_state.authenticated = True
-                st.rerun()
-            else:
-                st.error("Wrong Password!")
-        
-        st.info("Authorized Personnel Only.")
-    st.stop() # Berhenti di sini, jangan tunjuk data kat bawah selagi tak login
-
-# --- 3. LOG OUT BUTTON (Letak dalam sidebar sedia ada kau) ---
-# (Kod ni selitkan dalam 'with st.sidebar' yang kau dah ada dalam kod asal)
 
 # --- SIDEBAR: THEME TOGGLE ---
 with st.sidebar:
@@ -50,33 +20,71 @@ with st.sidebar:
         st.image("logo.png", use_container_width=True)
     dark_mode = st.toggle("Dark Mode View", value=False)
     st.divider()
-    if st.button("🔒 Log Out"):
-        st.session_state.authenticated = False
-        st.rerun()
 
-# --- DYNAMIC CSS LOGIC (THEME & MOBILE FIX) ---
+# --- DYNAMIC CSS LOGIC (FIX VISIBILITY & SIDEBAR) ---
 if dark_mode:
+    # --- TEMA SILVER PURPLE (METALLIC GLOW) ---
+    # Gradient dari Ungu Hitam ke Silver Gelap
     bg_style = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)" 
-    sidebar_bg = "rgba(15, 10, 25, 0.98)"
-    card_bg = "rgba(255, 255, 255, 0.05)"
-    text_color = "#E0E0E0"
-    shadow = "0 8px 32px rgba(108, 92, 231, 0.15)"
+    sidebar_bg = "rgba(15, 10, 25, 0.98)" # Sidebar ungu hampir hitam
+    card_bg = "rgba(255, 255, 255, 0.05)" # Kotak lutsinar (Glassmorphism effect)
+    text_color = "#E0E0E0"              # Putih Silver (tak sakit mata)
+    shadow = "0 8px 32px rgba(108, 92, 231, 0.15)" # Glow ungu halus
     plotly_theme = "plotly_dark"
     
     custom_dark_css = f"""
+        /* 1. PAKSA SEMUA TULISAN UTAMA TERMASUK SIDEBAR */
         .stApp, .stMarkdown p, h1, h2, h3, h4, label, .stWidgetLabel p, [data-testid="stSidebar"] p {{ 
             color: white !important; 
+            opacity: 1 !important;
         }}
+
+        /* 2. FIX BUTANG (🟢 OK, 🟡 FAULTY, etc.) */
+        /* Gambar ke-2 kau tunjuk butang ni jadi putih melepak. Kita paksa dia jadi gelap. */
         .stButton > button {{
             background-color: #1e293b !important;
             color: white !important;
             border: 1px solid #3e4e63 !important;
             border-radius: 10px !important;
         }}
-        /* Warna butang collapse sidebar (Laptop) */
+        
+        .stButton > button:hover {{
+            border-color: #0984E3 !important;
+            color: #0984E3 !important;
+        }}
+
+        /* 3. FIX SIDEBAR TEXT (BAGI TERANG) */
+        [data-testid="stSidebar"] {{ color: white !important; }}
+        [data-testid="stSidebar"] .stWidgetLabel p, 
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] span {{ 
+            color: white !important; 
+            opacity: 1 !important; 
+        }}
+
+        /* 4. FIX DROPDOWN LIST (Masa menu terbuka) */
+        div[data-baseweb="popover"] ul {{
+            background-color: #1e293b !important;
+        }}
+        div[data-baseweb="popover"] li {{
+            color: white !important;
+        }}
+
+        /* 5. SIDEBAR FIX */
+        [data-testid="stSidebar"] {{ color: {text_color} !important; }}
+        
+        /* 6. PAKSA BUTANG HIDE/SHOW SIDEBAR SENTIASA NAMPAK (TAMBAH INI) */
         [data-testid="stSidebarCollapseButton"] button {{
-            color: #a29bfe !important;
+            color: #a29bfe !important; /* Warna ungu terang */
             background-color: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(162, 155, 254, 0.5) !important;
+            margin-top: 5px !important;
+        }}
+        
+        /* Bila hover, dia jadi lagi terang */
+        [data-testid="stSidebarCollapseButton"] button:hover {{
+            background-color: #6c5ce7 !important;
+            color: white !important;
         }}
     """
 else:
@@ -88,37 +96,41 @@ else:
     plotly_theme = "plotly_white"
     custom_dark_css = ""
 
+# --- DYNAMIC CSS & LAYOUT FIX ---
 st.markdown(f"""
     <style>
+    /* 1. BUANG RUANG KOSONG PALING ATAS */
     .block-container {{
-        padding-top: 1rem !important;
+        padding-top: 0.5rem !important;
         padding-bottom: 0rem !important;
     }}
 
-    /* FIX HEADER & MOBILE BUTTON (WAJIB ADA) */
+    /* 2. TARIK TAJUK (H1) NAIK LAGI & BESARKAN */
+    h1 {{
+        margin-top: 40px !important; /* Tarik naik melepasi header */
+        padding-top: 0px !important;
+        font-size: 3.2rem !important; /* Saiz besar */
+        font-weight: 800 !important;
+        line-height: 1.2 !important;
+    }}
+
+    /* 3. SEMBUNYIKAN HEADER ASAL STREAMLIT */
     header[data-testid="stHeader"] {{
-        background-color: rgba(0,0,0,0) !important;
-        visibility: visible !important;
-        display: flex !important;
+        visibility: hidden !important;
+        height: 0px !important;
     }}
 
-    /* Butang Hamburger Phone */
-    button[data-testid="baseButton-headerNoPadding"] {{
-        visibility: visible !important;
-        color: #a29bfe !important; 
-        background-color: rgba(255, 255, 255, 0.15) !important;
-        z-index: 9999999 !important;
-    }}
-
-    .stApp {{ background: {bg_style}; color: {text_color}; }}
+    /* 4. TEMA WARNA & BACKGROUND */
+    .stApp {{ background: {bg_style}; font-family: 'Inter', sans-serif; color: {text_color}; }}
     {custom_dark_css}
     
     [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
     [data-testid="stMetric"] {{ background: {card_bg} !important; padding: 20px !important; border-radius: 20px !important; box-shadow: {shadow} !important; }}
+    [data-testid="stMetricValue"] {{ color: {text_color} !important; }}
+    [data-testid="stMetricLabel"] {{ color: {text_color} !important; opacity: 0.8; }}
     
-    /* Buang footer & decoration tapi biarkan MainMenu visible (kita cuma sorok icon dia je) */
+    #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
-    [data-testid="stDecoration"] {{display:none;}}
     </style>
 """, unsafe_allow_html=True)
 # --- DATA LOAD ---
