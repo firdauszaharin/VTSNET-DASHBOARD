@@ -132,7 +132,7 @@ PDF_COL = "UPLOAD REPORT"
 
 # AIS sheet (anda perlu set gid yang betul untuk setiap sheet)
 # buat sementara, saya letak gid=0 utk kedua-dua; tukar ikut sheet sebenar anda
-AISVDES_URL = "https://docs.google.com/spreadsheets/d/1HQUV7NXuhAKtKW-weSwAmhIMOde8CZM8XiTiaF1P7K4/edit?usp=sharing"
+AISVDES_URL = "https://docs.google.com/spreadsheets/d/1HQUV7NXuhAKtKW-weSwAmhIMOde8CZM8XiTiaF1P7K4/export?format=csv&gid=0"
 AISVTS_URL  = "https://docs.google.com/spreadsheets/d/1HQUV7NXuhAKtKW-weSwAmhIMOde8CZM8XiTiaF1P7K4/export?format=csv&gid=0"
 
 # ========= 4. DATA LOAD FUNCTIONS =========
@@ -188,7 +188,6 @@ if "selected_row_idx" not in st.session_state:
 
 # ========= 6. SIDEBAR =========
 with st.sidebar:
-    with st.sidebar:
     # Logo
     if os.path.exists("logo.png"):
         st.image("logo.png", use_container_width=True)
