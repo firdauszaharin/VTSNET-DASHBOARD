@@ -189,12 +189,30 @@ elif menu_selection == "⚙️ Equipment Status":
             df_plot = df_working.copy()
             df_plot[selected_month] = status_series
             
-            # 2. METRICS
-            me1, me2, me3 = st.columns(3)
-            me1.metric("🟢 Equipment OK", len(df_working[status_series == 'OK']))
-            me2.metric("🟡 Faulty ⚠️", len(df_working[status_series == 'FAULTY']))
-            me3.metric("🔴 Missing ❌", len(df_working[status_series == 'MISSING']))
+            # --- 2. METRICS DENGAN FUNGSI KLIK (DRILL-DOWN) ---
+            # Inisialisasi session state untuk filter jika belum ada
+            if 'filter_status' not in st.session_state:
+                st.session_state.filter_status = "ALL"
 
+            col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+            
+            # Kira jumlah
+            total_ok = len(df_working[status_series == 'OK'])
+            total_faulty = len(df_working[status_series == 'FAULTY'])
+            total_missing = len(df_working[status_series == 'MISSING'])
+
+            with col_m1:
+                if st.button(f"🟢 OK: {total_ok}", use_container_width=True):
+                    st.session_state.filter_status = "OK"
+            with col_m2:
+                if st.button(f"🟡 FAULTY: {total_faulty}", use_container_width=True):
+                    st.session_state.filter_status = "FAULTY"
+            with col_m3:
+                if st.button(f"🔴 MISSING: {total_missing}", use_container_width=True):
+                    st.session_state.filter_status = "MISSING"
+            with col_m4:
+                if st.button("🔵 SHOW ALL", use_container_width=True):
+                    st.session_state.filter_status = "ALL"
             # 3. VISUALISASI
             st.markdown(f"### 🎯 Performance Overview: {selected_site}")
             col_chart1, col_chart2 = st.columns([0.4, 0.6])
@@ -218,56 +236,53 @@ elif menu_selection == "⚙️ Equipment Status":
                     )
                     st.plotly_chart(fig_site_hist, use_container_width=True)
 
-            # --- 4. DATA TABLE (FIXED: ASSET LIST AKAN KELUAR) ---
+            # --- 4. DATA TABLE (DIKEMASKINI DENGAN FILTER) ---
             st.divider()
-            st.subheader(f"📦 Inventory Asset List ({selected_site})")
+            st.subheader(f"📦 Inventory Asset List ({selected_site}) - {st.session_state.filter_status}")
             
-            search_eq = st.text_input("🔍 Carian Pantas (SN, Nama, IP, Remark):", key="search_eq_box")
+            search_eq = st.text_input("🔍 Carian Pantas (SN, Nama, IP):", key="search_eq_box")
             
-            # Tentukan Quarter & Tahun berdasarkan selected_month untuk cari Remark
+            # Proses penapisan berdasarkan butang yang diklik
+            df_filtered = df_working.copy()
+            
+            # Tapis ikut status dari butang
+            if st.session_state.filter_status != "ALL":
+                df_filtered = df_filtered[df_filtered[selected_month].astype(str).str.strip().str.upper() == st.session_state.filter_status]
+
+            # Tapis ikut carian teks
+            if search_eq:
+                df_filtered = df_filtered[df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
+
+            # Logik Remark (Kekal sama)
             year_match = re.search(r'202\d', selected_month)
             curr_yr = year_match.group(0) if year_match else "2025"
             m_up = selected_month.upper()
-            
             if any(m in m_up for m in ['JAN', 'FEB', 'MAR']): q = "Q1"
             elif any(m in m_up for m in ['APR', 'MAY', 'MEI', 'JUN']): q = "Q2"
             elif any(m in m_up for m in ['JUL', 'AUG', 'SEP', 'OGO']): q = "Q3"
             else: q = "Q4"
 
-            # Cari Kolum Remark (Smart search)
             actual_remark_col = next((c for c in df_equip.columns if "REMARK" in c.upper() and q in c.upper() and curr_yr in c.upper()), None)
 
-            # Sediakan Data untuk Table (Jangan filter notna supaya list tak hilang)
-            df_table = df_working.copy()
-
-            if search_eq:
-                df_table = df_table[df_table.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
-
-            # Susun kolum yang mahu dipaparkan (Hanya jika wujud dalam Sheet)
+            # Pilih kolum paparan
             display_cols = []
             standard_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
             for col in standard_cols:
-                match = next((c for c in df_table.columns if c.lower() == col.lower()), None)
+                match = next((c for c in df_filtered.columns if c.lower() == col.lower()), None)
                 if match: display_cols.append(match)
             
-            if selected_month in df_table.columns:
-                display_cols.append(selected_month)
-            
-            if actual_remark_col:
-                display_cols.append(actual_remark_col)
+            if selected_month in df_filtered.columns: display_cols.append(selected_month)
+            if actual_remark_col: display_cols.append(actual_remark_col)
 
-            # Paparkan Jadual
-            if not df_table.empty:
+            # Papar Jadual
+            if not df_filtered.empty:
                 st.dataframe(
-                    df_table[display_cols].style.map(
+                    df_filtered[display_cols].style.map(
                         lambda x: 'background-color: #D4EDDA; color: #155724;' if str(x).upper() == 'OK' else 
                                   ('background-color: #F8D7DA; color: #721C24;' if str(x).upper() == 'MISSING' else 
                                    ('background-color: #FFF3CD; color: #856404;' if str(x).upper() == 'FAULTY' else '')), 
                         subset=[selected_month] if selected_month in display_cols else None
-                    ), 
-                    use_container_width=True, hide_index=True
+                    ), use_container_width=True, hide_index=True
                 )
-                if actual_remark_col:
-                    st.success(f"✅ Menunjukkan Remark: `{actual_remark_col}`")
             else:
-                st.warning("Tiada aset ditemui.")
+                st.info(f"Tiada aset dengan status {st.session_state.filter_status} untuk paparan ini.")
