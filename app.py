@@ -36,53 +36,30 @@ if dark_mode:
             color: {text_color} !important; 
         }}
 
-        /* 2. FIX SELECTBOX & INPUT (Guna selector paling dalam) */
-        /* Kita paksa latar belakang kotak input jadi gelap sikit supaya tulisan putih nampak */
-        div[data-baseweb="select"] > div, 
-        div[data-baseweb="input"] > div,
-        input {{
-            background-color: #262730 !important; /* Warna kelabu gelap Streamlit */
-            color: white !important;
-            -webkit-text-fill-color: white !important;
-            border: 1px solid rgba(255,255,255,0.2) !important;
+        /* 2. SIDEBAR FIX (PAKSA PUTIH TERANG) */
+        [data-testid="stSidebar"] {{
+            color: {text_color} !important;
         }}
-
-        /* Tulisan label di atas kotak (Contoh: Select Site) */
-        .stWidgetLabel p, label {{
-            color: white !important;
+        
+        /* Hilangkan efek kelabu/malap pada label sidebar */
+        [data-testid="stSidebar"] .stWidgetLabel p, 
+        [data-testid="stSidebar"] label, 
+        [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
+        [data-testid="stSidebar"] span {{
+            color: {text_color} !important;
             opacity: 1 !important;
-        }}
-        /* 3. FIX DROPDOWN LIST (Masa menu tu terbuka/tersembul keluar) */
-        div[data-baseweb="popover"] ul {{
-            background-color: #262730 !important;
-            border: 1px solid #454d5e !important;
-        }}
-        
-        div[data-baseweb="popover"] li {{
-            color: white !important;
+            -webkit-text-fill-color: {text_color} !important;
         }}
 
-        div[data-baseweb="popover"] li:hover {{
-            background-color: #0984E3 !important;
-        }}
-        
-        /* 4. METRIC BOX TEXT */
-        [data-testid="stMetricValue"] {{ color: white !important; }}
-        [data-testid="stMetricLabel"] p {{ color: white !important; }}
-    """
-
-        /* 3. FIX DROPDOWN LIST (Masa menu tu terbuka/tersembul keluar) */
-        div[data-baseweb="popover"] ul {{
-            background-color: #262730 !important;
-            border: 1px solid #454d5e !important;
-        }}
-        
-        div[data-baseweb="popover"] li {{
-            color: white !important;
+        /* 3. FIX INPUT & SELECTBOX */
+        input {{
+            color: {text_color} !important;
+            background-color: rgba(255,255,255,0.1) !important;
+            -webkit-text-fill-color: {text_color} !important;
         }}
 
-        div[data-baseweb="popover"] li:hover {{
-            background-color: #0984E3 !important;
+        [data-baseweb="select"] > div {{
+            color: {text_color} !important;
         }}
         
         /* 4. DROPDOWN LIST VISIBILITY */
@@ -92,7 +69,6 @@ if dark_mode:
         [data-baseweb="popover"] li {{
             color: white !important;
         }}
-    
 
         /* 5. SIDEBAR FIX */
         [data-testid="stSidebar"] {{ color: {text_color} !important; }}
