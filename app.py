@@ -244,8 +244,11 @@ elif menu_selection == "⚙️ Equipment Status":
                         subset=[selected_month] if selected_month in display_cols else None
                     ), use_container_width=True, hide_index=True
                 )
-# --- FOOTER SECTION ---
-st.write("##") # Tambah ruang sikit supaya data tak kena tutup dengan footer
+
+# --- FOOTER SECTION (PASTIKAN DUDUK LUAR BLOK IF/ELIF) ---
+st.write("##") 
+st.write("##") 
+
 st.markdown(f"""
     <style>
     .footer {{
@@ -253,14 +256,14 @@ st.markdown(f"""
         left: 0;
         bottom: 0;
         width: 100%;
-        background-color: {sidebar_bg}; /* Ikut warna sidebar supaya matching */
+        background-color: {sidebar_bg};
         color: {text_color};
         text-align: center;
         padding: 10px;
         font-size: 12px;
         letter-spacing: 1px;
-        backdrop-filter: blur(10px); /* Efek glassmorphism */
-        z-index: 100;
+        backdrop-filter: blur(10px);
+        z-index: 9999; /* Kita naikkan z-index biar dia paling depan */
         border-top: 1px solid rgba(255,255,255,0.1);
     }}
     </style>
