@@ -69,7 +69,6 @@ if dark_mode:
         [data-baseweb="popover"] li {{
             color: white !important;
         }}
-    """
 
         /* 5. SIDEBAR FIX */
         [data-testid="stSidebar"] {{ color: {text_color} !important; }}
