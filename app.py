@@ -32,7 +32,7 @@ if dark_mode:
     shadow = "0 8px 32px rgba(108, 92, 231, 0.15)" # Glow ungu halus
     plotly_theme = "plotly_dark"
     
-   custom_dark_css = f"""
+    custom_dark_css = f"""
         /* 1. Paksa semua tulisan utama jadi putih */
         .stApp, .stMarkdown p, h1, h2, h3, h4, label, .stWidgetLabel p, [data-testid="stSidebar"] p {{ 
             color: white !important; 
