@@ -91,7 +91,7 @@ st.markdown("""
 
 # 3. DATA LINKS
 SHEET_REPORT_URL = "https://docs.google.com/spreadsheets/d/1cJAnZVhxY_Nqjkfo39ze9DCAIZwWd_6dIdFgw0a2j_s/export?format=csv"
-SHEET_EQUIP_URL = "https://docs.google.com/spreadsheets/d/1HQUV7NXuhAKtKW-weSwAmhIMOde8CZM8XiTiaF1P7K4/edit?usp=sharing"
+SHEET_EQUIP_URL = "https://docs.google.com/spreadsheets/d/1HQUV7NXuhAKtKW-weSwAmhIMOde8CZM8XiTiaF1P7K4/export?format=csv"
 PDF_COL = "UPLOAD REPORT" 
 
 # 4. DATA LOAD FUNCTION
@@ -154,42 +154,24 @@ with st.sidebar:
 st.title("VTSNET Management Dashboard")
 
 if not df_equip.empty:
-    month_cols = [c for c in df_equip.columns if any(yr in c for yr in ["2025", "2026"])]
+    month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026"])]
     latest_month = month_cols[-1] if month_cols else None
     
     if latest_month:
+        # Tampilkan Header Banner yang cantik
+        st.markdown(f"""
+            <div style="background: linear-gradient(90deg, #0984E3, #6c5ce7); padding: 30px; border-radius: 20px; color: white; margin-bottom: 25px;">
+                <h1 style="color: white; margin: 0;">EDM VTMS LPJ/PTP</h1>
+                <p style="font-size: 18px; opacity: 0.9;">System Status: {latest_month}</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
         status_check = df_equip[latest_month].astype(str).str.strip().str.upper()
         faulty_data = df_equip[status_check.isin(['FAULTY', 'MISSING'])]
         
         if len(faulty_data) > 0:
-            st.markdown("""
-    <div style="
-        background: linear-gradient(90deg, #0984E3, #6c5ce7);
-        padding: 30px;
-        border-radius: 20px;
-        margin-bottom: 25px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    ">
-        <div style="display: flex; flex-direction: column; align-items: flex-start;">
-            <div style="margin-bottom: 15px;">
-                <img src="https://lh3.googleusercontent.com/d/1lG9eKZ69hpT6q-aqXpNxyd0HMcXdr3A" 
-                     style="height: 60px; filter: brightness(0) invert(1);"> 
-                </div>
-            
-            <h1 style="
-                color: white;
-                font-size: 30px;
-                font-weight: 800;
-                margin: 0;
-                letter-spacing: -1px;
-                line-height: 1.1;
-            ">
-
-""", unsafe_allow_html=True)
-            
+            st.error(f"⚠️ Dikesan {len(faulty_data)} aset bermasalah pada bulan {latest_month}!")
+            st.download_button("📥 Download Faulty List", faulty_data.to_csv(index=False), "faulty_assets.csv")
 
 # 7. MAIN CONTENT TABS
 tab1, tab2 = st.tabs(["📝 Maintenance Reports", "⚙️ Equipment Status"])
