@@ -40,21 +40,19 @@ if dark_mode:
             opacity: 1 !important; 
         }}
 
-        /* 2. FIX SELECTBOX & INPUT (Guna selector paling dalam) */
-        /* Kita paksa latar belakang kotak input jadi gelap sikit supaya tulisan putih nampak */
-        div[data-baseweb="select"] > div, 
-        div[data-baseweb="input"] > div,
-        input {{
-            background-color: #262730 !important; /* Warna kelabu gelap Streamlit */
-            color: white !important;
-            -webkit-text-fill-color: white !important;
-            border: 1px solid rgba(255,255,255,0.2) !important;
+        /* 2. SIDEBAR FIX (PAKSA PUTIH TERANG) */
+        [data-testid="stSidebar"] {{
+            color: {text_color} !important;
         }}
-
-        /* Tulisan label di atas kotak (Contoh: Select Site) */
-        .stWidgetLabel p, label {{
-            color: white !important;
+        
+        /* Hilangkan efek kelabu/malap pada label sidebar */
+        [data-testid="stSidebar"] .stWidgetLabel p, 
+        [data-testid="stSidebar"] label, 
+        [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
+        [data-testid="stSidebar"] span {{
+            color: {text_color} !important;
             opacity: 1 !important;
+            -webkit-text-fill-color: {text_color} !important;
         }}
 
         /* 3. FIX DROPDOWN LIST (Masa menu tu terbuka/tersembul keluar) */
