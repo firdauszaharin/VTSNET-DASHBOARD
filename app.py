@@ -88,38 +88,58 @@ else:
 # --- DYNAMIC CSS & LAYOUT FIX ---
 st.markdown(f"""
     <style>
-    /* 1. BUANG RUANG KOSONG PALING ATAS */
     .block-container {{
-        padding-top: 0.5rem !important;
+        padding-top: 1rem !important;
         padding-bottom: 0rem !important;
     }}
 
-    /* 2. TARIK TAJUK (H1) NAIK LAGI & BESARKAN */
-    h1 {{
-        margin-top: 40px !important; /* Tarik naik melepasi header */
-        padding-top: 0px !important;
-        font-size: 3.2rem !important; /* Saiz besar */
-        font-weight: 800 !important;
-        line-height: 1.2 !important;
-    }}
-
-    /* 3. SEMBUNYIKAN HEADER ASAL STREAMLIT */
+    /* --- 1. PAKSA HEADER & BUTTON SIDEBAR MUNCUL --- */
     header[data-testid="stHeader"] {{
-        visibility: hidden !important;
-        height: 0px !important;
+        background-color: rgba(0,0,0,0) !important;
+        visibility: visible !important;
+        display: flex !important;
     }}
 
-    /* 4. TEMA WARNA & BACKGROUND */
-    .stApp {{ background: {bg_style}; font-family: 'Inter', sans-serif; color: {text_color}; }}
+    /* Butang Phone (Hamburger) */
+    button[data-testid="baseButton-headerNoPadding"] {{
+        visibility: visible !important;
+        display: flex !important;
+        color: #a29bfe !important; 
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        z-index: 999999 !important;
+    }}
+
+    /* Butang Laptop (Anak Panah / Collapse) */
+    [data-testid="stSidebarCollapseButton"] {{
+        visibility: visible !important;
+        display: block !important;
+    }}
+    
+    [data-testid="stSidebarCollapseButton"] button {{
+        color: #a29bfe !important;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(162, 155, 254, 0.3) !important;
+    }}
+
+    /* --- 2. THEME STYLES --- */
+    .stApp {{ background: {bg_style}; color: {text_color}; }}
     {custom_dark_css}
     
-    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
-    [data-testid="stMetric"] {{ background: {card_bg} !important; padding: 20px !important; border-radius: 20px !important; box-shadow: {shadow} !important; }}
-    [data-testid="stMetricValue"] {{ color: {text_color} !important; }}
-    [data-testid="stMetricLabel"] {{ color: {text_color} !important; opacity: 0.8; }}
+    [data-testid="stSidebar"] {{ 
+        background-color: {sidebar_bg} !important; 
+        backdrop-filter: blur(10px); 
+    }}
     
-    #MainMenu {{visibility: hidden;}}
+    [data-testid="stMetric"] {{ 
+        background: {card_bg} !important; 
+        padding: 20px !important; 
+        border-radius: 20px !important; 
+        box-shadow: {shadow} !important; 
+    }}
+    
+    /* Buang footer tapi biarkan MainMenu supaya tak kacau header */
     footer {{visibility: hidden;}}
+    [data-testid="stDecoration"] {{display:none;}}
     </style>
 """, unsafe_allow_html=True)
 # --- DATA LOAD ---
