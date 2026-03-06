@@ -1,104 +1,128 @@
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-from datetime import datetime
-import pytz
-import requests
-import io
+import { useState } from 'react';
+import { Wrench, Package, Menu, X } from 'lucide-react';
+import { RealTimeClock } from './components/RealTimeClock';
+import { TabButton } from './components/TabButton';
+import { MaintenanceTab } from './components/MaintenanceTab';
+import { EquipmentTab } from './components/EquipmentTab';
+import { useDashboardData } from './hooks/useDashboardData';
 
-# 1. PAGE CONFIGURATION
-st.set_page_config(
-    page_title="GreenFinder VTMS Admin & Inventory",
-    layout="wide",
-    page_icon="📊"
-)
+type TabType = 'maintenance' | 'equipment';
 
-# --- CSS MODEN (GLASSMORPHISM) ---
-st.markdown("""
-    <style>
-    .stApp {
-        background: radial-gradient(circle at top right, #1a1a2e, #16213e, #0f3460);
-        color: white;
-        font-family: 'Inter', sans-serif;
-    }
-    .glass-card {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        padding: 20px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    }
-    h1, h2, h3 { color: white !important; }
-    .stMetric {
-        background: rgba(255, 255, 255, 0.05);
-        padding: 15px;
-        border-radius: 15px;
-    }
-    </style>
-""", unsafe_allow_html=True)
+export function App() {
+  const [activeTab, setActiveTab] = useState<TabType>('maintenance');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { maintenanceReports, equipmentInventory, loading, error } = useDashboardData();
 
-# 2. DATA LOADING
-@st.cache_data(ttl=600)
-def load_data(url):
-    try:
-        response = requests.get(url).content
-        return pd.read_csv(io.StringIO(response.decode('utf-8')))
-    except:
-        return pd.DataFrame()
+  return (
+    <div className="min-h-screen gradient-bg">
+      {/* Background decorations */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/30 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl" />
+      </div>
 
-# URLs
-MAINTENANCE_URL = "https://docs.google.com/spreadsheets/d/1WB76n71wxMT3i5ZCaoCBIyb888il-qBydY8OEgC81Q8/export?format=csv"
-EQUIPMENT_URL = "https://docs.google.com/spreadsheets/d/1HQUV7NXuhAKtKW-weSwAmhIMOde8CZM8XiTiaF1P7K4/export?format=csv&gid=0"
+      <div className="relative z-10">
+        {/* Header */}
+        <header className="glass-card border-0 border-b border-white/10">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              {/* Logo & Title */}
+              <div className="flex items-center gap-4">
+                <img src="/logo.png" alt="GreenFinder Logo" className="h-12" />
+                <div>
+                  <h1 className="text-xl md:text-2xl font-bold text-white">
+                    GreenFinder VTMS Admin & Inventory
+                  </h1>
+                  <p className="text-white/60 text-sm hidden sm:block">
+                    Electronic Data Management System - Going Forward
+                  </p>
+                </div>
+              </div>
 
-df_maint = load_data(MAINTENANCE_URL)
-df_equip = load_data(EQUIPMENT_URL)
+              {/* Clock & Mobile Menu */}
+              <div className="flex items-center gap-4">
+                <div className="hidden md:block">
+                  <RealTimeClock />
+                </div>
+                <button
+                  className="md:hidden w-10 h-10 rounded-lg glass-card flex items-center justify-center"
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                >
+                  {mobileMenuOpen ? (
+                    <X className="w-5 h-5 text-white" />
+                  ) : (
+                    <Menu className="w-5 h-5 text-white" />
+                  )}
+                </button>
+              </div>
+            </div>
 
-# 3. HEADER
-col1, col2 = st.columns([0.1, 0.9])
-with col1:
-    st.image("https://cdn-icons-png.flaticon.com/512/2991/2991108.png", width=80)
-with col2:
-    st.title("GreenFinder VTMS Admin & Inventory")
-    st.caption("Electronic Data Management System - Going Forward")
+            {/* Mobile Clock */}
+            <div className="md:hidden mt-4">
+              <RealTimeClock />
+            </div>
 
-# 4. TABS
-tab1, tab2 = st.tabs(["📝 Maintenance Reports", "⚙️ Equipment Inventory"])
+            {/* Tabs */}
+            <div className={`mt-4 ${mobileMenuOpen ? 'block' : 'hidden md:block'}`}>
+              <div className="flex flex-col md:flex-row gap-2 md:gap-4">
+                <TabButton
+                  active={activeTab === 'maintenance'}
+                  onClick={() => {
+                    setActiveTab('maintenance');
+                    setMobileMenuOpen(false);
+                  }}
+                  icon={<Wrench className="w-5 h-5" />}
+                >
+                  Maintenance Reports
+                </TabButton>
+                <TabButton
+                  active={activeTab === 'equipment'}
+                  onClick={() => {
+                    setActiveTab('equipment');
+                    setMobileMenuOpen(false);
+                  }}
+                  icon={<Package className="w-5 h-5" />}
+                >
+                  Equipment Inventory
+                </TabButton>
+              </div>
+            </div>
+          </div>
+        </header>
 
-with tab1:
-    st.subheader("Maintenance Reports")
-    if not df_maint.empty:
-        # Metrik ringkas
-        cols = st.columns(4)
-        cols[0].metric("Total Reports", len(df_maint))
-        cols[1].metric("Approved", len(df_maint[df_maint.get('STATUS', '') == 'APPROVED']))
-        cols[2].metric("Rejected", len(df_maint[df_maint.get('STATUS', '') == 'REJECTED']))
-        cols[3].metric("Pending", len(df_maint[~df_maint.get('STATUS', '').isin(['APPROVED', 'REJECTED'])]))
-        
-        st.dataframe(df_maint, use_container_width=True)
-    else:
-        st.warning("Data Maintenance tidak dijumpai.")
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-4 py-6">
+          {loading && (
+            <div className="glass-card rounded-2xl p-4 mb-6 text-white/80">
+              Sync data VTSNET sedang berjalan...
+            </div>
+          )}
+          {error && !loading && (
+            <div className="glass-card rounded-2xl p-4 mb-6 text-amber-200 border border-amber-400/30">
+              {error}
+            </div>
+          )}
+          {activeTab === 'maintenance' && <MaintenanceTab maintenanceReports={maintenanceReports} />}
+          {activeTab === 'equipment' && <EquipmentTab equipmentInventory={equipmentInventory} />}
+        </main>
 
-with tab2:
-    st.subheader("AIS VTS & AIS VDES Monitoring")
-    if not df_equip.empty:
-        # Filter status
-        status_filter = st.multiselect("Filter Status:", options=df_equip.iloc[:, -1].unique())
-        df_show = df_equip
-        if status_filter:
-            df_show = df_equip[df_equip.iloc[:, -1].isin(status_filter)]
-            
-        st.dataframe(df_show, use_container_width=True)
-        
-        # Ringkasan Carta
-        if not df_show.empty:
-            fig = px.pie(df_show, names=df_show.columns[-1], title="Status Distribution")
-            fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", font_color="white")
-            st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.warning("Data Equipment tidak dijumpai.")
-
-# 5. FOOTER
-st.divider()
-st.markdown("© 2025 GreenFinder VTMS Admin & Inventory Dashboard. All rights reserved.")
+        {/* Footer */}
+        <footer className="glass-card border-0 border-t border-white/10 mt-8">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <p className="text-white/60 text-sm">
+                © 2025 GreenFinder VTMS Admin & Inventory Dashboard. All rights reserved.
+              </p>
+              <div className="flex items-center gap-4">
+                <span className="text-white/40 text-xs">Version 2.0</span>
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-green-400 text-xs">Live</span>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+  );
+}
