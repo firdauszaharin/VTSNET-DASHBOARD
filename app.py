@@ -36,19 +36,18 @@ if dark_mode:
             color: {text_color} !important; 
         }}
 
-        /* 2. SIDEBAR FIX (PAKSA PUTIH TERANG) */
-        [data-testid="stSidebar"] {{
-            color: {text_color} !important;
+        /* 2. FIX BUTANG (🟢 OK, 🟡 FAULTY, etc.) */
+        /* Gambar ke-2 kau tunjuk butang ni jadi putih melepak. Kita paksa dia jadi gelap. */
+        .stButton > button {{
+            background-color: #1e293b !important;
+            color: white !important;
+            border: 1px solid #3e4e63 !important;
+            border-radius: 10px !important;
         }}
         
-        /* Hilangkan efek kelabu/malap pada label sidebar */
-        [data-testid="stSidebar"] .stWidgetLabel p, 
-        [data-testid="stSidebar"] label, 
-        [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
-        [data-testid="stSidebar"] span {{
-            color: {text_color} !important;
-            opacity: 1 !important;
-            -webkit-text-fill-color: {text_color} !important;
+        .stButton > button:hover {{
+            border-color: #0984E3 !important;
+            color: #0984E3 !important;
         }}
 
         /* 3. FIX DROPDOWN LIST (Masa menu tu terbuka/tersembul keluar) */
