@@ -54,70 +54,29 @@ with st.sidebar:
         st.session_state.authenticated = False
         st.rerun()
 
-# --- DYNAMIC CSS LOGIC (FIX VISIBILITY & SIDEBAR) ---
+# --- DYNAMIC CSS LOGIC (THEME & MOBILE FIX) ---
 if dark_mode:
-    # --- TEMA SILVER PURPLE (METALLIC GLOW) ---
-    # Gradient dari Ungu Hitam ke Silver Gelap
     bg_style = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)" 
-    sidebar_bg = "rgba(15, 10, 25, 0.98)" # Sidebar ungu hampir hitam
-    card_bg = "rgba(255, 255, 255, 0.05)" # Kotak lutsinar (Glassmorphism effect)
-    text_color = "#E0E0E0"              # Putih Silver (tak sakit mata)
-    shadow = "0 8px 32px rgba(108, 92, 231, 0.15)" # Glow ungu halus
+    sidebar_bg = "rgba(15, 10, 25, 0.98)"
+    card_bg = "rgba(255, 255, 255, 0.05)"
+    text_color = "#E0E0E0"
+    shadow = "0 8px 32px rgba(108, 92, 231, 0.15)"
     plotly_theme = "plotly_dark"
     
     custom_dark_css = f"""
-        /* 1. PAKSA SEMUA TULISAN UTAMA TERMASUK SIDEBAR */
         .stApp, .stMarkdown p, h1, h2, h3, h4, label, .stWidgetLabel p, [data-testid="stSidebar"] p {{ 
             color: white !important; 
-            opacity: 1 !important;
         }}
-
-        /* 2. FIX BUTANG (🟢 OK, 🟡 FAULTY, etc.) */
-        /* Gambar ke-2 kau tunjuk butang ni jadi putih melepak. Kita paksa dia jadi gelap. */
         .stButton > button {{
             background-color: #1e293b !important;
             color: white !important;
             border: 1px solid #3e4e63 !important;
             border-radius: 10px !important;
         }}
-        
-        .stButton > button:hover {{
-            border-color: #0984E3 !important;
-            color: #0984E3 !important;
-        }}
-
-        /* 3. FIX SIDEBAR TEXT (BAGI TERANG) */
-        [data-testid="stSidebar"] {{ color: white !important; }}
-        [data-testid="stSidebar"] .stWidgetLabel p, 
-        [data-testid="stSidebar"] label,
-        [data-testid="stSidebar"] span {{ 
-            color: white !important; 
-            opacity: 1 !important; 
-        }}
-
-        /* 4. FIX DROPDOWN LIST (Masa menu terbuka) */
-        div[data-baseweb="popover"] ul {{
-            background-color: #1e293b !important;
-        }}
-        div[data-baseweb="popover"] li {{
-            color: white !important;
-        }}
-
-        /* 5. SIDEBAR FIX */
-        [data-testid="stSidebar"] {{ color: {text_color} !important; }}
-        
-        /* 6. PAKSA BUTANG HIDE/SHOW SIDEBAR SENTIASA NAMPAK (TAMBAH INI) */
+        /* Warna butang collapse sidebar (Laptop) */
         [data-testid="stSidebarCollapseButton"] button {{
-            color: #a29bfe !important; /* Warna ungu terang */
+            color: #a29bfe !important;
             background-color: rgba(255, 255, 255, 0.1) !important;
-            border: 1px solid rgba(162, 155, 254, 0.5) !important;
-            margin-top: 5px !important;
-        }}
-        
-        /* Bila hover, dia jadi lagi terang */
-        [data-testid="stSidebarCollapseButton"] button:hover {{
-            background-color: #6c5ce7 !important;
-            color: white !important;
         }}
     """
 else:
@@ -128,62 +87,36 @@ else:
     shadow = "0 10px 25px rgba(0,0,0,0.03)"
     plotly_theme = "plotly_white"
     custom_dark_css = ""
-# --- INI BAHAGIAN YANG AKU KEMASKAN (LAYOUT FIX - VERSION FINAL) ---
+
 st.markdown(f"""
     <style>
-    /* 1. LAYOUT SPACING */
     .block-container {{
         padding-top: 1rem !important;
         padding-bottom: 0rem !important;
     }}
 
-    h1 {{
-        margin-top: 30px !important; 
-        font-size: 2.8rem !important;
-        font-weight: 800 !important;
-    }}
-
-    /* 2. FORCE MOBILE BUTTON TO APPEAR */
-    /* Kita paksa header sentiasa ada (tapi transparent) supaya butang menu tak ghaib */
+    /* FIX HEADER & MOBILE BUTTON (WAJIB ADA) */
     header[data-testid="stHeader"] {{
         background-color: rgba(0,0,0,0) !important;
         visibility: visible !important;
         display: flex !important;
     }}
 
-    /* Paksa butang sidebar (hamburger menu) muncul dengan warna yang terang */
+    /* Butang Hamburger Phone */
     button[data-testid="baseButton-headerNoPadding"] {{
         visibility: visible !important;
-        display: flex !important;
         color: #a29bfe !important; 
         background-color: rgba(255, 255, 255, 0.15) !important;
-        border-radius: 8px !important;
-        z-index: 9999999 !important; /* Letak paling atas supaya tak kena tindih */
+        z-index: 9999999 !important;
     }}
 
-    /* 3. THEME DYNAMIC STYLES */
-    .stApp {{ 
-        background: {bg_style}; 
-        font-family: 'Inter', sans-serif; 
-        color: {text_color}; 
-    }}
-    
+    .stApp {{ background: {bg_style}; color: {text_color}; }}
     {custom_dark_css}
     
-    [data-testid="stSidebar"] {{ 
-        background-color: {sidebar_bg} !important; 
-        backdrop-filter: blur(10px); 
-    }}
+    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
+    [data-testid="stMetric"] {{ background: {card_bg} !important; padding: 20px !important; border-radius: 20px !important; box-shadow: {shadow} !important; }}
     
-    [data-testid="stMetric"] {{ 
-        background: {card_bg} !important; 
-        padding: 20px !important; 
-        border-radius: 20px !important; 
-        box-shadow: {shadow} !important; 
-    }}
-    
-    /* Buang menu 'Deploy' dan footer tapi kekalkan butang sidebar */
-    #MainMenu {{visibility: hidden;}}
+    /* Buang footer & decoration tapi biarkan MainMenu visible (kita cuma sorok icon dia je) */
     footer {{visibility: hidden;}}
     [data-testid="stDecoration"] {{display:none;}}
     </style>
