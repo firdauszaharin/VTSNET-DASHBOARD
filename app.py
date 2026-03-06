@@ -159,7 +159,7 @@ def color_status(val):
 
 # --- SIDEBAR NAVIGATION ---
 with st.sidebar:
-    st.title("📌 MENU")
+   
     menu_selection = st.radio("Pilih Paparan:", ["📝 Maintenance Reports", "⚙️ Equipment Status"])
     st.divider()
     st.markdown(f"🕒 **Last Sync:** {waktu_msia.strftime('%H:%M:%S')}")
