@@ -70,19 +70,6 @@ if not st.session_state.authenticated:
             border-radius: 12px !important;
             height: 45px !important;
         }
-
-        /* Button Styling */
-        div.stButton > button {
-            background: linear-gradient(90deg, #6c5ce7 0%, #a29bfe 100%) !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 12px !important;
-            font-weight: 700 !important;
-            height: 45px !important;
-            transition: all 0.3s ease !important;
-            margin-top: 10px;
-        }
-
         
         </style>
     """, unsafe_allow_html=True)
