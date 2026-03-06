@@ -189,7 +189,7 @@ if menu_selection == "📝 Maintenance Reports":
 
         c1, c2 = st.columns(2)
         with c1:
-            st.plotly_chart(px.pie(df, names='STATUS', hole=0.55, title="Status Distribution", 
+            st.plotly_chart(px.pie(df, names='STATUS', hole=0.55, title="Approval Overview", 
                                    color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}, template=plotly_theme), use_container_width=True)
         with c2:
             st.plotly_chart(px.histogram(df, x='REPORT CHECKLIST', color='STATUS', title="Reports by Type",
