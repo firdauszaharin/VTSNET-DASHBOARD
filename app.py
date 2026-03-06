@@ -235,9 +235,41 @@ elif menu_selection == "⚙️ Equipment Status":
                     ), use_container_width=True, hide_index=True
                 )
 
-# --- FOOTER SECTION (Paling bawah, luar blok if-else) ---
-st.markdown(f"""
-    <div style="position: fixed; left: 0; bottom: 0; width: 100%; background-color: {sidebar_bg}; color: {text_color}; text-align: center; padding: 10px; font-size: 12px; backdrop-filter: blur(10px); z-index: 9999; border-top: 1px solid rgba(255,255,255,0.1);">
-        <p>© 2026 GreenFinder VTMS Admin & Inventory Dashboard. All rights reserved.</p>
+# --- FOOTER SECTION (TAKTIK PALING AGRESIF) ---
+st.markdown("""
+    <style>
+    /* Paksa content utama ada ruang kat bawah supaya tak kena tutup */
+    .main .block-container {
+        padding-bottom: 80px !important;
+    }
+    
+    /* Paksa footer muncul paling depan */
+    #custom-footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0.9); /* Warna terang sikit biar nampak */
+        color: #1e293b;
+        text-align: center;
+        padding: 15px 0;
+        font-size: 14px;
+        font-weight: bold;
+        z-index: 999999 !important;
+        border-top: 2px solid #a29bfe;
+        box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+        display: block !important;
+        visibility: visible !important;
+    }
+
+    /* Kalau Dark Mode aktif, tukar warna footer */
+    [data-user-color-scheme="dark"] #custom-footer {
+        background-color: #1a0a2e !important;
+        color: white !important;
+    }
+    </style>
+    
+    <div id="custom-footer">
+        © 2026 GreenFinder VTMS Admin & Inventory Dashboard. All rights reserved.
     </div>
 """, unsafe_allow_html=True)
