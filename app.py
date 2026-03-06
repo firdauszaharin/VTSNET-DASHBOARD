@@ -21,24 +21,70 @@ with st.sidebar:
     dark_mode = st.toggle("Dark Mode View", value=False)
     st.divider()
 
-# --- DYNAMIC CSS LOGIC (REPAIRED) ---
+# --- DYNAMIC CSS LOGIC (FIX VISIBILITY & SIDEBAR) ---
 if dark_mode:
+    # --- TEMA SILVER PURPLE (METALLIC GLOW) ---
+    # Gradient dari Ungu Hitam ke Silver Gelap
     bg_style = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)" 
-    sidebar_bg = "rgba(15, 10, 25, 0.98)"
-    card_bg = "rgba(255, 255, 255, 0.05)"
-    text_color = "#E0E0E0"
-    shadow = "0 8px 32px rgba(108, 92, 231, 0.15)"
+    sidebar_bg = "rgba(15, 10, 25, 0.98)" # Sidebar ungu hampir hitam
+    card_bg = "rgba(255, 255, 255, 0.05)" # Kotak lutsinar (Glassmorphism effect)
+    text_color = "#E0E0E0"              # Putih Silver (tak sakit mata)
+    shadow = "0 8px 32px rgba(108, 92, 231, 0.15)" # Glow ungu halus
     plotly_theme = "plotly_dark"
     
     custom_dark_css = f"""
+        /* 1. PAKSA SEMUA TULISAN UTAMA TERMASUK SIDEBAR */
         .stApp, .stMarkdown p, h1, h2, h3, h4, label, .stWidgetLabel p, [data-testid="stSidebar"] p {{ 
             color: white !important; 
+            opacity: 1 !important;
         }}
+
+        /* 2. FIX BUTANG (🟢 OK, 🟡 FAULTY, etc.) */
+        /* Gambar ke-2 kau tunjuk butang ni jadi putih melepak. Kita paksa dia jadi gelap. */
         .stButton > button {{
             background-color: #1e293b !important;
             color: white !important;
             border: 1px solid #3e4e63 !important;
             border-radius: 10px !important;
+        }}
+        
+        .stButton > button:hover {{
+            border-color: #0984E3 !important;
+            color: #0984E3 !important;
+        }}
+
+        /* 3. FIX SIDEBAR TEXT (BAGI TERANG) */
+        [data-testid="stSidebar"] {{ color: white !important; }}
+        [data-testid="stSidebar"] .stWidgetLabel p, 
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] span {{ 
+            color: white !important; 
+            opacity: 1 !important; 
+        }}
+
+        /* 4. FIX DROPDOWN LIST (Masa menu terbuka) */
+        div[data-baseweb="popover"] ul {{
+            background-color: #1e293b !important;
+        }}
+        div[data-baseweb="popover"] li {{
+            color: white !important;
+        }}
+
+        /* 5. SIDEBAR FIX */
+        [data-testid="stSidebar"] {{ color: {text_color} !important; }}
+        
+        /* 6. PAKSA BUTANG HIDE/SHOW SIDEBAR SENTIASA NAMPAK (TAMBAH INI) */
+        [data-testid="stSidebarCollapseButton"] button {{
+            color: #a29bfe !important; /* Warna ungu terang */
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(162, 155, 254, 0.5) !important;
+            margin-top: 5px !important;
+        }}
+        
+        /* Bila hover, dia jadi lagi terang */
+        [data-testid="stSidebarCollapseButton"] button:hover {{
+            background-color: #6c5ce7 !important;
+            color: white !important;
         }}
     """
 else:
@@ -50,31 +96,29 @@ else:
     plotly_theme = "plotly_white"
     custom_dark_css = ""
 
-# Pastikan st.markdown ni rapat ke kiri skrin (tak ada space kat depan)
+# --- DYNAMIC CSS & LAYOUT FIX ---
 st.markdown(f"""
     <style>
+    /* 1. BUANG RUANG KOSONG PALING ATAS */
     .block-container {{
-        padding-top: 1rem !important;
+        padding-top: 0.5rem !important;
         padding-bottom: 0rem !important;
     }}
+
+    /* 2. TARIK TAJUK (H1) NAIK LAGI & BESARKAN */
+    h1 {{
+        margin-top: 40px !important; /* Tarik naik melepasi header */
+        padding-top: 0px !important;
+        font-size: 3.2rem !important; /* Saiz besar */
+        font-weight: 800 !important;
+        line-height: 1.2 !important;
+    }}
+
+    /* 3. SEMBUNYIKAN HEADER ASAL STREAMLIT */
     header[data-testid="stHeader"] {{
-        background-color: rgba(0,0,0,0) !important;
-        visibility: visible !important;
-        display: flex !important;
+        visibility: hidden !important;
+        height: 0px !important;
     }}
-    button[data-testid="baseButton-headerNoPadding"] {{
-        visibility: visible !important;
-        color: #a29bfe !important; 
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        z-index: 999999 !important;
-    }}
-    .stApp {{ background: {bg_style}; color: {text_color}; }}
-    {custom_dark_css}
-    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
-    [data-testid="stMetric"] {{ background: {card_bg} !important; padding: 20px !important; border-radius: 20px !important; box-shadow: {shadow} !important; }}
-    footer {{visibility: hidden;}}
-    </style>
-""", unsafe_allow_html=True)
 
     /* 4. TEMA WARNA & BACKGROUND */
     .stApp {{ background: {bg_style}; font-family: 'Inter', sans-serif; color: {text_color}; }}
