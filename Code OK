@@ -173,7 +173,7 @@ with st.sidebar:
         search_staff = ""
         search_id = ""
 
-st.title("VTSNET Management Dashboard")
+st.title("VTSNET: Maintenance & Asset Lifecycle Tracker")
 
 # --- PAGE 1: MAINTENANCE REPORTS ---
 if menu_selection == "📝 Maintenance Reports":
@@ -189,13 +189,13 @@ if menu_selection == "📝 Maintenance Reports":
 
         c1, c2 = st.columns(2)
         with c1:
-            st.plotly_chart(px.pie(df, names='STATUS', hole=0.55, title="Status Distribution", 
+            st.plotly_chart(px.pie(df, names='STATUS', hole=0.55, title="Approval Overview", 
                                    color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}, template=plotly_theme), use_container_width=True)
         with c2:
             st.plotly_chart(px.histogram(df, x='REPORT CHECKLIST', color='STATUS', title="Reports by Type",
                                          color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}, template=plotly_theme), use_container_width=True)
 
-        st.subheader("📋 Record Table")
+        st.subheader("📋 Report Tracking Status")
         styled_df = df.style.map(color_status, subset=['STATUS']) if 'STATUS' in df.columns else df
         st.dataframe(styled_df, use_container_width=True, hide_index=True,
                      column_config={PDF_COL: st.column_config.LinkColumn("Report File", display_text="OPEN PDF 📄")})
@@ -209,7 +209,7 @@ elif menu_selection == "⚙️ Equipment Status":
         
         if month_cols:
             c1, c2 = st.columns(2)
-            with c1: selected_month = st.selectbox("📅 Select Report Month:", month_cols, index=len(month_cols)-1)
+            with c1: selected_month = st.selectbox("📅 Select Report Month:", month_cols, index=0)
             
             df_working = df_equip.copy()
             if site_col:
