@@ -23,7 +23,7 @@ if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
-    st.markdown("<style>header {visibility: hidden;} [data-testid='stSidebar'] {display: none;}</style>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center;'>...</h1>")
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
         st.title("🔒 VTSNET Project Access")
