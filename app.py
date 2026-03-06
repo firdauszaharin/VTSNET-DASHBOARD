@@ -140,7 +140,19 @@ st.markdown(f"""
     <style>
     .stApp {{ background: {bg_style}; color: {text_color}; }}
     [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
-    .main .block-container {{ padding-bottom: 100px !important; }}
+    
+    /* ADJUST KAT SINI */
+    .main .block-container {{ 
+        padding-top: 3rem !important;  /* Kecilkan nombor ni kalau nak Title lagi tinggi ke atas */
+        padding-bottom: 100px !important; 
+    }}
+    
+    /* Tambahan: Kalau nak adjust saiz Title tu sendiri */
+    h1 {{
+        margin-top: -40px !important; /* Gunakan nombor negatif untuk paksa Title naik atas */
+        padding-top: 0px !important;
+    }}
+    
     footer {{visibility: hidden;}}
     </style>
 """, unsafe_allow_html=True)
