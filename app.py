@@ -52,58 +52,50 @@ if dark_mode:
     bg_style = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)" 
     sidebar_bg = "rgba(15, 10, 25, 0.98)"
     text_color = "#FFFFFF"
-    plotly_theme = "plotly_dark"
     
     custom_dark_css = """
         <style>
-        /* 1. Paksa SEMUA teks dalam sidebar jadi putih (Label & Options) */
-        [data-testid="stSidebar"] *, 
-        [data-testid="stSidebar"] span, 
-        [data-testid="stSidebar"] p, 
-        [data-testid="stSidebar"] label {
+        /* 1. Paksa semua teks umum jadi putih */
+        .stApp, .stMarkdown p, h1, h2, h3, label, [data-testid="stSidebar"] * {
             color: #FFFFFF !important;
         }
 
-        /* 2. Paksa tulisan radio button options (Maintenance/Equipment) jadi putih terang */
-        div[data-testid="stMarkdownContainer"] p {
-            color: #FFFFFF !important;
-        }
-
-        /* 3. Fix untuk Radio Button yang tak terpilih (unselected) supaya nampak */
-        div[data-testid="stWidgetLabel"] {
-            color: #FFFFFF !important;
-        }
-        
-        /* 4. Teks Dashboard Utama */
-        .stApp, h1, h2, h3 {
-            color: #FFFFFF !important;
-        }
-
-        /* 5. Button Status (OK/FAULTY/MISSING) - Tulisan Hitam atas Putih */
-        div.stButton > button {
+        /* 2. FIX BUTTON STATUS (OK, FAULTY, MISSING) */
+        /* Kita target button dalam main content area sahaja */
+        .main .stButton > button {
             color: #000000 !important; 
             background-color: #FFFFFF !important;
-            font-weight: bold !important;
+            font-weight: 800 !important;
+            border: 2px solid #a29bfe !important;
         }
+
+        /* 3. FIX BUTTON LOG OUT (Dalam Sidebar) */
+        /* Kita paksa tulisan Log Out jadi putih balik sebab background dia gelap/merah */
+        [data-testid="stSidebar"] .stButton > button {
+            color: #FFFFFF !important;
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid #ff4b4b !important;
+        }
+        
+        /* Hover effect untuk Log Out */
+        [data-testid="stSidebar"] .stButton > button:hover {
+            background-color: #ff4b4b !important;
+            color: #FFFFFF !important;
+        }
+
+        /* 4. Metric & Table Fix */
+        [data-testid="stMetricValue"] { color: #FFFFFF !important; }
+        .stDataFrame { background-color: transparent !important; }
         </style>
     """
 else:
     bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7)"
     sidebar_bg = "rgba(255, 255, 255, 0.9)"
     text_color = "#1e293b"
-    plotly_theme = "plotly_white"
     custom_dark_css = ""
 
 # Apply CSS
 st.markdown(custom_dark_css, unsafe_allow_html=True)
-
-st.markdown(f"""
-    <style>
-    .stApp {{ background: {bg_style}; color: {text_color}; }}
-    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
-    footer {{visibility: hidden;}}
-    </style>
-""", unsafe_allow_html=True)
 # --- 5. HELPER FUNCTIONS ---
 def color_status(val):
     if val == 'APPROVED': return 'background-color: #d4edda; color: #155724;'
