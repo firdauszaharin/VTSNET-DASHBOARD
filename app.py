@@ -121,7 +121,7 @@ icon_map = {
     "RSS JLM": "https://cdn-icons-png.flaticon.com/512/3126/3126505.png",
     "RSS APMM": "https://cdn-icons-png.flaticon.com/512/3126/3126505.png",
     "RSS LPJ": "https://cdn-icons-png.flaticon.com/512/3126/3126505.png",
-    "APPLICATION SERVER": "https://cdn-icons-png.flaticon.com/512/2333/2333241.png"
+    "APPLICATION SERVER": "https://cdn-icons-png.flaticon.com/512/2333/2333241.png",
     "DATABASE SERVER": "https://cdn-icons-png.flaticon.com/512/2333/2333241.png"
 }
 
