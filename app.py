@@ -8,7 +8,7 @@ import os
 
 # 1. PAGE CONFIGURATION
 st.set_page_config(
-    page_title="VTMS Admin & Inventory Dashboard",
+    page_title="VTSNET Admin & Inventory Dashboard",
     layout="wide",
     page_icon="📊",
     initial_sidebar_state="expanded"
@@ -148,7 +148,7 @@ with st.sidebar:
     st.link_button("📂 Open Drive Folder", "https://drive.google.com/drive/folders/1lG9eKZ69hpT6q-aqXpNxyd0HMcXdr3A4jUaXLCpDpOPffFzG0XK-MGBLaGHcBMcyqWjyLy", use_container_width=True)
 
 # 6. EXECUTIVE SUMMARY
-st.title("EDM VTMS LPJ/PTP Management Dashboard")
+st.title("VTSNET Management Dashboard")
 
 if not df_equip.empty:
     month_cols = [c for c in df_equip.columns if any(yr in c for yr in ["2025", "2026"])]
