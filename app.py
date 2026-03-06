@@ -109,17 +109,12 @@ with st.sidebar:
     if menu_selection == "📝 Maintenance Reports":
         search_report = st.text_input("🔎 Search Site/Type:")
         search_staff = st.text_input("👤 Search Staff Name:")
-        
-        # --- NEW: Dropdown untuk ID Doc ---
-        if not df_raw.empty and 'ID' in df_raw.columns:
-            # Ambil senarai ID unik, buang yang kosong (NaN), dan susun ikut urutan
-            id_list = ["ALL IDs"] + sorted(df_raw['ID'].astype(str).unique().tolist())
-            search_id = st.selectbox("🆔 Select Document ID:", id_list)
-       
-        else:
+        # TAMBAH INI:
+        search_id = st.text_input("🆔 Search Document ID:") 
+    else:
         search_report = ""
         search_staff = ""
-        search_id = ""
+        search_id = "" # Reset
 
 st.title("VTSNET Management Dashboard")
 
