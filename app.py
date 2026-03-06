@@ -14,99 +14,65 @@ st.set_page_config(
     page_icon="📊",
     initial_sidebar_state="expanded"
 )
-# --- 1. AUTO REFRESH (5 MINIT) ---
+
+# --- AUTO REFRESH (5 MINIT) ---
 st_autorefresh(interval=300000, key="vts_refresh")
 
-# --- 2. LOGIN SECURITY (USING SECRETS) ---
+# --- 2. LOGIN SECURITY ---
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 # Paparan Login jika belum authenticated
 if not st.session_state.authenticated:
-    with st.sidebar:
-        st.title("🔒 Project Access")
+    st.markdown("""
+        <style>
+        header {visibility: hidden;}
+        [data-testid="stSidebar"] {display: none;}
+        </style>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        st.title("🔒 VTSNET Project Access")
         pwd = st.text_input("Project Access Code:", type="password")
-        
-        # Ambil password dari Streamlit Secrets (Key: PROJECT_PASSWORD)
-        # Default backup jika Secrets belum di-set: "9660"
         correct_password = st.secrets.get("PROJECT_PASSWORD", "9660")
         
-        if st.button("Unlock Dashboard"):
+        if st.button("Unlock Dashboard", use_container_width=True):
             if pwd == correct_password:
                 st.session_state.authenticated = True
                 st.rerun()
             else:
                 st.error("Wrong Password!")
-        
         st.info("Authorized Personnel Only.")
-    st.stop() # Berhenti di sini, jangan tunjuk data kat bawah selagi tak login
+    st.stop()
 
-# --- 3. LOG OUT BUTTON (Letak dalam sidebar sedia ada kau) ---
-# (Kod ni selitkan dalam 'with st.sidebar' yang kau dah ada dalam kod asal)
-# --- SIDEBAR: THEME TOGGLE ---
+# --- 3. THEME TOGGLE & LOGOUT ---
 with st.sidebar:
     if os.path.exists("logo.png"):
         st.image("logo.png", use_container_width=True)
+    
     dark_mode = st.toggle("Dark Mode View", value=False)
     st.divider()
-    if st.button("🔒 Log Out"):
+    
+    if st.button("🔒 Log Out", use_container_width=True):
         st.session_state.authenticated = False
         st.rerun()
 
-# --- DYNAMIC CSS LOGIC (FIX VISIBILITY & SIDEBAR) ---
+# --- 4. DYNAMIC CSS LOGIC ---
 if dark_mode:
-    # --- TEMA SILVER PURPLE (METALLIC GLOW) ---
-    # Gradient dari Ungu Hitam ke Silver Gelap
     bg_style = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)" 
-    sidebar_bg = "rgba(15, 10, 25, 0.98)" # Sidebar ungu hampir hitam
-    card_bg = "rgba(255, 255, 255, 0.05)" # Kotak lutsinar (Glassmorphism effect)
-    text_color = "#E0E0E0"              # Putih Silver (tak sakit mata)
-    shadow = "0 8px 32px rgba(108, 92, 231, 0.15)" # Glow ungu halus
+    sidebar_bg = "rgba(15, 10, 25, 0.98)"
+    card_bg = "rgba(255, 255, 255, 0.05)"
+    text_color = "#E0E0E0"
+    shadow = "0 8px 32px rgba(108, 92, 231, 0.15)"
     plotly_theme = "plotly_dark"
     
     custom_dark_css = f"""
-        /* 1. Paksa semua tulisan utama jadi putih */
-        .stApp, .stMarkdown p, h1, h2, h3, h4, label, .stWidgetLabel p, [data-testid="stSidebar"] p {{ 
-            color: white !important; 
-        }}
-        
-        /* 2. FIX NOMBOR METRIC (Total Reports, Approved, Pending) */
-        [data-testid="stMetricValue"] {{
-            color: #ffffff !important;
-            font-weight: 700 !important;
-        }}
-        
-        /* 3. FIX LABEL METRIC (Tulisan kecil atas nombor) */
-        [data-testid="stMetricLabel"] p {{
-            color: #E0E0E0 !important;
-            opacity: 0.9 !important;
-        }}
-
-        /* 4. Fix Butang */
-        .stButton > button {{
-            background-color: #1e293b !important;
-            color: white !important;
-            border: 1px solid #3e4e63 !important;
-            border-radius: 10px !important;
-        }}
-    
-
-        /* 5. SIDEBAR FIX */
-        [data-testid="stSidebar"] {{ color: {text_color} !important; }}
-        
-        /* 6. PAKSA BUTANG HIDE/SHOW SIDEBAR SENTIASA NAMPAK (TAMBAH INI) */
-        [data-testid="stSidebarCollapseButton"] button {{
-            color: #a29bfe !important; /* Warna ungu terang */
-            background-color: rgba(255, 255, 255, 0.1) !important;
-            border: 1px solid rgba(162, 155, 254, 0.5) !important;
-            margin-top: 5px !important;
-        }}
-        
-        /* Bila hover, dia jadi lagi terang */
-        [data-testid="stSidebarCollapseButton"] button:hover {{
-            background-color: #6c5ce7 !important;
-            color: white !important;
-        }}
+        .stApp, .stMarkdown p, h1, h2, h3, h4, label, .stWidgetLabel p, [data-testid="stSidebar"] p {{ color: white !important; }}
+        [data-testid="stMetricValue"] {{ color: #ffffff !important; font-weight: 700 !important; }}
+        [data-testid="stMetricLabel"] p {{ color: #E0E0E0 !important; opacity: 0.9 !important; }}
+        .stButton > button {{ background-color: #1e293b !important; color: white !important; border: 1px solid #3e4e63 !important; border-radius: 10px !important; }}
+        [data-testid="stSidebarCollapseButton"] button {{ color: #a29bfe !important; background-color: rgba(255, 255, 255, 0.1) !important; }}
     """
 else:
     bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7,#f8faff)"
@@ -117,64 +83,20 @@ else:
     plotly_theme = "plotly_white"
     custom_dark_css = ""
 
-# --- DYNAMIC CSS & LAYOUT FIX ---
 st.markdown(f"""
     <style>
-    .block-container {{
-        padding-top: 1rem !important;
-        padding-bottom: 0rem !important;
-    }}
-
-    /* --- 1. PAKSA HEADER & BUTTON SIDEBAR MUNCUL --- */
-    header[data-testid="stHeader"] {{
-        background-color: rgba(0,0,0,0) !important;
-        visibility: visible !important;
-        display: flex !important;
-    }}
-
-    /* Butang Phone (Hamburger) */
-    button[data-testid="baseButton-headerNoPadding"] {{
-        visibility: visible !important;
-        display: flex !important;
-        color: #a29bfe !important; 
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        z-index: 999999 !important;
-    }}
-
-    /* Butang Laptop (Anak Panah / Collapse) */
-    [data-testid="stSidebarCollapseButton"] {{
-        visibility: visible !important;
-        display: block !important;
-    }}
-    
-    [data-testid="stSidebarCollapseButton"] button {{
-        color: #a29bfe !important;
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        border: 1px solid rgba(162, 155, 254, 0.3) !important;
-    }}
-
-    /* --- 2. THEME STYLES --- */
+    .block-container {{ padding-top: 1rem !important; }}
+    header[data-testid="stHeader"] {{ background: transparent !important; visibility: visible !important; display: flex !important; }}
+    button[data-testid="baseButton-headerNoPadding"] {{ visibility: visible !important; color: #a29bfe !important; background-color: rgba(255,255,255,0.1) !important; z-index: 999999 !important; }}
     .stApp {{ background: {bg_style}; color: {text_color}; }}
     {custom_dark_css}
-    
-    [data-testid="stSidebar"] {{ 
-        background-color: {sidebar_bg} !important; 
-        backdrop-filter: blur(10px); 
-    }}
-    
-    [data-testid="stMetric"] {{ 
-        background: {card_bg} !important; 
-        padding: 20px !important; 
-        border-radius: 20px !important; 
-        box-shadow: {shadow} !important; 
-    }}
-    
-    /* Buang footer tapi biarkan MainMenu supaya tak kacau header */
+    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
+    [data-testid="stMetric"] {{ background: {card_bg} !important; padding: 20px !important; border-radius: 20px !important; box-shadow: {shadow} !important; }}
     footer {{visibility: hidden;}}
-    [data-testid="stDecoration"] {{display:none;}}
     </style>
 """, unsafe_allow_html=True)
-# --- DATA LOAD ---
+
+# --- 5. DATA LOAD & MAIN CONTENT ---
 msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
 waktu_msia = datetime.now(msia_tz)
 
@@ -193,14 +115,9 @@ def load_data(url):
 df_raw = load_data(SHEET_REPORT_URL)
 df_equip = load_data(SHEET_EQUIP_URL)
 
-def color_status(val):
-    if val == 'APPROVED': return 'background-color: #d4edda; color: #155724;'
-    if val == 'REJECTED': return 'background-color: #f8d7da; color: #721c24;'
-    return ''
+# ... (Bahagian bawah ni sambung balik kod asal kau: Navigation, Maintenance Reports, Equipment Status) ...
 
-# --- SIDEBAR NAVIGATION ---
 with st.sidebar:
-   
     menu_selection = st.radio("Select Category:", ["📝 Maintenance Reports", "⚙️ Equipment Status"])
     st.divider()
     st.markdown(f"🕒 **Last Sync:** {waktu_msia.strftime('%H:%M:%S')}")
@@ -208,14 +125,12 @@ with st.sidebar:
     if menu_selection == "📝 Maintenance Reports":
         search_report = st.text_input("🔎 Search Site/Type:")
         search_staff = st.text_input("👤 Search Staff Name:")
-        search_id = st.text_input("🆔 Search Document ID:") 
     else:
-        search_report = ""
-        search_staff = ""
-        search_id = ""
+        search_report = search_staff = ""
 
 st.title("VTSNET: Maintenance & Asset Lifecycle Tracker")
 
+# Seterusnya masukkan Page 1 & Page 2 macam biasa...
 # --- PAGE 1: MAINTENANCE REPORTS ---
 if menu_selection == "📝 Maintenance Reports":
     if not df_raw.empty:
