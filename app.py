@@ -98,34 +98,16 @@ else:
 
 st.markdown(f"""
     <style>
-    /* 1. BUANG GAP ATAS SEKALI (DARI AKAR) */
-    .block-container {{
-        padding-top: 1rem !important;
-        padding-bottom: 0rem !important;
-        margin-top: -20px !important;
-    }}
-
-    /* 2. ADJUST TITLE (VTSNET Management Dashboard) */
-    h1 {{
-        margin-top: -20px !important;
-        padding-top: 0px !important;
-        font-size: 3.5rem !important; /* Besarkan tulisan */
-        font-weight: 800 !important;
-        color: white !important; /* Pastikan nampak dalam dark mode */
-        line-height: 1.2 !important;
-    }}
-
-    /* 3. KECILKAN HEADER KOSONG STREAMLIT */
-    header[data-testid="stHeader"] {{
-        height: 0px !important;
-        background: transparent !important;
-        display: none !important; /* Sembunyikan terus bar kosong kat atas */
-    }}
-
     .stApp {{ background: {bg_style}; font-family: 'Inter', sans-serif; color: {text_color}; }}
     {custom_dark_css}
     [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
     [data-testid="stMetric"] {{ background: {card_bg} !important; padding: 20px !important; border-radius: 20px !important; box-shadow: {shadow} !important; }}
+    [data-testid="stMetricValue"] {{ color: {text_color} !important; }}
+    [data-testid="stMetricLabel"] {{ color: {text_color} !important; opacity: 0.8; }}
+    header[data-testid="stHeader"] {{ background-color: rgba(0,0,0,0) !important; }}
+    .st-emotion-cache-hp888a {{ color: #0984E3 !important; }}
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
     </style>
 """, unsafe_allow_html=True)
 # --- DATA LOAD ---
