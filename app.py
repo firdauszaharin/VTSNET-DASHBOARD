@@ -52,50 +52,48 @@ if dark_mode:
     bg_style = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)" 
     sidebar_bg = "rgba(15, 10, 25, 0.98)"
     text_color = "#FFFFFF"
+    plotly_theme = "plotly_dark"
     
     custom_dark_css = """
         <style>
-        /* 1. Paksa semua teks umum jadi putih */
-        .stApp, .stMarkdown p, h1, h2, h3, label, [data-testid="stSidebar"] * {
+        /* Paksa SEMUA teks dashboard & sidebar jadi putih */
+        .stApp, [data-testid="stSidebar"] *, .stMarkdown p, h1, h2, h3, label {
             color: #FFFFFF !important;
         }
 
-        /* 2. FIX BUTTON STATUS (OK, FAULTY, MISSING) */
-        /* Kita target button dalam main content area sahaja */
+        /* FIX BUTTON STATUS: Tulisan HITAM atas background PUTIH */
         .main .stButton > button {
             color: #000000 !important; 
             background-color: #FFFFFF !important;
-            font-weight: 800 !important;
-            border: 2px solid #a29bfe !important;
+            font-weight: 900 !important;
+            border: 2px solid #6c5ce7 !important;
         }
 
-        /* 3. FIX BUTTON LOG OUT (Dalam Sidebar) */
-        /* Kita paksa tulisan Log Out jadi putih balik sebab background dia gelap/merah */
+        /* FIX LOG OUT BUTTON: Tulisan PUTIH atas background GELAP */
         [data-testid="stSidebar"] .stButton > button {
             color: #FFFFFF !important;
-            background-color: rgba(255, 255, 255, 0.1) !important;
+            background-color: rgba(255, 75, 75, 0.2) !important;
             border: 1px solid #ff4b4b !important;
         }
-        
-        /* Hover effect untuk Log Out */
-        [data-testid="stSidebar"] .stButton > button:hover {
-            background-color: #ff4b4b !important;
-            color: #FFFFFF !important;
-        }
-
-        /* 4. Metric & Table Fix */
-        [data-testid="stMetricValue"] { color: #FFFFFF !important; }
-        .stDataFrame { background-color: transparent !important; }
         </style>
     """
 else:
     bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7)"
     sidebar_bg = "rgba(255, 255, 255, 0.9)"
     text_color = "#1e293b"
+    plotly_theme = "plotly_white"
     custom_dark_css = ""
 
-# Apply CSS
 st.markdown(custom_dark_css, unsafe_allow_html=True)
+st.markdown(f"""
+    <style>
+    .stApp {{ background: {bg_style}; color: {text_color}; }}
+    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
+    .main .block-container {{ padding-bottom: 100px !important; }}
+    footer {{visibility: hidden;}}
+    </style>
+""", unsafe_allow_html=True)
+
 # --- 5. HELPER FUNCTIONS ---
 def color_status(val):
     if val == 'APPROVED': return 'background-color: #d4edda; color: #155724;'
@@ -192,7 +190,6 @@ elif menu_selection == "⚙️ Equipment Status":
             if st.session_state.filter_status != "ALL":
                 df_filtered = df_filtered[df_filtered[selected_month].astype(str).str.strip().str.upper() == st.session_state.filter_status]
 
-            # Charts
             col_chart1, col_chart2 = st.columns([0.4, 0.6])
             with col_chart1:
                 fig_donut = px.pie(df_working, names=selected_month, hole=0.55, template=plotly_theme, title="Status Overall",
@@ -206,13 +203,11 @@ elif menu_selection == "⚙️ Equipment Status":
                                       color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}, barmode='group')
                     st.plotly_chart(fig_type, use_container_width=True)
 
-            # Table with Remark Logic
             st.divider()
             search_eq = st.text_input("🔍 Quick Search (SN, Name, IP):", key="search_eq_box")
             if search_eq:
                 df_filtered = df_filtered[df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
 
-            # Remark Quarter Logic
             year_match = re.search(r'202\d', selected_month)
             curr_yr = year_match.group(0) if year_match else "2026"
             m_up = selected_month.upper()
@@ -237,7 +232,7 @@ elif menu_selection == "⚙️ Equipment Status":
 
 # --- 8. FOOTER (GLOBAL) ---
 st.markdown(f"""
-    <div style="position: fixed; left: 0; bottom: 0; width: 100%; background-color: {sidebar_bg}; color: {text_color}; text-align: center; padding: 10px; z-index: 9999; border-top: 1px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
-        <p>© 2026 GreenFinder VTMS Admin & Inventory Dashboard. All rights reserved.</p>
+    <div style="position: fixed; left: 0; bottom: 0; width: 100%; background-color: {sidebar_bg}; text-align: center; padding: 10px; z-index: 9999; border-top: 1px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
+        <p style="color: {text_color} !important;">© 2026 GreenFinder VTMS Admin & Inventory Dashboard. All rights reserved.</p>
     </div>
 """, unsafe_allow_html=True)
