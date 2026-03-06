@@ -233,22 +233,44 @@ elif menu_selection == "⚙️ Equipment Status":
                 st.plotly_chart(fig_donut, use_container_width=True)
 
             with col_chart2:
-                # Histogram mengikut Type (Guna data yang dah ditapis butang)
+                # --- HISTOGRAM BY TYPE DENGAN PECAHAN STATUS ---
                 type_col = next((c for c in df_filtered.columns if c.lower() == 'type'), None)
+                
                 if type_col and not df_filtered.empty:
-                    df_type_count = df_filtered.groupby(type_col).size().reset_index(name='count')
-                    df_type_count = df_type_count.sort_values('count', ascending=False)
+                    # 1. Group data ikut Type DAN Status Bulan yang dipilih
+                    df_type_status = df_filtered.groupby([type_col, selected_month]).size().reset_index(name='count')
+                    
+                    # 2. Susun supaya yang paling banyak jumlahnya duduk depan
+                    df_type_status = df_type_status.sort_values('count', ascending=False)
 
+                    # 3. Bina Carta Bar (Stacked/Grouped)
                     fig_type = px.bar(
-                        df_type_count, x=type_col, y='count',
-                        title=f'Equipment Detail by Type',
-                        color_discrete_sequence=['#0984E3'],
-                        text_auto=True
+                        df_type_status, 
+                        x=type_col, 
+                        y='count',
+                        color=selected_month, # Ini yang akan pecahkan warna OK/Faulty/Missing
+                        title=f'Equipment Detail by Type & Status',
+                        # Set warna supaya konsisten dengan Donut Chart
+                        color_discrete_map={
+                            'OK': '#2ecc71', 
+                            'FAULTY': '#f1c40f', 
+                            'MISSING': '#e74c3c'
+                        },
+                        text_auto=True,
+                        barmode='group' # Gunakan 'group' untuk bar bersebelahan, atau 'stack' untuk bar bertindih
                     )
-                    fig_type.update_layout(xaxis_tickangle=-45, yaxis_title="Quantity")
+                    
+                    fig_type.update_layout(
+                        xaxis_tickangle=-45, 
+                        yaxis_title="Quantity", 
+                        xaxis_title=None,
+                        legend_title="Status",
+                        margin=dict(l=20, r=20, t=50, b=100) # Elakkan nama Type kena potong
+                    )
+                    
                     st.plotly_chart(fig_type, use_container_width=True)
                 else:
-                    st.info("Tiada data untuk dipaparkan dalam carta bar.")
+                    st.info("Sila pilih status atau pastikan data 'Type' wujud untuk melihat perincian.")
             # --- 4. DATA TABLE ---
             st.divider()
             st.subheader(f"📦 Inventory Asset List")
