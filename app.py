@@ -128,47 +128,37 @@ else:
     shadow = "0 10px 25px rgba(0,0,0,0.03)"
     plotly_theme = "plotly_white"
     custom_dark_css = ""
-
-# --- DYNAMIC CSS & LAYOUT FIX ---
+# --- INI BAHAGIAN YANG AKU KEMASKAN (LAYOUT FIX) ---
 st.markdown(f"""
     <style>
-    /* 1. BUANG RUANG KOSONG PALING ATAS */
     .block-container {{
         padding-top: 0.5rem !important;
         padding-bottom: 0rem !important;
     }}
 
-    /* 2. TARIK TAJUK (H1) NAIK LAGI & BESARKAN */
     h1 {{
-        margin-top: 40px !important; /* Tarik naik melepasi header */
-        padding-top: 0px !important;
-        font-size: 3.2rem !important; /* Saiz besar */
+        margin-top: 45px !important; 
+        font-size: 3.2rem !important;
         font-weight: 800 !important;
-        line-height: 1.2 !important;
     }}
 
-    /* 3. SEMBUNYIKAN HEADER ASAL STREAMLIT */
-   /* GANTI bahagian header[data-testid="stHeader"] kau dengan yang ini */
-header[data-testid="stHeader"] {
-    background-color: rgba(0,0,0,0) !important; /* Buat dia transparent */
-    color: #a29bfe !important; /* Warna butang menu (ungu terang) */
-}
+    /* FIX HEADER UNTUK PHONE - SUPAYA MENU TAK HILANG */
+    header[data-testid="stHeader"] {{
+        background-color: rgba(0,0,0,0) !important;
+        visibility: visible !important;
+    }}
 
-/* Tambah ini supaya butang sidebar nampak jelas kat phone */
-button[data-testid="baseButton-headerNoPadding"] {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border-radius: 10px !important;
-    margin: 5px !important;
-}
+    button[data-testid="baseButton-headerNoPadding"] {{
+        color: #a29bfe !important; 
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        border-radius: 10px !important;
+    }}
 
-    /* 4. TEMA WARNA & BACKGROUND */
     .stApp {{ background: {bg_style}; font-family: 'Inter', sans-serif; color: {text_color}; }}
     {custom_dark_css}
     
     [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
     [data-testid="stMetric"] {{ background: {card_bg} !important; padding: 20px !important; border-radius: 20px !important; box-shadow: {shadow} !important; }}
-    [data-testid="stMetricValue"] {{ color: {text_color} !important; }}
-    [data-testid="stMetricLabel"] {{ color: {text_color} !important; opacity: 0.8; }}
     
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
