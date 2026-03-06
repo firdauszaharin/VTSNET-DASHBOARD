@@ -223,43 +223,8 @@ elif menu_selection == "⚙️ Equipment Status":
                     fig_site_hist.update_layout(yaxis_title="Quantity", xaxis_title="Location")
                     st.plotly_chart(fig_site_hist, use_container_width=True)
 
-            # --- HISTOGRAM CATEGORY (MERUJUK KOLUM C / TYPE) ---
-            # --- 3. DETAILED INDIVIDUAL EQUIPMENT CHART ---
-            st.markdown(f"### 📊 Individual Equipment Health: {selected_site}")
-            
-            # Kita cari kolum 'Equipment' atau 'Name' (Kolum yang simpan 'Workstation 1', 'Monitor 1', etc)
-            equip_col = next((c for c in df_plot.columns if c.lower() in ['equipment', 'item', 'nama']), None)
-            
-            if equip_col:
-                # Kita tapis data yang hanya ada status (OK/FAULTY/MISSING)
-                df_detail = df_plot[df_plot[selected_month].isin(['OK', 'FAULTY', 'MISSING'])].copy()
-                
-                # Sort: FAULTY & MISSING duduk atas sekali supaya nampak dulu
-                df_detail['priority'] = df_detail[selected_month].map({'FAULTY': 0, 'MISSING': 1, 'OK': 2})
-                df_detail = df_detail.sort_values('priority')
-
-                fig_indiv = px.bar(
-                    df_detail, 
-                    y=equip_col, 
-                    x=[selected_month], # Trigger bar tunggal
-                    color=selected_month,
-                    orientation='h',
-                    title=f"Detailed Status per Unit - {selected_month}",
-                    color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'},
-                    text_auto=True,
-                    height=max(400, len(df_detail) * 25) # Height dinamik ikut jumlah barang
-                )
-                
-                fig_indiv.update_layout(
-                    xaxis_title="Current Status",
-                    yaxis_title=None,
-                    showlegend=True,
-                    margin=dict(l=150, r=20, t=40, b=20) # Margin kiri besar sikit untuk nama Workstation/Monitor
-                )
-                
-                st.plotly_chart(fig_indiv, use_container_width=True)
-            else:
-                st.error("Ralat: Kolum 'Equipment' tidak dijumpai. Sila pastikan header di Sheet anda bernama 'Equipment'.")
+            # --- HISTOGRAM CATEGORY (MERUJUK KOLUM C / TYPE Buang) ---
+          
             
             # 4. DATA TABLE
             st.divider()
