@@ -23,7 +23,7 @@ with st.sidebar:
 
 # --- DYNAMIC CSS LOGIC (FIX VISIBILITY & SIDEBAR) ---
 if dark_mode:
-    bg_style = "radial-gradient(circle at top right,#6C5CE7,#2f3640,#6C5CE7)"
+    bg_style = "radial-gradient(circle at top right,#1e272e, #0f172a)"
     sidebar_bg = "rgba(30, 39, 46, 0.95)"
     card_bg = "#1e293b"
     text_color = "#FFFFFF"
