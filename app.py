@@ -195,8 +195,6 @@ with st.sidebar:
     else:
         st.markdown("### GreenFinder VTMS")
 
-    st.markdown("### GreenFinder VTMS")
-
     st.divider()
     st.markdown(f"🕒 **Last Sync (MYT):** {waktu_msia.strftime('%d-%m-%Y %H:%M:%S')}")
     st.divider()
