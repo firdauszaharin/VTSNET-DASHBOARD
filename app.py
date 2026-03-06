@@ -5,6 +5,7 @@ from datetime import datetime
 import pytz
 import re
 import os
+from streamlit_autorefresh import st_autorefresh
 
 # 1. PAGE CONFIGURATION
 st.set_page_config(
@@ -13,13 +14,44 @@ st.set_page_config(
     page_icon="📊",
     initial_sidebar_state="expanded"
 )
+# --- 1. AUTO REFRESH (5 MINIT) ---
+st_autorefresh(interval=300000, key="vts_refresh")
 
+# --- 2. LOGIN SECURITY (USING SECRETS) ---
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+# Paparan Login jika belum authenticated
+if not st.session_state.authenticated:
+    with st.sidebar:
+        st.title("🔒 Project Access")
+        pwd = st.text_input("Project Access Code:", type="password")
+        
+        # Ambil password dari Streamlit Secrets (Key: PROJECT_PASSWORD)
+        # Default backup jika Secrets belum di-set: "9660"
+        correct_password = st.secrets.get("PROJECT_PASSWORD", "9660")
+        
+        if st.button("Unlock Dashboard"):
+            if pwd == correct_password:
+                st.session_state.authenticated = True
+                st.rerun()
+            else:
+                st.error("Wrong Password!")
+        
+        st.info("Authorized Personnel Only.")
+    st.stop() # Berhenti di sini, jangan tunjuk data kat bawah selagi tak login
+
+# --- 3. LOG OUT BUTTON (Letak dalam sidebar sedia ada kau) ---
+# (Kod ni selitkan dalam 'with st.sidebar' yang kau dah ada dalam kod asal)
 # --- SIDEBAR: THEME TOGGLE ---
 with st.sidebar:
     if os.path.exists("logo.png"):
         st.image("logo.png", use_container_width=True)
     dark_mode = st.toggle("Dark Mode View", value=False)
     st.divider()
+    if st.button("🔒 Log Out"):
+        st.session_state.authenticated = False
+        st.rerun()
 
 # --- DYNAMIC CSS LOGIC (FIX VISIBILITY & SIDEBAR) ---
 if dark_mode:
