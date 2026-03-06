@@ -31,16 +31,18 @@ if dark_mode:
     plotly_theme = "plotly_dark"
     
     custom_dark_css = f"""
-        /* 1. SIDEBAR & TEXT GENERAL */
-        [data-testid="stSidebar"] {{ color: {text_color} !important; }}
-        [data-testid="stSidebar"] .stWidgetLabel p, 
-        [data-testid="stSidebar"] label,
-        [data-testid="stSidebar"] span {{ 
-            color: {text_color} !important; 
-            opacity: 1 !important; 
+        /* 1. FIX KOTAK INPUT & SELECTBOX (Jan 2025 / ALL SITES) */
+        /* Kita paksa kotak tu jadi gelap sikit */
+        div[data-baseweb="select"] > div, 
+        div[data-baseweb="input"] > div,
+        input {{
+            background-color: #1e293b !important; 
+            color: white !important;
+            -webkit-text-fill-color: white !important;
+            border: 1px solid #3e4e63 !important;
         }}
 
-        * 2. FIX BUTANG (🟢 OK, 🟡 FAULTY, etc.) */
+        /* 2. FIX BUTANG (🟢 OK, 🟡 FAULTY, etc.) */
         /* Gambar ke-2 kau tunjuk butang ni jadi putih melepak. Kita paksa dia jadi gelap. */
         .stButton > button {{
             background-color: #1e293b !important;
@@ -54,23 +56,27 @@ if dark_mode:
             color: #0984E3 !important;
         }}
 
-        /* 3. FIX DROPDOWN LIST (Masa menu tu terbuka/tersembul keluar) */
-        div[data-baseweb="popover"] ul {{
-            background-color: #262730 !important;
-            border: 1px solid #454d5e !important;
+        /* 3. FIX SIDEBAR TEXT (BAGI TERANG) */
+        [data-testid="stSidebar"] {{ color: white !important; }}
+        [data-testid="stSidebar"] .stWidgetLabel p, 
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] span {{ 
+            color: white !important; 
+            opacity: 1 !important; 
         }}
-        
+
+        /* 4. FIX DROPDOWN LIST (Masa menu terbuka) */
+        div[data-baseweb="popover"] ul {{
+            background-color: #1e293b !important;
+        }}
         div[data-baseweb="popover"] li {{
             color: white !important;
         }}
 
-        div[data-baseweb="popover"] li:hover {{
-            background-color: #0984E3 !important;
-        }}
-        
-        /* 4. METRIC BOX TEXT */
+        /* 5. METRIC & TITLES */
+        .stWidgetLabel p, label {{ color: white !important; opacity: 1 !important; }}
         [data-testid="stMetricValue"] {{ color: white !important; }}
-        [data-testid="stMetricLabel"] p {{ color: white !important; }}
+    """
 
         /* 5. SIDEBAR FIX */
         [data-testid="stSidebar"] {{ color: {text_color} !important; }}
