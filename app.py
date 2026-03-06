@@ -100,9 +100,22 @@ if dark_mode:
             margin-top: 20px !important;
             margin-bottom: 20px !important;
         }
+        /* 3. BAGI NAMPAK LINE & BORDER (GLOW EFFECT) */
+        hr {
+            border-top: 2px solid rgba(162, 155, 254, 0.5) !important; /* Warna purple cair */
+            margin: 20px 0 !important;
+        }
         
+        /* Border keliling kotak Metric supaya nampak 'line' pemisah */
+        [data-testid="stMetric"] {
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+            border-radius: 12px !important;
+            padding: 20px !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
 
-        /* 3. FIX LOG OUT BUTTON (Dalam Sidebar) */
+        /* 3.1 FIX LOG OUT BUTTON (Dalam Sidebar) */
         /* Kita kekalkan tulisan putih supaya nampak atas butang merah */
         section[data-testid="stSidebar"] .stButton > button {
             color: #FFFFFF !important;
