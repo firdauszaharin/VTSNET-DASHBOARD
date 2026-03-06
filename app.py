@@ -244,3 +244,26 @@ elif menu_selection == "⚙️ Equipment Status":
                         subset=[selected_month] if selected_month in display_cols else None
                     ), use_container_width=True, hide_index=True
                 )
+# --- FOOTER SECTION ---
+st.markdown(f"""
+    <style>
+    .footer {{
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: {sidebar_bg}; /* Ikut warna sidebar supaya matching */
+        color: {text_color};
+        text-align: center;
+        padding: 10px;
+        font-size: 12px;
+        letter-spacing: 1px;
+        backdrop-filter: blur(10px); /* Efek glassmorphism */
+        z-index: 100;
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }}
+    </style>
+    <div class="footer">
+        <p>© 2026 GreenFinder VTMS Admin & Inventory Dashboard. All rights reserved.</p>
+    </div>
+""", unsafe_allow_html=True)
