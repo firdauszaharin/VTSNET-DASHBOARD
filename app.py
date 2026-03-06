@@ -23,11 +23,12 @@ with st.sidebar:
 
 # --- DYNAMIC CSS LOGIC (FIX VISIBILITY & SIDEBAR) ---
 if dark_mode:
-    bg_style = "radial-gradient(circle at top right,#1e272e, #0f172a)"
-    sidebar_bg = "rgba(30, 39, 46, 0.95)"
-    card_bg = "#1e293b"
-    text_color = "#FFFFFF"
-    shadow = "0 10px 25px rgba(0,0,0,0.5)"
+    # --- TEMA UNGU GELAP (PREMIUM) ---
+    bg_style = "radial-gradient(circle at top right, #2d3436, #1a0a2e, #0f0817)" # Ungu Midnight
+    sidebar_bg = "rgba(26, 10, 46, 0.95)" # Ungu pekat untuk sidebar
+    card_bg = "#24123a"                 # Ungu untuk kotak Metric
+    text_color = "#FFFFFF"              # Tulisan kekal Putih
+    shadow = "0 10px 25px rgba(108, 92, 231, 0.2)" # Shadow ada glow ungu sikit
     plotly_theme = "plotly_dark"
     
     custom_dark_css = f"""
