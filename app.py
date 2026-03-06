@@ -281,6 +281,6 @@ elif menu_selection == "⚙️ Equipment Status":
 # --- 8. FOOTER (GLOBAL) ---
 st.markdown(f"""
     <div style="position: fixed; left: 0; bottom: 0; width: 100%; background-color: {sidebar_bg}; text-align: center; padding: 10px; z-index: 9999; border-top: 1px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
-        <p style="color: {text_color} !important;">© 2026 GreenFinder VTMS Admin & Inventory Dashboard. All rights reserved.</p>
+        <p style="color: {text_color} !important;">© 2026 GreenFinder VTMS Dashboard. All rights reserved.</p>
     </div>
 """, unsafe_allow_html=True)
