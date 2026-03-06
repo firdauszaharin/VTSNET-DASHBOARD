@@ -218,9 +218,7 @@ with st.sidebar:
 # ========= 7. HEADER (BRANDING + CLOCK) =========
 col_logo, col_title, col_clock = st.columns([1, 3, 2])
 
-with col_logo:
-    if os.path.exists("logo.png"):
-        st.image("logo.png", use_container_width=False)
+
 
 with col_title:
     st.markdown(
