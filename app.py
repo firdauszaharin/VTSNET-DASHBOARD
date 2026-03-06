@@ -52,7 +52,6 @@ if dark_mode:
     bg_style = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)" 
     sidebar_bg = "rgba(15, 10, 25, 0.98)"
     card_bg = "rgba(255, 255, 255, 0.05)"
-    footer_bg = "rgba(30, 20, 50, 0.9)" # Warna gelap sikit untuk footer
     text_color = "#FFFFFF"
     plotly_theme = "plotly_dark"
     
@@ -63,20 +62,21 @@ if dark_mode:
             color: #FFFFFF !important;
         }
         
-        /* FIX BUTTONS: Paksa tulisan dalam button jadi HITAM supaya nampak atas background putih */
-        .stButton > button {
-            color: #1a0a2e !important; 
-            font-weight: bold !important;
-            background-color: #ffffff !important;
-            border: 1px solid #a29bfe !important;
+        /* FIX BUTTONS: Paksa tulisan dalam button jadi warna GELAP */
+        /* Kita guna selector yang sangat spesifik supaya Streamlit tak boleh override */
+        div.stButton > button {
+            color: #000000 !important; 
+            background-color: #FFFFFF !important;
+            border: 2px solid #a29bfe !important;
+            font-weight: 800 !important;
+            text-transform: uppercase;
         }
 
-        /* FIX FOOTER TEXT: Paksa jadi putih terang */
-        .custom-footer-text {
-            color: #FFFFFF !important;
-            font-size: 13px !important;
-            font-weight: 500 !important;
-            letter-spacing: 0.5px;
+        /* Hover effect supaya user tahu boleh klik */
+        div.stButton > button:hover {
+            border-color: #6c5ce7 !important;
+            background-color: #f0f0f0 !important;
+            color: #000000 !important;
         }
 
         /* Metric Fix */
@@ -88,21 +88,17 @@ else:
     bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7)"
     sidebar_bg = "rgba(255, 255, 255, 0.9)"
     card_bg = "white"
-    footer_bg = "rgba(255, 255, 255, 0.9)"
     text_color = "#1e293b"
     plotly_theme = "plotly_white"
-    custom_dark_css = """
-        <style>
-        .custom-footer-text { color: #1e293b !important; }
-        </style>
-    """
+    custom_dark_css = ""
 
+# Apply CSS
 st.markdown(custom_dark_css, unsafe_allow_html=True)
 
 st.markdown(f"""
     <style>
     .stApp {{ background: {bg_style}; color: {text_color}; }}
-    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; }}
+    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
     .main .block-container {{ padding-bottom: 100px !important; }}
     footer {{visibility: hidden;}}
     </style>
