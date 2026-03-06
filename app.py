@@ -72,12 +72,6 @@ if not st.session_state.authenticated:
     with col_mid:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         
-        # Branding Header
-        if os.path.exists("logo.png"):
-            st.image("logo.png", width=180)
-        else:
-            st.markdown('<p class="login-title">VTSNET PROJECT</p>', unsafe_allow_html=True)
-        
         st.markdown('<p class="login-subtitle">Admin & Asset Management Portal 2026</p>', unsafe_allow_html=True)
         
         # Input Section
