@@ -38,41 +38,33 @@ st.set_page_config(
 msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
 waktu_msia = datetime.now(msia_tz)
 
-# 2. MODERN CSS (VERSI FIX SIDEBAR BUTTON)
+# 2. DARK MODE MODERN CSS
 st.markdown("""
     <style>
-    /* Latar Belakang & Font */
     .stApp { 
-        background: radial-gradient(circle at top right, #f8faff, #eef2f7,#f8faff); 
+        background-color: #0E1117;
+        background-image: radial-gradient(circle at top right, #1a2a6c, #0E1117, #0E1117);
+        color: #E0E0E0;
         font-family: 'Inter', sans-serif; 
     }
-
-    /* Glassmorphism Sidebar */
     [data-testid="stSidebar"] { 
-        background-color: rgba(255, 255, 255, 0.8) !important; 
-        backdrop-filter: blur(10px); 
+        background-color: rgba(20, 26, 35, 0.95) !important; 
+        backdrop-filter: blur(10px);
+        border-right: 1px solid rgba(255,255,255,0.1);
     }
-
-    /* Metric Cards */
     [data-testid="stMetric"] { 
-        background: white !important; 
+        background: #1D232D !important; 
         padding: 20px !important; 
         border-radius: 20px !important; 
-        box-shadow: 0 10px 25px rgba(0,0,0,0.03) !important; 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+        border: 1px solid rgba(255,255,255,0.05);
     }
-
-    /* --- FIX: KEKALKAN BUTANG SIDEBAR TAPI SOROK HEADER PUTIH --- */
-    header[data-testid="stHeader"] {
-        background-color: rgba(0,0,0,0) !important; /* Buat header lutsinar */
-        color: #0984E3 !important; /* Warnakan butang menu */
-    }
+    [data-testid="stMetricValue"] { color: #FFFFFF !important; }
+    [data-testid="stMetricLabel"] { color: #A0A0A0 !important; }
     
-    /* Pastikan butang "Open Sidebar" (Chevron) sentiasa nampak */
-    .st-emotion-cache-hp888a {
-        color: #0984E3 !important;
+    header[data-testid="stHeader"] {
+        background-color: rgba(0,0,0,0) !important;
     }
-
-    /* Sembunyikan menu Streamlit (tiga titik) & footer sahaja */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     </style>
