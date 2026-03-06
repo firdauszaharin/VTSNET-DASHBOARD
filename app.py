@@ -52,42 +52,32 @@ if dark_mode:
     bg_style = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)" 
     sidebar_bg = "rgba(15, 10, 25, 0.98)"
     text_color = "#FFFFFF"
-    plotly_theme = "plotly_dark"
     
     custom_dark_css = """
         <style>
-        /* 1. Paksa SEMUA teks dashboard & sidebar jadi putih */
+        /* 1. Teks umum & Sidebar */
         .stApp, [data-testid="stSidebar"] *, .stMarkdown p, h1, h2, h3, label {
             color: #FFFFFF !important;
         }
 
-        /* 2. FIX SEMUA BUTTON DALAM MAIN AREA (OK, FAULTY, MISSING, SHOW ALL) */
-        /* Kita guna 'div[data-testid="stVerticalBlock"]' untuk target area content sahaja */
+        /* 2. FIX BUTTON STATUS (OK/FAULTY/MISSING) */
         div[data-testid="stVerticalBlock"] .stButton > button {
             color: #000000 !important; 
             background-color: #FFFFFF !important;
             font-weight: 900 !important;
-            border: 2px solid #FFFFFF !important;
-            opacity: 1 !important;
         }
 
-        /* Effect bila mouse lalu (Hover) */
-        div[data-testid="stVerticalBlock"] .stButton > button:hover {
-            background-color: #f0f2f6 !important;
-            color: #000000 !important;
-            border: 2px solid #6c5ce7 !important;
+        /* 3. FIX TABLE/DATAFRAME (Sangat Penting!) */
+        /* Kita benarkan warna dalam sel table kekal ikut 'style.map' kita */
+        [data-testid="stTable"] td, [data-testid="stDataFrame"] td {
+            font-weight: 500;
         }
-
-        /* 3. FIX LOG OUT BUTTON (Dalam Sidebar) */
-        /* Kita kekalkan tulisan putih supaya nampak atas butang merah */
+        
+        /* 4. FIX LOG OUT BUTTON */
         section[data-testid="stSidebar"] .stButton > button {
             color: #FFFFFF !important;
             background-color: rgba(255, 75, 75, 0.2) !important;
             border: 1px solid #ff4b4b !important;
-        }
-        
-        section[data-testid="stSidebar"] .stButton > button:p {
-            color: #FFFFFF !important;
         }
         </style>
     """
@@ -95,22 +85,17 @@ else:
     bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7)"
     sidebar_bg = "rgba(255, 255, 255, 0.9)"
     text_color = "#1e293b"
-    plotly_theme = "plotly_white"
     custom_dark_css = ""
 
 st.markdown(custom_dark_css, unsafe_allow_html=True)
-st.markdown(f"""
-    <style>
-    .stApp {{ background: {bg_style}; color: {text_color}; }}
-    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
-    .main .block-container {{ padding-bottom: 100px !important; }}
-    footer {{visibility: hidden;}}
-    </style>
-""", unsafe_allow_html=True)
-# --- 5. HELPER FUNCTIONS ---
+
+# --- 5. HELPER FUNCTIONS (Warna Table) ---
 def color_status(val):
-    if val == 'APPROVED': return 'background-color: #d4edda; color: #155724;'
-    if val == 'REJECTED': return 'background-color: #f8d7da; color: #721c24;'
+    # Kita paksa warna teks jadi HITAM (#000000) supaya nampak atas hijau/merah
+    if val == 'APPROVED': 
+        return 'background-color: #d4edda; color: #000000; font-weight: bold;'
+    if val == 'REJECTED': 
+        return 'background-color: #f8d7da; color: #000000; font-weight: bold;'
     return ''
 
 @st.cache_data(ttl=60)
