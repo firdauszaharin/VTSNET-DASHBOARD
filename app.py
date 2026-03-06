@@ -120,7 +120,7 @@ with st.sidebar:
     else:
         search_report = ""
         search_staff = ""
-        search_id = "ALL IDs"
+        search_id = ""
 
 st.title("VTSNET Management Dashboard")
 
