@@ -246,7 +246,7 @@ elif menu_selection == "⚙️ Equipment Status":
                     names=selected_month, 
                     hole=0.6, 
                     template=plotly_theme,
-                    title="📊 Status Overall",
+                    title="Status Overall",
                     color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}
                 )
                 
@@ -267,7 +267,7 @@ elif menu_selection == "⚙️ Equipment Status":
                         y='count', 
                         color=selected_month, 
                         template=plotly_theme,
-                        title=f"📈 Analisis Equipment: {selected_month}",
+                        title=f"Analysis Equipment: {selected_month}",
                         color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}, 
                         barmode='group'
                     )
