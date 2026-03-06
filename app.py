@@ -19,7 +19,7 @@ with st.sidebar:
     if os.path.exists("logo.png"):
         st.image("logo.png", use_container_width=True)
     
-    st.title("🌓 SETTINGS")
+    
     dark_mode = st.toggle("Dark Mode View", value=False)
     st.divider()
 
