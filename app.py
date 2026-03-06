@@ -107,7 +107,7 @@ st.markdown(f"""
 
     /* 2. TARIK TAJUK (H1) NAIK LAGI & BESARKAN */
     h1 {{
-        margin-top: 10px !important; /* Tarik naik melepasi header */
+        margin-top: 40px !important; /* Tarik naik melepasi header */
         padding-top: 0px !important;
         font-size: 3.5rem !important; /* Saiz besar */
         font-weight: 800 !important;
