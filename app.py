@@ -18,14 +18,43 @@ st.set_page_config(
 msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
 waktu_msia = datetime.now(msia_tz)
 
-# 2. MODERN CSS
+# 2. MODERN CSS (VERSI FIX SIDEBAR BUTTON)
 st.markdown("""
     <style>
-    .stApp { background: radial-gradient(circle at top right, #f8faff, #eef2f7,#f8faff); font-family: 'Inter', sans-serif; }
-    [data-testid="stSidebar"] { background-color: rgba(255, 255, 255, 0.8) !important; backdrop-filter: blur(10px); }
-    [data-testid="stMetric"] { background: white !important; padding: 20px !important; border-radius: 20px !important; box-shadow: 0 10px 25px rgba(0,0,0,0.03) !important; }
-    header { visibility: hidden; }
-    footer { visibility: hidden; }
+    /* Latar Belakang & Font */
+    .stApp { 
+        background: radial-gradient(circle at top right, #f8faff, #eef2f7,#f8faff); 
+        font-family: 'Inter', sans-serif; 
+    }
+
+    /* Glassmorphism Sidebar */
+    [data-testid="stSidebar"] { 
+        background-color: rgba(255, 255, 255, 0.8) !important; 
+        backdrop-filter: blur(10px); 
+    }
+
+    /* Metric Cards */
+    [data-testid="stMetric"] { 
+        background: white !important; 
+        padding: 20px !important; 
+        border-radius: 20px !important; 
+        box-shadow: 0 10px 25px rgba(0,0,0,0.03) !important; 
+    }
+
+    /* --- FIX: KEKALKAN BUTANG SIDEBAR TAPI SOROK HEADER PUTIH --- */
+    header[data-testid="stHeader"] {
+        background-color: rgba(0,0,0,0) !important; /* Buat header lutsinar */
+        color: #0984E3 !important; /* Warnakan butang menu */
+    }
+    
+    /* Pastikan butang "Open Sidebar" (Chevron) sentiasa nampak */
+    .st-emotion-cache-hp888a {
+        color: #0984E3 !important;
+    }
+
+    /* Sembunyikan menu Streamlit (tiga titik) & footer sahaja */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
 
