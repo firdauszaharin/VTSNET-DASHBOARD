@@ -237,46 +237,46 @@ elif menu_selection == "⚙️ Equipment Status":
                 df_filtered = df_filtered[df_filtered[selected_month].astype(str).str.strip().str.upper() == st.session_state.filter_status]
 
             # Charts
-            col_chart1, col_chart2 = st.columns([0.3, 0.7])
+            # Charts
+            col_chart1, col_chart2 = st.columns([0.4, 0.6]) # Adjust ratio sikit bagi donut ada ruang
+            
             with col_chart1:
-    # 1. Tambah title dalam px.pie
-    fig_donut = px.pie(
-        df_working, 
-        names=selected_month, 
-        hole=0.6, 
-        template=plotly_theme,
-        title="Status Overall", # <--- Letak tajuk kat sini
-        color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}
-    )
-    
-    # 2. Update layout untuk center-kan tajuk & legend
-    fig_donut.update_layout(
-        title_x=0.25, # Center-kan tajuk (0.5 adalah tengah-tengah)
-        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5), # Legend kat bawah
-        margin=dict(l=20, r=20, t=50, b=20) # Ruang atas (t=50) untuk tajuk
-    )
-    
-    st.plotly_chart(fig_donut, use_container_width=True)
+                fig_donut = px.pie(
+                    df_working, 
+                    names=selected_month, 
+                    hole=0.6, 
+                    template=plotly_theme,
+                    title="📊 Status Overall",
+                    color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}
+                )
+                
+                fig_donut.update_layout(
+                    title_x=0.2, # Center-kan tajuk relatif kepada donut
+                    showlegend=True,
+                    legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
+                    margin=dict(l=20, r=20, t=60, b=20)
+                )
+                st.plotly_chart(fig_donut, use_container_width=True)
 
-with col_chart2:
-    # 1. Tambah title dalam px.bar
-    type_col = next((c for c in df_filtered.columns if c.lower() == 'type'), None)
-    if type_col and not df_filtered.empty:
-        fig_type = px.bar(
-            df_filtered.groupby([type_col, selected_month]).size().reset_index(name='count'), 
-            x=type_col, 
-            y='count', 
-            color=selected_month, 
-            template=plotly_theme,
-            title=f"Analisis Equipment: {selected_month}", # <--- Letak tajuk kat sini
-            color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}, 
-            barmode='group'
-        )
-        
-        # Center-kan tajuk bar chart
-        fig_type.update_layout(title_x=0.5)
-        
-        st.plotly_chart(fig_type, use_container_width=True)
+            with col_chart2:
+                type_col = next((c for c in df_filtered.columns if c.lower() == 'type'), None)
+                if type_col and not df_filtered.empty:
+                    fig_type = px.bar(
+                        df_filtered.groupby([type_col, selected_month]).size().reset_index(name='count'), 
+                        x=type_col, 
+                        y='count', 
+                        color=selected_month, 
+                        template=plotly_theme,
+                        title=f"📈 Analisis Equipment: {selected_month}",
+                        color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}, 
+                        barmode='group'
+                    )
+                    
+                    fig_type.update_layout(
+                        title_x=0.5, # Bar chart title betul-betul tengah
+                        margin=dict(l=20, r=20, t=60, b=20)
+                    )
+                    st.plotly_chart(fig_type, use_container_width=True)
             # --- INVENTORY ASSET LIST ---
             st.divider()
             st.subheader(f"📦 Inventory Asset List")
