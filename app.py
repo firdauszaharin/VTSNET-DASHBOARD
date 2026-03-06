@@ -115,9 +115,8 @@ with st.sidebar:
             # Ambil senarai ID unik, buang yang kosong (NaN), dan susun ikut urutan
             id_list = ["ALL IDs"] + sorted(df_raw['ID'].astype(str).unique().tolist())
             search_id = st.selectbox("🆔 Select Document ID:", id_list)
+       
         else:
-            search_id = "ALL IDs"
-    else:
         search_report = ""
         search_staff = ""
         search_id = ""
