@@ -224,33 +224,42 @@ elif menu_selection == "⚙️ Equipment Status":
                     st.plotly_chart(fig_site_hist, use_container_width=True)
 
             # --- HISTOGRAM CATEGORY (MERUJUK KOLUM C / TYPE) ---
-            # Kita paksa ambil kolum 'Type' seperti dalam Sheet Kolum C
-            type_col = next((c for c in df_plot.columns if c.lower() == 'type'), None)
+            # --- 3. DETAILED INDIVIDUAL EQUIPMENT CHART ---
+            st.markdown(f"### 📊 Individual Equipment Health: {selected_site}")
             
-            if type_col:
-                st.markdown(f"### 🗂️ Status by Equipment Category (Type)")
+            # Kita cari kolum 'Equipment' atau 'Name' (Kolum yang simpan 'Workstation 1', 'Monitor 1', etc)
+            equip_col = next((c for c in df_plot.columns if c.lower() in ['equipment', 'item', 'nama']), None)
+            
+            if equip_col:
+                # Kita tapis data yang hanya ada status (OK/FAULTY/MISSING)
+                df_detail = df_plot[df_plot[selected_month].isin(['OK', 'FAULTY', 'MISSING'])].copy()
                 
-                # Buat histogram mengikut jenis peralatan (Kolum C)
-                fig_type = px.histogram(
-                    df_plot, 
-                    x=type_col, 
-                    color=selected_month, 
-                    barmode='group',
-                    title=f'Detailed Status by Equipment Type - {selected_month}',
+                # Sort: FAULTY & MISSING duduk atas sekali supaya nampak dulu
+                df_detail['priority'] = df_detail[selected_month].map({'FAULTY': 0, 'MISSING': 1, 'OK': 2})
+                df_detail = df_detail.sort_values('priority')
+
+                fig_indiv = px.bar(
+                    df_detail, 
+                    y=equip_col, 
+                    x=[selected_month], # Trigger bar tunggal
+                    color=selected_month,
+                    orientation='h',
+                    title=f"Detailed Status per Unit - {selected_month}",
                     color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'},
                     text_auto=True,
-                    category_orders={type_col: sorted(df_plot[type_col].unique())} # Susun ikut abjad
+                    height=max(400, len(df_detail) * 25) # Height dinamik ikut jumlah barang
                 )
                 
-                fig_type.update_layout(
-                    xaxis_title="Equipment Type (Column C)",
-                    yaxis_title="Total Units",
-                    legend_title="Status"
+                fig_indiv.update_layout(
+                    xaxis_title="Current Status",
+                    yaxis_title=None,
+                    showlegend=True,
+                    margin=dict(l=150, r=20, t=40, b=20) # Margin kiri besar sikit untuk nama Workstation/Monitor
                 )
                 
-                st.plotly_chart(fig_type, use_container_width=True)
+                st.plotly_chart(fig_indiv, use_container_width=True)
             else:
-                st.error("Ralat: Kolum 'Type' (Kolum C) tidak dijumpai dalam Google Sheets. Sila pastikan header bernama 'Type'.")
+                st.error("Ralat: Kolum 'Equipment' tidak dijumpai. Sila pastikan header di Sheet anda bernama 'Equipment'.")
             
             # 4. DATA TABLE
             st.divider()
