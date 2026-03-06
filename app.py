@@ -14,55 +14,57 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- SIDEBAR SETTINGS (DUAL MODE TOGGLE) ---
+# --- SIDEBAR THEME TOGGLE ---
 with st.sidebar:
     if os.path.exists("logo.png"):
         st.image("logo.png", use_container_width=True)
     
-    st.title("🌓 THEME SETTINGS")
-    # Toggle untuk Dual Mode
+    st.title("🌓 SETTINGS")
+    # Switch untuk Dual Mode
     dark_mode = st.toggle("Dark Mode View", value=False)
     st.divider()
 
-# --- CSS LOGIC FOR DUAL MODE ---
+# --- DYNAMIC CSS LOGIC ---
 if dark_mode:
-    # THEME DARK (MOD GELAP)
-    bg_style = "radial-gradient(circle at top right, #1e272e, #0f172a)"
+    # Warna untuk MOD GELAP
+    primary_bg = "radial-gradient(circle at top right, #1e272e, #0f172a)"
+    sidebar_bg = "rgba(30, 39, 46, 0.95)"
     card_bg = "#1e293b"
-    text_color = "#f8fafc"
-    metric_shadow = "rgba(0,0,0,0.3)"
+    text_main = "#f8fafc"
+    shadow = "0 10px 25px rgba(0,0,0,0.5)"
+    plotly_template = "plotly_dark"
 else:
-    # THEME LIGHT (MOD ASAL)
-    bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7,#f8faff)"
+    # Warna untuk MOD ASAL (LIGHT)
+    primary_bg = "radial-gradient(circle at top right, #f8faff, #eef2f7,#f8faff)"
+    sidebar_bg = "rgba(255, 255, 255, 0.8)"
     card_bg = "white"
-    text_color = "#1e293b"
-    metric_shadow = "rgba(0,0,0,0.03)"
+    text_main = "#1e293b"
+    shadow = "0 10px 25px rgba(0,0,0,0.03)"
+    plotly_template = "plotly_white"
 
 st.markdown(f"""
     <style>
     .stApp {{ 
-        background: {bg_style}; 
+        background: {primary_bg}; 
         font-family: 'Inter', sans-serif; 
-        color: {text_color};
+        color: {text_main};
     }}
 
-    /* Sidebar Glassmorphism */
     [data-testid="stSidebar"] {{ 
-        background-color: {"rgba(15, 23, 42, 0.9)" if dark_mode else "rgba(255, 255, 255, 0.8)"} !important; 
+        background-color: {sidebar_bg} !important; 
         backdrop-filter: blur(10px); 
     }}
 
-    /* Metric Cards */
     [data-testid="stMetric"] {{ 
         background: {card_bg} !important; 
         padding: 20px !important; 
         border-radius: 20px !important; 
-        box-shadow: 0 10px 25px {metric_shadow} !important;
+        box-shadow: {shadow} !important; 
     }}
     
-    /* Warna Text Metric */
-    [data-testid="stMetricValue"] {{ color: {text_color} !important; }}
-    [data-testid="stMetricLabel"] {{ color: {text_color} !important; opacity: 0.8; }}
+    /* Warna text untuk Metric */
+    [data-testid="stMetricValue"] {{ color: {text_main} !important; }}
+    [data-testid="stMetricLabel"] {{ color: {text_main} !important; opacity: 0.8; }}
 
     header[data-testid="stHeader"] {{
         background-color: rgba(0,0,0,0) !important;
@@ -75,14 +77,16 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# --- DATA LOADING & TIMEZONE ---
+# --- SET MALAYSIA TIMEZONE ---
 msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
 waktu_msia = datetime.now(msia_tz)
 
+# 3. DATA LINKS
 SHEET_REPORT_URL = "https://docs.google.com/spreadsheets/d/1cJAnZVhxY_Nqjkfo39ze9DCAIZwWd_6dIdFgw0a2j_s/export?format=csv"
 SHEET_EQUIP_URL = "https://docs.google.com/spreadsheets/d/1IvOj5FqviwhZU7tGdnuh7zK5WUf-RsjUrVVa6HalkVU/export?format=csv"
 PDF_COL = "UPLOAD REPORT" 
 
+# 4. DATA LOAD FUNCTION
 @st.cache_data(ttl=60)
 def load_data(url):
     try:
@@ -93,7 +97,8 @@ def load_data(url):
             data[time_col] = pd.to_datetime(data[time_col], errors='coerce')
             data['Year'] = data[time_col].dt.year
         return data
-    except: return pd.DataFrame()
+    except:
+        return pd.DataFrame()
 
 df_raw = load_data(SHEET_REPORT_URL)
 df_equip = load_data(SHEET_EQUIP_URL)
@@ -103,7 +108,7 @@ def color_status(val):
     if val == 'REJECTED': return 'background-color: #f8d7da; color: #721c24;'
     return ''
 
-# --- SIDEBAR MENU ---
+# --- SIDEBAR NAVIGATION ---
 with st.sidebar:
     st.title("📌 MENU")
     menu_selection = st.radio("Pilih Paparan:", ["📝 Maintenance Reports", "⚙️ Equipment Status"])
@@ -114,7 +119,7 @@ with st.sidebar:
 
 st.title("VTSNET Management Dashboard")
 
-# --- MODULAR CONTENT ---
+# --- PAGE 1: MAINTENANCE REPORTS ---
 if menu_selection == "📝 Maintenance Reports":
     if not df_raw.empty:
         df = df_raw.copy()
@@ -127,22 +132,21 @@ if menu_selection == "📝 Maintenance Reports":
         m3.metric("Pending ⏳", len(df[~df['STATUS'].isin(['APPROVED', 'REJECTED'])]) if 'STATUS' in df.columns else 0)
 
         c1, c2 = st.columns(2)
-        # Plotly theme adjustment
-        p_theme = "plotly_dark" if dark_mode else "plotly_white"
-        
         with c1:
-            st.plotly_chart(px.pie(df, names='STATUS', hole=0.4, title="Status Distribution", 
-                                   template=p_theme, color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}), use_container_width=True)
+            st.plotly_chart(px.pie(df, names='STATUS', hole=0.4, title="Status Distribution", template=plotly_template,
+                                   color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}), use_container_width=True)
         with c2:
-            st.plotly_chart(px.histogram(df, x='REPORT CHECKLIST', color='STATUS', title="Reports by Type",
-                                         template=p_theme, color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}), use_container_width=True)
+            st.plotly_chart(px.histogram(df, x='REPORT CHECKLIST', color='STATUS', title="Reports by Type", template=plotly_template,
+                                         color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}), use_container_width=True)
 
         st.subheader("📋 Record Table")
         styled_df = df.style.map(color_status, subset=['STATUS']) if 'STATUS' in df.columns else df
         st.dataframe(styled_df, use_container_width=True, hide_index=True,
                     column_config={PDF_COL: st.column_config.LinkColumn("Report File", display_text="OPEN PDF 📄")})
-    else: st.info("Waiting for data...")
+    else:
+        st.info("Waiting for data...")
 
+# --- PAGE 2: EQUIPMENT STATUS ---
 elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
         st.subheader("⚙️ Inventory & Equipment Status")
@@ -151,28 +155,31 @@ elif menu_selection == "⚙️ Equipment Status":
         
         if month_cols:
             c1, c2 = st.columns(2)
-            with c1: selected_month = st.selectbox("📅 Select Month:", month_cols, index=len(month_cols)-1)
+            with c1:
+                selected_month = st.selectbox("📅 Select Month:", month_cols, index=len(month_cols)-1)
             
             df_working = df_equip.copy()
             if site_col:
                 unique_sites = ["ALL SITES"] + sorted(df_working[site_col].dropna().unique().tolist())
-                with c2: selected_site = st.selectbox("🏗️ Select Site:", unique_sites)
+                with c2:
+                    selected_site = st.selectbox("🏗️ Select Site:", unique_sites)
                 if selected_site != "ALL SITES":
                     df_working = df_working[df_working[site_col] == selected_site]
 
             st.divider()
             status_series = df_working[selected_month].astype(str).str.strip().str.upper()
             
-            if 'filter_status' not in st.session_state: st.session_state.filter_status = "ALL"
+            if 'filter_status' not in st.session_state:
+                st.session_state.filter_status = "ALL"
 
             col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-            with col_m1: 
+            with col_m1:
                 if st.button(f"🟢 OK: {len(df_working[status_series == 'OK'])}", use_container_width=True): st.session_state.filter_status = "OK"
-            with col_m2: 
+            with col_m2:
                 if st.button(f"🟡 FAULTY: {len(df_working[status_series == 'FAULTY'])}", use_container_width=True): st.session_state.filter_status = "FAULTY"
-            with col_m3: 
+            with col_m3:
                 if st.button(f"🔴 MISSING: {len(df_working[status_series == 'MISSING'])}", use_container_width=True): st.session_state.filter_status = "MISSING"
-            with col_m4: 
+            with col_m4:
                 if st.button("🔵 SHOW ALL", use_container_width=True): st.session_state.filter_status = "ALL"
 
             df_filtered = df_working.copy()
@@ -180,13 +187,11 @@ elif menu_selection == "⚙️ Equipment Status":
             if st.session_state.filter_status != "ALL":
                 df_filtered = df_filtered[df_filtered[selected_month] == st.session_state.filter_status]
 
-            # Visuals
-            st.markdown(f"### 🎯 Overview: {selected_site}")
+            st.markdown(f"### 🎯 Performance Overview: {selected_site}")
             col_chart1, col_chart2 = st.columns([0.3, 0.7])
-            p_theme = "plotly_dark" if dark_mode else "plotly_white"
             
             with col_chart1:
-                fig_donut = px.pie(df_working, names=selected_month, hole=0.6, template=p_theme,
+                fig_donut = px.pie(df_working, names=selected_month, hole=0.6, template=plotly_template,
                                    color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'})
                 st.plotly_chart(fig_donut, use_container_width=True)
 
@@ -194,7 +199,7 @@ elif menu_selection == "⚙️ Equipment Status":
                 type_col = next((c for c in df_filtered.columns if c.lower() == 'type'), None)
                 if type_col and not df_filtered.empty:
                     df_type_status = df_filtered.groupby([type_col, selected_month]).size().reset_index(name='count')
-                    fig_type = px.bar(df_type_status, x=type_col, y='count', color=selected_month, template=p_theme,
+                    fig_type = px.bar(df_type_status, x=type_col, y='count', color=selected_month, template=plotly_template,
                                      color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}, barmode='group')
                     st.plotly_chart(fig_type, use_container_width=True)
 
