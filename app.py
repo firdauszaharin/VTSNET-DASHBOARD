@@ -234,7 +234,7 @@ elif menu_selection == "⚙️ Equipment Status":
 
             with col_chart2:
                 # Histogram mengikut Type (Guna data yang dah ditapis butang)
-                type_col = next((c for c in df_filtered.columns if c.lower() == 'type'), None)
+                type_col = next((c for c in df_filtered.columns if c.lower() == 'type equipment'), None)
                 if type_col and not df_filtered.empty:
                     df_type_count = df_filtered.groupby(type_col).size().reset_index(name='count')
                     df_type_count = df_type_count.sort_values('count', ascending=False)
