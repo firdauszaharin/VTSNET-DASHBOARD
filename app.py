@@ -130,6 +130,8 @@ if menu_selection == "📝 Maintenance Reports":
         df = df_raw.copy()
         if search_report: df = df[df['REPORT CHECKLIST'].str.contains(search_report, case=False, na=False)]
         if search_staff: df = df[df['Name'].str.contains(search_staff, case=False, na=False)]
+        if search_id != "ALL IDs":
+            df = df[df['ID'].astype(str) == search_id]
         
         m1, m2, m3 = st.columns(3)
         m1.metric("Total Reports", len(df))
