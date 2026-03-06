@@ -34,13 +34,18 @@ with st.sidebar:
                 st.error("Wrong Password!")
         st.stop() 
 
-# --- DATA LOAD & TIMEZONE ---
-msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
-waktu_msia = datetime.now(msia_tz)
+# --- FUNCTIONS UTAMA ---
+def color_status_report(val):
+    if val == 'APPROVED': return 'background-color: #d4edda; color: #155724;'
+    if val == 'REJECTED': return 'background-color: #f8d7da; color: #721c24;'
+    return ''
 
-SHEET_REPORT_URL = "https://docs.google.com/spreadsheets/d/1cJAnZVhxY_Nqjkfo39ze9DCAIZwWd_6dIdFgw0a2j_s/export?format=csv"
-SHEET_EQUIP_URL = "https://docs.google.com/spreadsheets/d/1IvOj5FqviwhZU7tGdnuh7zK5WUf-RsjUrVVa6HalkVU/export?format=csv"
-PDF_COL = "UPLOAD REPORT" 
+def color_status_equip(val):
+    v = str(val).upper().strip()
+    if v == 'OK': return 'background-color: #D4EDDA; color: #155724;'
+    if v == 'MISSING': return 'background-color: #F8D7DA; color: #721C24;'
+    if v == 'FAULTY': return 'background-color: #FFF3CD; color: #856404;'
+    return ''
 
 @st.cache_data(ttl=60)
 def load_data(url):
@@ -49,6 +54,14 @@ def load_data(url):
         data.columns = data.columns.str.strip()
         return data
     except: return pd.DataFrame()
+
+# --- DATA LOAD & TIMEZONE ---
+msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
+waktu_msia = datetime.now(msia_tz)
+
+SHEET_REPORT_URL = "https://docs.google.com/spreadsheets/d/1cJAnZVhxY_Nqjkfo39ze9DCAIZwWd_6dIdFgw0a2j_s/export?format=csv"
+SHEET_EQUIP_URL = "https://docs.google.com/spreadsheets/d/1IvOj5FqviwhZU7tGdnuh7zK5WUf-RsjUrVVa6HalkVU/export?format=csv"
+PDF_COL = "UPLOAD REPORT" 
 
 df_raw = load_data(SHEET_REPORT_URL)
 df_equip = load_data(SHEET_EQUIP_URL)
@@ -63,10 +76,7 @@ with st.sidebar:
 if dark_mode:
     bg_style, sidebar_bg, card_bg, text_color = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)", "rgba(15, 10, 25, 0.98)", "rgba(255, 255, 255, 0.05)", "#E0E0E0"
     shadow, plotly_theme = "0 8px 32px rgba(108, 92, 231, 0.15)", "plotly_dark"
-    custom_dark_css = f"""
-        .stApp, .stMarkdown p, h1, h2, h3, h4, label {{ color: white !important; }}
-        .stButton > button {{ background-color: #1e293b !important; color: white !important; border: 1px solid #3e4e63 !important; }}
-    """
+    custom_dark_css = f".stApp, .stMarkdown p, h1, h2, h3, h4, label {{ color: white !important; }} .stButton > button {{ background-color: #1e293b !important; color: white !important; border: 1px solid #3e4e63 !important; }}"
 else:
     bg_style, sidebar_bg, card_bg, text_color = "radial-gradient(circle at top right, #f8faff, #eef2f7,#f8faff)", "rgba(255, 255, 255, 0.8)", "white", "#1e293b"
     shadow, plotly_theme = "0 10px 25px rgba(0,0,0,0.03)", "plotly_white"
@@ -75,7 +85,7 @@ else:
 st.markdown(f"""
     <style>
     .block-container {{ padding-top: 0.5rem !important; }}
-    h1 {{ margin-top: 40px !important; font-size: 3.2rem !important; font-weight: 800; }}
+    h1 {{ margin-top: 30px !important; font-size: 2.8rem !important; font-weight: 800; }}
     header[data-testid="stHeader"] {{ visibility: hidden; height: 0px; }}
     .stApp {{ background: {bg_style}; color: {text_color}; }}
     [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
@@ -119,11 +129,7 @@ if menu_selection == "📝 Maintenance Reports":
                                          color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}, template=plotly_theme), use_container_width=True)
 
         st.subheader("📊 Report Tracking Status")
-        def color_status(val):
-            if val == 'APPROVED': return 'background-color: #d4edda; color: #155724;'
-            if val == 'REJECTED': return 'background-color: #f8d7da; color: #721c24;'
-            return ''
-        styled_df = df.style.map(color_status, subset=['STATUS']) if 'STATUS' in df.columns else df
+        styled_df = df.style.map(color_status_report, subset=['STATUS']) if 'STATUS' in df.columns else df
         st.dataframe(styled_df, use_container_width=True, hide_index=True,
                      column_config={PDF_COL: st.column_config.LinkColumn("Report File", display_text="OPEN PDF 📄")})
 
@@ -202,9 +208,9 @@ elif menu_selection == "⚙️ Equipment Status":
             if not df_filtered.empty:
                 st.dataframe(
                     df_filtered[display_cols].style.map(
-                        lambda x: 'background-color: #D4EDDA; color: #155724;' if str(x).upper() == 'OK' else 
-                                  ('background-color: #F8D7DA; color: #721C24;' if str(x).upper() == 'MISSING' else 
-                                   ('background-color: #FFF3CD; color: #856404;' if str(x).upper() == 'FAULTY' else '')), 
+                        color_status_equip, 
                         subset=[selected_month] if selected_month in display_cols else None
                     ), use_container_width=True, hide_index=True
                 )
+            else:
+                st.warning("No data found for the selected filter.")
