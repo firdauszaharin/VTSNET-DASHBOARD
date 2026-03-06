@@ -280,7 +280,7 @@ elif menu_selection == "⚙️ Equipment Status":
             # --- INVENTORY ASSET LIST ---
             st.divider()
             st.subheader(f"📦 Inventory Asset List")
-            search_eq = st.text_input("🔍 Search (SN, Nama, IP):", key="search_eq_box")
+            search_eq = st.text_input("🔍 Search (SN, Name, IP):", key="search_eq_box")
             if search_eq:
                 df_filtered = df_filtered[df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
 
