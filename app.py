@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- SIDEBAR THEME TOGGLE ---
+# --- SIDEBAR: THEME TOGGLE ---
 with st.sidebar:
     if os.path.exists("logo.png"):
         st.image("logo.png", use_container_width=True)
@@ -23,37 +23,28 @@ with st.sidebar:
     dark_mode = st.toggle("Dark Mode View", value=False)
     st.divider()
 
-# --- DYNAMIC CSS LOGIC ---
+# --- DYNAMIC CSS LOGIC (FIX VISIBILITY & SIDEBAR) ---
 if dark_mode:
     bg_style = "radial-gradient(circle at top right, #1e272e, #0f172a)"
     sidebar_bg = "rgba(30, 39, 46, 0.95)"
     card_bg = "#1e293b"
-    text_color = "#FFFFFF"  # Putih terang
+    text_color = "#FFFFFF"
     shadow = "0 10px 25px rgba(0,0,0,0.5)"
     plotly_theme = "plotly_dark"
     
-    # FIX KHAS UNTUK TULISAN SIDEBAR & RADIO
     custom_dark_css = f"""
-        /* Paksa semua teks dalam sidebar jadi putih */
-        [data-testid="stSidebar"] {{
-            color: {text_color} !important;
-        }}
-        
-        /* Fix tulisan "Pilih Paparan" dan label radio button */
+        [data-testid="stSidebar"] {{ color: {text_color} !important; }}
         [data-testid="stSidebar"] .stWidgetLabel p, 
         [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
         [data-testid="stSidebar"] label {{
             color: {text_color} !important;
             opacity: 1 !important;
         }}
-
-        /* Fix teks radio button (Maintenance Reports / Equipment Status) */
         [data-testid="stSidebar"] div[role="radiogroup"] label p {{
             color: {text_color} !important;
         }}
-
-        /* Input text & search box */
         input {{ color: {text_color} !important; }}
+        .stMarkdown p, h1, h2, h3, h4 {{ color: {text_color} !important; }}
     """
 else:
     bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7,#f8faff)"
@@ -67,31 +58,18 @@ else:
 st.markdown(f"""
     <style>
     .stApp {{ background: {bg_style}; font-family: 'Inter', sans-serif; color: {text_color}; }}
-    
     {custom_dark_css}
-
-    [data-testid="stSidebar"] {{ 
-        background-color: {sidebar_bg} !important; 
-        backdrop-filter: blur(10px); 
-    }}
-
-    [data-testid="stMetric"] {{ 
-        background: {card_bg} !important; 
-        padding: 20px !important; 
-        border-radius: 20px !important; 
-        box-shadow: {shadow} !important; 
-    }}
-    
+    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
+    [data-testid="stMetric"] {{ background: {card_bg} !important; padding: 20px !important; border-radius: 20px !important; box-shadow: {shadow} !important; }}
     [data-testid="stMetricValue"] {{ color: {text_color} !important; }}
     [data-testid="stMetricLabel"] {{ color: {text_color} !important; opacity: 0.8; }}
-
     header[data-testid="stHeader"] {{ background-color: rgba(0,0,0,0) !important; }}
     .st-emotion-cache-hp888a {{ color: #0984E3 !important; }}
-    
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     </style>
 """, unsafe_allow_html=True)
+
 # --- DATA LOAD & TIMEZONE ---
 msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
 waktu_msia = datetime.now(msia_tz)
@@ -126,8 +104,16 @@ with st.sidebar:
     menu_selection = st.radio("Pilih Paparan:", ["📝 Maintenance Reports", "⚙️ Equipment Status"])
     st.divider()
     st.markdown(f"🕒 **Last Sync:** {waktu_msia.strftime('%H:%M:%S')}")
-    search_report = st.text_input("🔎 Search Site/Type:")
-    search_staff = st.text_input("👤 Search Staff Name:")
+    
+    # --- CONDITIONAL SEARCH AREA ---
+    # Kedua-dua carian ini hanya muncul bila tab Maintenance Reports dipilih
+    if menu_selection == "📝 Maintenance Reports":
+        search_report = st.text_input("🔎 Search Site/Type:")
+        search_staff = st.text_input("👤 Search Staff Name:")
+    else:
+        # Reset filter supaya tidak mengganggu tab Equipment Status
+        search_report = ""
+        search_staff = ""
 
 st.title("VTSNET Management Dashboard")
 
@@ -157,7 +143,7 @@ if menu_selection == "📝 Maintenance Reports":
                     column_config={PDF_COL: st.column_config.LinkColumn("Report File", display_text="OPEN PDF 📄")})
     else: st.info("Waiting for data...")
 
-# --- PAGE 2: EQUIPMENT STATUS (KEKAL LOGIK ASAL) ---
+# --- PAGE 2: EQUIPMENT STATUS ---
 elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
         st.subheader("⚙️ Inventory & Equipment Status")
@@ -181,16 +167,12 @@ elif menu_selection == "⚙️ Equipment Status":
             if 'filter_status' not in st.session_state: st.session_state.filter_status = "ALL"
 
             col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-            total_ok = len(df_working[status_series == 'OK'])
-            total_faulty = len(df_working[status_series == 'FAULTY'])
-            total_missing = len(df_working[status_series == 'MISSING'])
-
             with col_m1: 
-                if st.button(f"🟢 OK: {total_ok}", use_container_width=True): st.session_state.filter_status = "OK"
+                if st.button(f"🟢 OK: {len(df_working[status_series == 'OK'])}", use_container_width=True): st.session_state.filter_status = "OK"
             with col_m2: 
-                if st.button(f"🟡 FAULTY: {total_faulty}", use_container_width=True): st.session_state.filter_status = "FAULTY"
+                if st.button(f"🟡 FAULTY: {len(df_working[status_series == 'FAULTY'])}", use_container_width=True): st.session_state.filter_status = "FAULTY"
             with col_m3: 
-                if st.button(f"🔴 MISSING: {total_missing}", use_container_width=True): st.session_state.filter_status = "MISSING"
+                if st.button(f"🔴 MISSING: {len(df_working[status_series == 'MISSING'])}", use_container_width=True): st.session_state.filter_status = "MISSING"
             with col_m4: 
                 if st.button("🔵 SHOW ALL", use_container_width=True): st.session_state.filter_status = "ALL"
 
@@ -221,7 +203,6 @@ elif menu_selection == "⚙️ Equipment Status":
             if search_eq:
                 df_filtered = df_filtered[df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
 
-            # Logik Remark Suku Tahun
             year_match = re.search(r'202\d', selected_month)
             curr_yr = year_match.group(0) if year_match else "2025"
             m_up = selected_month.upper()
@@ -231,7 +212,6 @@ elif menu_selection == "⚙️ Equipment Status":
             else: q = "Q4"
             actual_remark_col = next((c for c in df_equip.columns if "REMARK" in c.upper() and q in c.upper() and curr_yr in c.upper()), None)
 
-            # Susun Kolum Ikut Kod Asal
             display_cols = []
             standard_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
             for col in standard_cols:
