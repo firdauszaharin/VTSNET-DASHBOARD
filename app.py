@@ -223,16 +223,34 @@ elif menu_selection == "⚙️ Equipment Status":
                     fig_site_hist.update_layout(yaxis_title="Quantity", xaxis_title="Location")
                     st.plotly_chart(fig_site_hist, use_container_width=True)
 
-            # --- HISTOGRAM CATEGORY (IF APPLICABLE) ---
-            type_col = next((c for c in df_plot.columns if c.lower() in ['type', 'category']), None)
+            # --- HISTOGRAM CATEGORY (MERUJUK KOLUM C / TYPE) ---
+            # Kita paksa ambil kolum 'Type' seperti dalam Sheet Kolum C
+            type_col = next((c for c in df_plot.columns if c.lower() == 'type'), None)
+            
             if type_col:
-                st.markdown(f"### 🗂️ Status by Equipment Category")
+                st.markdown(f"### 🗂️ Status by Equipment Category (Type)")
+                
+                # Buat histogram mengikut jenis peralatan (Kolum C)
                 fig_type = px.histogram(
-                    df_plot, x=type_col, color=selected_month, barmode='group',
+                    df_plot, 
+                    x=type_col, 
+                    color=selected_month, 
+                    barmode='group',
+                    title=f'Detailed Status by Equipment Type - {selected_month}',
                     color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'},
-                    text_auto=True
+                    text_auto=True,
+                    category_orders={type_col: sorted(df_plot[type_col].unique())} # Susun ikut abjad
                 )
+                
+                fig_type.update_layout(
+                    xaxis_title="Equipment Type (Column C)",
+                    yaxis_title="Total Units",
+                    legend_title="Status"
+                )
+                
                 st.plotly_chart(fig_type, use_container_width=True)
+            else:
+                st.error("Ralat: Kolum 'Type' (Kolum C) tidak dijumpai dalam Google Sheets. Sila pastikan header bernama 'Type'.")
             
             # 4. DATA TABLE
             st.divider()
