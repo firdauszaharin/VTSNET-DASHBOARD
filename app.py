@@ -28,71 +28,70 @@ if dark_mode:
     bg_style = "radial-gradient(circle at top right, #1e272e, #0f172a)"
     sidebar_bg = "rgba(30, 39, 46, 0.95)"
     card_bg = "#1e293b"
-    text_color = "#FFFFFF"  # Putih terang untuk Dark Mode
-    sub_text = "#E2E8F0"
+    text_color = "#FFFFFF"  # Putih terang
     shadow = "0 10px 25px rgba(0,0,0,0.5)"
     plotly_theme = "plotly_dark"
-    # CSS tambahan untuk paksa input & table jadi putih
-    input_css = f"""
+    
+    # FIX KHAS UNTUK TULISAN SIDEBAR & RADIO
+    custom_dark_css = f"""
+        /* Paksa semua teks dalam sidebar jadi putih */
+        [data-testid="stSidebar"] {{
+            color: {text_color} !important;
+        }}
+        
+        /* Fix tulisan "Pilih Paparan" dan label radio button */
+        [data-testid="stSidebar"] .stWidgetLabel p, 
+        [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
+        [data-testid="stSidebar"] label {{
+            color: {text_color} !important;
+            opacity: 1 !important;
+        }}
+
+        /* Fix teks radio button (Maintenance Reports / Equipment Status) */
+        [data-testid="stSidebar"] div[role="radiogroup"] label p {{
+            color: {text_color} !important;
+        }}
+
+        /* Input text & search box */
         input {{ color: {text_color} !important; }}
-        label {{ color: {text_color} !important; }}
-        .stMarkdown p {{ color: {text_color} !important; }}
-        h1, h2, h3, h4 {{ color: {text_color} !important; }}
     """
 else:
     bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7,#f8faff)"
     sidebar_bg = "rgba(255, 255, 255, 0.8)"
     card_bg = "white"
-    text_color = "#1e293b" # Biru gelap/Hitam untuk Light Mode
-    sub_text = "#475569"
+    text_color = "#1e293b"
     shadow = "0 10px 25px rgba(0,0,0,0.03)"
     plotly_theme = "plotly_white"
-    input_css = ""
+    custom_dark_css = ""
 
 st.markdown(f"""
     <style>
-    /* Latar Belakang & Font Utama */
-    .stApp {{ 
-        background: {bg_style}; 
-        font-family: 'Inter', sans-serif; 
-        color: {text_color}; 
-    }}
+    .stApp {{ background: {bg_style}; font-family: 'Inter', sans-serif; color: {text_color}; }}
     
-    {input_css}
+    {custom_dark_css}
 
-    /* Sidebar Fix */
     [data-testid="stSidebar"] {{ 
         background-color: {sidebar_bg} !important; 
         backdrop-filter: blur(10px); 
     }}
-    [data-testid="stSidebar"] .stMarkdown p, [data-testid="stSidebar"] h1 {{
-        color: {text_color} !important;
-    }}
 
-    /* Metric Cards Fix */
     [data-testid="stMetric"] {{ 
         background: {card_bg} !important; 
         padding: 20px !important; 
         border-radius: 20px !important; 
         box-shadow: {shadow} !important; 
     }}
+    
     [data-testid="stMetricValue"] {{ color: {text_color} !important; }}
     [data-testid="stMetricLabel"] {{ color: {text_color} !important; opacity: 0.8; }}
 
-    /* Header & Icons */
     header[data-testid="stHeader"] {{ background-color: rgba(0,0,0,0) !important; }}
     .st-emotion-cache-hp888a {{ color: #0984E3 !important; }}
-    
-    /* Table & Dataframe Visibility Fix */
-    [data-testid="stTable"], [data-testid="stDataFrame"] {{
-        background-color: {card_bg} !important;
-    }}
     
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     </style>
 """, unsafe_allow_html=True)
-
 # --- DATA LOAD & TIMEZONE ---
 msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
 waktu_msia = datetime.now(msia_tz)
