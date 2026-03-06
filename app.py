@@ -5,6 +5,28 @@ from datetime import datetime
 import pytz
 import re
 import os
+from streamlit_autorefresh import st_autorefresh
+
+st.set_page_config(page_title="VTSNET: MAL Tracker", layout="wide")
+
+# 1. AUTO REFRESH (5 MINUTES)
+st_autorefresh(interval=300000, key="vts_refresh")
+
+# 2. LOGIN SECURITY
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+with st.sidebar:
+    if not st.session_state.authenticated:
+        st.title("🔒 Login")
+        pwd = st.text_input("Project Access Code:", type="password")
+        if st.button("Unlock Dashboard"):
+            if pwd == "vtsnet2026": # <--- Tukar password kat sini
+                st.session_state.authenticated = True
+                st.rerun()
+            else:
+                st.error("Wrong Password!")
+        st.stop() # STOP dashboard dari loading kalau belum login
 
 # 1. PAGE CONFIGURATION
 st.set_page_config(
