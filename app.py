@@ -100,6 +100,14 @@ st.markdown(f"""
     <style>
     .stApp {{ background: {bg_style}; font-family: 'Inter', sans-serif; color: {text_color}; }}
     {custom_dark_css}
+    /* Naikkan Title ke atas & Besarkan Font */
+    .main .block-container h1 {
+        padding-top: 0rem !important;
+        margin-top: -30px !important; /* Nilai negatif untuk tarik lagi ke atas */
+        font-size: 3.5rem !important; /* Besarkan saiz tulisan */
+        font-weight: 800 !important;
+        letter-spacing: -1px;
+    }
     [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
     [data-testid="stMetric"] {{ background: {card_bg} !important; padding: 20px !important; border-radius: 20px !important; box-shadow: {shadow} !important; }}
     [data-testid="stMetricValue"] {{ color: {text_color} !important; }}
