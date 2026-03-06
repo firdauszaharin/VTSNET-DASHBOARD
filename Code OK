@@ -204,20 +204,12 @@ if menu_selection == "📝 Maintenance Reports":
 elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
         st.subheader("⚙️ Inventory & Equipment Status")
-        
-        # 1. Tapis column bulan dengan lebih tepat
-        # Kita cuma ambil column yang ada tahun 2025-2027 TAPI taknak ada perkataan 'REMARK' atau 'SITE' atau 'EQUIPMENT'
-        month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026", "2027"])]
-        month_cols = [c for c in month_cols if "REMARK" not in c.upper() and "SITE" not in c.upper() and "EQUIPMENT" not in c.upper()]
-        
-        # 2. SUSUN (SORT) - Ini penting supaya data terawal sentiasa kat depan
-        month_cols = sorted(month_cols) 
-
+        month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026", "2027"]) and "REMARK" not in c.upper()]
         site_col = next((c for c in df_equip.columns if c.lower() == 'site'), None)
         
         if month_cols:
             c1, c2 = st.columns(2)
-            with c1: selected_month = st.selectbox("📅 Select Report Month:", month_cols, index=0)
+            with c1: selected_month = st.selectbox("📅 Select Report Month:", month_cols, index=len(month_cols)-1)
             
             df_working = df_equip.copy()
             if site_col:
