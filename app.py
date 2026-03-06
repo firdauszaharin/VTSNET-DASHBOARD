@@ -160,7 +160,7 @@ elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
         st.subheader("⚙️ Inventory & Equipment Status")
         
-        # 1. DETECT KOLUM (Bulan & Site) - Tapis Remark keluar dari Dropdown
+        # 1. DETECT KOLUM (Bulan & Site)
         month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026", "2027"]) 
                       and "REMARK" not in c.upper()]
         site_col = next((c for c in df_equip.columns if c.lower() == 'site'), None)
@@ -184,19 +184,15 @@ elif menu_selection == "⚙️ Equipment Status":
 
             st.divider()
 
-            # Clean status untuk charting
+            # Clean status data
             status_series = df_working[selected_month].astype(str).str.strip().str.upper()
-            df_plot = df_working.copy()
-            df_plot[selected_month] = status_series
             
             # --- 2. METRICS DENGAN FUNGSI KLIK (DRILL-DOWN) ---
-            # Inisialisasi session state untuk filter jika belum ada
             if 'filter_status' not in st.session_state:
                 st.session_state.filter_status = "ALL"
 
             col_m1, col_m2, col_m3, col_m4 = st.columns(4)
             
-            # Kira jumlah
             total_ok = len(df_working[status_series == 'OK'])
             total_faulty = len(df_working[status_series == 'FAULTY'])
             total_missing = len(df_working[status_series == 'MISSING'])
@@ -213,58 +209,57 @@ elif menu_selection == "⚙️ Equipment Status":
             with col_m4:
                 if st.button("🔵 SHOW ALL", use_container_width=True):
                     st.session_state.filter_status = "ALL"
-            # 3. VISUALISASI
-            st.markdown(f"### 🎯 Performance Overview: {selected_site}")
-            col_chart1, col_chart2 = st.columns([0.4, 0.6])
+
+            # --- PREPARE FILTERED DATA FOR CHARTS & TABLE ---
+            df_filtered = df_working.copy()
+            # Tukar status column kepada format seragam (OK/FAULTY/MISSING)
+            df_filtered[selected_month] = df_filtered[selected_month].astype(str).str.strip().str.upper()
+            
+            if st.session_state.filter_status != "ALL":
+                df_filtered = df_filtered[df_filtered[selected_month] == st.session_state.filter_status]
+
+            # --- 3. VISUALISASI ---
+            st.markdown(f"### 🎯 Performance Overview: {selected_site} ({st.session_state.filter_status})")
+            col_chart1, col_chart2 = st.columns([0.3, 0.7])
             
             with col_chart1:
+                # Donut Chart (Sentiasa tunjuk pecahan asal df_working)
                 fig_donut = px.pie(
-                    df_plot, names=selected_month, hole=0.6, 
-                    title=f'Overall Condition ({selected_month})',
+                    df_working, names=selected_month, hole=0.6, 
+                    title=f'Overall Condition',
                     color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}
                 )
                 fig_donut.update_traces(textposition='inside', textinfo='percent+label')
                 st.plotly_chart(fig_donut, use_container_width=True)
 
             with col_chart2:
-                # --- HISTOGRAM BY TYPE (MCM DALAM SCREENSHOT) ---
-                type_col = next((c for c in df_visual.columns if c.lower() == 'type'), None)
-                if type_col:
-                    # Kira jumlah ikut Type
-                    df_type_count = df_visual.groupby(type_col).size().reset_index(name='count')
+                # Histogram mengikut Type (Guna data yang dah ditapis butang)
+                type_col = next((c for c in df_filtered.columns if c.lower() == 'type'), None)
+                if type_col and not df_filtered.empty:
+                    df_type_count = df_filtered.groupby(type_col).size().reset_index(name='count')
                     df_type_count = df_type_count.sort_values('count', ascending=False)
 
                     fig_type = px.bar(
-                        df_type_count, 
-                        x=type_col, 
-                        y='count',
-                        title=f'Equipment Detail by Type ({st.session_state.filter_status})',
-                        color_discrete_sequence=['#ffaaaa' if st.session_state.filter_status == 'MISSING' else '#0984E3'],
+                        df_type_count, x=type_col, y='count',
+                        title=f'Equipment Detail by Type',
+                        color_discrete_sequence=['#0984E3'],
                         text_auto=True
                     )
-                    fig_type.update_layout(xaxis_tickangle=-45, yaxis_title="Quantity", xaxis_title=None)
+                    fig_type.update_layout(xaxis_tickangle=-45, yaxis_title="Quantity")
                     st.plotly_chart(fig_type, use_container_width=True)
                 else:
-                    st.info("Kolum 'Type' tidak dijumpai untuk paparan carta detail.")
-                    
-            # --- 4. DATA TABLE (DIKEMASKINI DENGAN FILTER) ---
+                    st.info("Tiada data untuk dipaparkan dalam carta bar.")
+
+            # --- 4. DATA TABLE ---
             st.divider()
-            st.subheader(f"📦 Inventory Asset List ({selected_site}) - {st.session_state.filter_status}")
+            st.subheader(f"📦 Inventory Asset List")
             
             search_eq = st.text_input("🔍 Carian Pantas (SN, Nama, IP):", key="search_eq_box")
             
-            # Proses penapisan berdasarkan butang yang diklik
-            df_filtered = df_working.copy()
-            
-            # Tapis ikut status dari butang
-            if st.session_state.filter_status != "ALL":
-                df_filtered = df_filtered[df_filtered[selected_month].astype(str).str.strip().str.upper() == st.session_state.filter_status]
-
-            # Tapis ikut carian teks
             if search_eq:
                 df_filtered = df_filtered[df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
 
-            # Logik Remark (Kekal sama)
+            # Logik Remark
             year_match = re.search(r'202\d', selected_month)
             curr_yr = year_match.group(0) if year_match else "2025"
             m_up = selected_month.upper()
@@ -275,7 +270,7 @@ elif menu_selection == "⚙️ Equipment Status":
 
             actual_remark_col = next((c for c in df_equip.columns if "REMARK" in c.upper() and q in c.upper() and curr_yr in c.upper()), None)
 
-            # Pilih kolum paparan
+            # Susun Kolum
             display_cols = []
             standard_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
             for col in standard_cols:
@@ -285,7 +280,6 @@ elif menu_selection == "⚙️ Equipment Status":
             if selected_month in df_filtered.columns: display_cols.append(selected_month)
             if actual_remark_col: display_cols.append(actual_remark_col)
 
-            # Papar Jadual
             if not df_filtered.empty:
                 st.dataframe(
                     df_filtered[display_cols].style.map(
@@ -296,4 +290,4 @@ elif menu_selection == "⚙️ Equipment Status":
                     ), use_container_width=True, hide_index=True
                 )
             else:
-                st.info(f"Tiada aset dengan status {st.session_state.filter_status} untuk paparan ini.")
+                st.info("Tiada rekod untuk paparan ini.")
