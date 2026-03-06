@@ -90,7 +90,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 3. DATA LINKS
-SHEET_REPORT_URL = "https://docs.google.com/spreadsheets/d/1WB76n71wxMT3i5ZCaoCBIyb888il-qBydY8OEgC81Q8/export?format=csv&gid=296214979"
+SHEET_REPORT_URL = "https://docs.google.com/spreadsheets/d/1cJAnZVhxY_Nqjkfo39ze9DCAIZwWd_6dIdFgw0a2j_s/edit?usp=drive_link"
 SHEET_EQUIP_URL = "https://docs.google.com/spreadsheets/d/1HQUV7NXuhAKtKW-weSwAmhIMOde8CZM8XiTiaF1P7K4/edit?usp=sharing"
 PDF_COL = "UPLOAD REPORT" 
 
