@@ -132,7 +132,7 @@ PDF_COL = "UPLOAD REPORT"
 
 # AIS sheet (anda perlu set gid yang betul untuk setiap sheet)
 # buat sementara, saya letak gid=0 utk kedua-dua; tukar ikut sheet sebenar anda
-AISVDES_URL = "https://docs.google.com/spreadsheets/d/1HQUV7NXuhAKtKW-weSwAmhIMOde8CZM8XiTiaF1P7K4/edit?usp=sharing"
+AISVDES_URL = "https://docs.google.com/spreadsheets/d/1HQUV7NXuhAKtKW-weSwAmhIMOde8CZM8XiTiaF1P7K4/edit?usp=drive_link"
 AISVTS_URL  = "https://docs.google.com/spreadsheets/d/1HQUV7NXuhAKtKW-weSwAmhIMOde8CZM8XiTiaF1P7K4/edit?usp=sharing"
 
 # ========= 4. DATA LOAD FUNCTIONS =========
