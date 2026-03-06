@@ -73,11 +73,6 @@ if dark_mode:
             color: white !important;
         }}
 
-        /* 5. METRIC & TITLES */
-        .stWidgetLabel p, label {{ color: white !important; opacity: 1 !important; }}
-        [data-testid="stMetricValue"] {{ color: white !important; }}
-    """
-
         /* 5. SIDEBAR FIX */
         [data-testid="stSidebar"] {{ color: {text_color} !important; }}
     """
