@@ -148,10 +148,18 @@ st.markdown(f"""
     }}
 
     /* 3. SEMBUNYIKAN HEADER ASAL STREAMLIT */
-    header[data-testid="stHeader"] {{
-        visibility: hidden !important;
-        height: 0px !important;
-    }}
+   /* GANTI bahagian header[data-testid="stHeader"] kau dengan yang ini */
+header[data-testid="stHeader"] {
+    background-color: rgba(0,0,0,0) !important; /* Buat dia transparent */
+    color: #a29bfe !important; /* Warna butang menu (ungu terang) */
+}
+
+/* Tambah ini supaya butang sidebar nampak jelas kat phone */
+button[data-testid="baseButton-headerNoPadding"] {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 10px !important;
+    margin: 5px !important;
+}
 
     /* 4. TEMA WARNA & BACKGROUND */
     .stApp {{ background: {bg_style}; font-family: 'Inter', sans-serif; color: {text_color}; }}
