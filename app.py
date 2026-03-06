@@ -47,14 +47,6 @@ if not st.session_state.authenticated:
             margin-top: 50px;
         }
 
-        .login-title {
-            color: #FFFFFF;
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 5px;
-            letter-spacing: -0.5px;
-        }
-
         .login-subtitle {
             color: #a29bfe;
             font-size: 14px;
