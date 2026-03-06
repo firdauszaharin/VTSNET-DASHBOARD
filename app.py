@@ -31,39 +31,45 @@ if dark_mode:
     plotly_theme = "plotly_dark"
     
     custom_dark_css = f"""
-        /* 1. Paksa warna teks utama */
+        /* 1. PAKSA SEMUA TULISAN UTAMA */
         .stApp, .stMarkdown p, h1, h2, h3, h4, label, .stWidgetLabel p {{ 
             color: {text_color} !important; 
         }}
 
-        /* 2. FIX INPUT BOX (SEARCH BARS) */
-        input {{
+        /* 2. SIDEBAR FIX (PAKSA PUTIH TERANG) */
+        [data-testid="stSidebar"] {{
             color: {text_color} !important;
-            background-color: rgba(255,255,255,0.05) !important;
+        }}
+        
+        /* Hilangkan efek kelabu/malap pada label sidebar */
+        [data-testid="stSidebar"] .stWidgetLabel p, 
+        [data-testid="stSidebar"] label, 
+        [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
+        [data-testid="stSidebar"] span {{
+            color: {text_color} !important;
+            opacity: 1 !important;
             -webkit-text-fill-color: {text_color} !important;
         }}
 
-        /* 3. FIX SELECTBOX (DROPDOWNS) */
-        [data-baseweb="select"] > div {{
+        /* 3. FIX INPUT & SELECTBOX */
+        input {{
             color: {text_color} !important;
-            background-color: rgba(255,255,255,0.05) !important;
-        }}
-        
-        /* Tulisan dalam kotak selectbox yang dah dipilih */
-        [data-testid="stSelectbox"] div[data-baseweb="select"] {{
-            color: {text_color} !important;
+            background-color: rgba(255,255,255,0.1) !important;
+            -webkit-text-fill-color: {text_color} !important;
         }}
 
-        /* 4. FIX DROPDOWN LIST (THE MENU THAT POPS OUT) */
+        [data-baseweb="select"] > div {{
+            color: {text_color} !important;
+        }}
+        
+        /* 4. DROPDOWN LIST VISIBILITY */
         [data-baseweb="popover"] ul {{
             background-color: #1e293b !important;
         }}
         [data-baseweb="popover"] li {{
             color: white !important;
         }}
-        [data-baseweb="popover"] li:hover {{
-            background-color: #0984E3 !important;
-        }}
+    """
 
         /* 5. SIDEBAR FIX */
         [data-testid="stSidebar"] {{ color: {text_color} !important; }}
