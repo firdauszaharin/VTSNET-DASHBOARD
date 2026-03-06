@@ -48,16 +48,50 @@ with st.sidebar:
         st.rerun()
 
 # --- 4. DYNAMIC CSS LOGIC ---
-bg_style = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)" if dark_mode else "radial-gradient(circle at top right, #f8faff, #eef2f7)"
-sidebar_bg = "rgba(15, 10, 25, 0.98)" if dark_mode else "rgba(255, 255, 255, 0.9)"
-text_color = "#E0E0E0" if dark_mode else "#1e293b"
-card_bg = "rgba(255, 255, 255, 0.05)" if dark_mode else "white"
-shadow = "0 8px 32px rgba(108, 92, 231, 0.15)" if dark_mode else "0 10px 25px rgba(0,0,0,0.03)"
-plotly_theme = "plotly_dark" if dark_mode else "plotly_white"
+if dark_mode:
+    bg_style = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)" 
+    sidebar_bg = "rgba(15, 10, 25, 0.98)"
+    card_bg = "rgba(255, 255, 255, 0.05)"
+    text_color = "#FFFFFF"  # Paksa putih terus
+    shadow = "0 8px 32px rgba(108, 92, 231, 0.15)"
+    plotly_theme = "plotly_dark"
+    
+    # CSS tambahan untuk paksa semua elemen nampak dalam Dark Mode
+    custom_dark_css = """
+        /* Paksa semua teks dalam app jadi putih */
+        .stApp, .stMarkdown p, h1, h2, h3, h4, h5, h6, label, .stWidgetLabel p {
+            color: #FFFFFF !important;
+        }
+        /* Paksa teks dalam Sidebar */
+        [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] label {
+            color: #FFFFFF !important;
+        }
+        /* Paksa angka Metric jadi putih terang */
+        [data-testid="stMetricValue"] {
+            color: #FFFFFF !important;
+        }
+        /* Paksa label Metric (bawah angka) jadi kelabu cerah */
+        [data-testid="stMetricLabel"] p {
+            color: #E0E0E0 !important;
+        }
+        /* Fix untuk input box supaya teks yang ditaip nampak */
+        .stTextInput input {
+            color: #FFFFFF !important;
+        }
+    """
+else:
+    bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7)"
+    sidebar_bg = "rgba(255, 255, 255, 0.9)"
+    card_bg = "white"
+    text_color = "#1e293b"
+    shadow = "0 10px 25px rgba(0,0,0,0.03)"
+    plotly_theme = "plotly_white"
+    custom_dark_css = ""
 
 st.markdown(f"""
     <style>
     .stApp {{ background: {bg_style}; color: {text_color}; }}
+    {custom_dark_css}
     [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
     [data-testid="stMetric"] {{ background: {card_bg} !important; padding: 20px !important; border-radius: 20px !important; box-shadow: {shadow} !important; }}
     .main .block-container {{ padding-bottom: 100px !important; }}
