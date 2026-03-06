@@ -47,13 +47,6 @@ if not st.session_state.authenticated:
             margin-top: 50px;
         }
 
-        .login-subtitle {
-            color: #a29bfe;
-            font-size: 14px;
-            margin-bottom: 30px;
-            opacity: 0.8;
-        }
-
         /* Input Styling */
         .stTextInput input {
             background-color: rgba(255, 255, 255, 0.05) !important;
