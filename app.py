@@ -143,7 +143,7 @@ st.markdown(f"""
     
     /* ADJUST KAT SINI */
     .main .block-container {{ 
-        padding-top: 3rem !important;  /* Kecilkan nombor ni kalau nak Title lagi tinggi ke atas */
+        padding-top: 2rem !important;  /* Kecilkan nombor ni kalau nak Title lagi tinggi ke atas */
         padding-bottom: 100px !important; 
     }}
     
