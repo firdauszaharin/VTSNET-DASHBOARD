@@ -52,53 +52,61 @@ if dark_mode:
     bg_style = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)" 
     sidebar_bg = "rgba(15, 10, 25, 0.98)"
     card_bg = "rgba(255, 255, 255, 0.05)"
-    text_color = "#FFFFFF"  # Paksa putih terus
-    shadow = "0 8px 32px rgba(108, 92, 231, 0.15)"
+    footer_bg = "rgba(30, 20, 50, 0.9)" # Warna gelap sikit untuk footer
+    text_color = "#FFFFFF"
     plotly_theme = "plotly_dark"
     
-    # CSS tambahan untuk paksa semua elemen nampak dalam Dark Mode
     custom_dark_css = """
-        /* Paksa semua teks dalam app jadi putih */
-        .stApp, .stMarkdown p, h1, h2, h3, h4, h5, h6, label, .stWidgetLabel p {
+        <style>
+        /* Paksa semua teks utama jadi putih */
+        .stApp, .stMarkdown p, h1, h2, h3, label, .stWidgetLabel p {
             color: #FFFFFF !important;
         }
-        /* Paksa teks dalam Sidebar */
-        [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] label {
+        
+        /* FIX BUTTONS: Paksa tulisan dalam button jadi HITAM supaya nampak atas background putih */
+        .stButton > button {
+            color: #1a0a2e !important; 
+            font-weight: bold !important;
+            background-color: #ffffff !important;
+            border: 1px solid #a29bfe !important;
+        }
+
+        /* FIX FOOTER TEXT: Paksa jadi putih terang */
+        .custom-footer-text {
             color: #FFFFFF !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            letter-spacing: 0.5px;
         }
-        /* Paksa angka Metric jadi putih terang */
-        [data-testid="stMetricValue"] {
-            color: #FFFFFF !important;
-        }
-        /* Paksa label Metric (bawah angka) jadi kelabu cerah */
-        [data-testid="stMetricLabel"] p {
-            color: #E0E0E0 !important;
-        }
-        /* Fix untuk input box supaya teks yang ditaip nampak */
-        .stTextInput input {
-            color: #FFFFFF !important;
-        }
+
+        /* Metric Fix */
+        [data-testid="stMetricValue"] { color: #FFFFFF !important; }
+        [data-testid="stMetricLabel"] p { color: #E0E0E0 !important; }
+        </style>
     """
 else:
     bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7)"
     sidebar_bg = "rgba(255, 255, 255, 0.9)"
     card_bg = "white"
+    footer_bg = "rgba(255, 255, 255, 0.9)"
     text_color = "#1e293b"
-    shadow = "0 10px 25px rgba(0,0,0,0.03)"
     plotly_theme = "plotly_white"
-    custom_dark_css = ""
+    custom_dark_css = """
+        <style>
+        .custom-footer-text { color: #1e293b !important; }
+        </style>
+    """
+
+st.markdown(custom_dark_css, unsafe_allow_html=True)
 
 st.markdown(f"""
     <style>
     .stApp {{ background: {bg_style}; color: {text_color}; }}
-    {custom_dark_css}
-    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
-    [data-testid="stMetric"] {{ background: {card_bg} !important; padding: 20px !important; border-radius: 20px !important; box-shadow: {shadow} !important; }}
+    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; }}
     .main .block-container {{ padding-bottom: 100px !important; }}
     footer {{visibility: hidden;}}
     </style>
 """, unsafe_allow_html=True)
-
 # --- 5. HELPER FUNCTIONS ---
 def color_status(val):
     if val == 'APPROVED': return 'background-color: #d4edda; color: #155724;'
