@@ -239,7 +239,8 @@ elif menu_selection == "⚙️ Equipment Status":
             # Charts
             col_chart1, col_chart2 = st.columns([0.3, 0.7])
             with col_chart1:
-                fig_donut = px.pie(
+    # 1. Tambah title dalam px.pie
+    fig_donut = px.pie(
         df_working, 
         names=selected_month, 
         hole=0.6, 
@@ -256,14 +257,26 @@ elif menu_selection == "⚙️ Equipment Status":
     )
     
     st.plotly_chart(fig_donut, use_container_width=True)
-            with col_chart2:
-                type_col = next((c for c in df_filtered.columns if c.lower() == 'type'), None)
-                if type_col and not df_filtered.empty:
-                    fig_type = px.bar(df_filtered.groupby([type_col, selected_month]).size().reset_index(name='count'), 
-                                      x=type_col, y='count', color=selected_month, template=plotly_theme,
-                                      color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}, barmode='group')
-                    st.plotly_chart(fig_type, use_container_width=True)
 
+with col_chart2:
+    # 1. Tambah title dalam px.bar
+    type_col = next((c for c in df_filtered.columns if c.lower() == 'type'), None)
+    if type_col and not df_filtered.empty:
+        fig_type = px.bar(
+            df_filtered.groupby([type_col, selected_month]).size().reset_index(name='count'), 
+            x=type_col, 
+            y='count', 
+            color=selected_month, 
+            template=plotly_theme,
+            title=f"Analisis Equipment: {selected_month}", # <--- Letak tajuk kat sini
+            color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}, 
+            barmode='group'
+        )
+        
+        # Center-kan tajuk bar chart
+        fig_type.update_layout(title_x=0.5)
+        
+        st.plotly_chart(fig_type, use_container_width=True)
             # --- INVENTORY ASSET LIST ---
             st.divider()
             st.subheader(f"📦 Inventory Asset List")
