@@ -110,10 +110,12 @@ with st.sidebar:
     if menu_selection == "📝 Maintenance Reports":
         search_report = st.text_input("🔎 Search Site/Type:")
         search_staff = st.text_input("👤 Search Staff Name:")
+   # TAMBAH INI:
+        search_id = st.text_input("🆔 Search Document ID:") 
     else:
-        # Reset filter supaya tidak mengganggu tab Equipment Status
         search_report = ""
         search_staff = ""
+        search_id = "" # Reset
 
 st.title("VTSNET Management Dashboard")
 
