@@ -56,24 +56,38 @@ if dark_mode:
     
     custom_dark_css = """
         <style>
-        /* Paksa SEMUA teks dashboard & sidebar jadi putih */
+        /* 1. Paksa SEMUA teks dashboard & sidebar jadi putih */
         .stApp, [data-testid="stSidebar"] *, .stMarkdown p, h1, h2, h3, label {
             color: #FFFFFF !important;
         }
 
-        /* FIX BUTTON STATUS: Tulisan HITAM atas background PUTIH */
-        .main .stButton > button {
+        /* 2. FIX SEMUA BUTTON DALAM MAIN AREA (OK, FAULTY, MISSING, SHOW ALL) */
+        /* Kita guna 'div[data-testid="stVerticalBlock"]' untuk target area content sahaja */
+        div[data-testid="stVerticalBlock"] .stButton > button {
             color: #000000 !important; 
             background-color: #FFFFFF !important;
             font-weight: 900 !important;
+            border: 2px solid #FFFFFF !important;
+            opacity: 1 !important;
+        }
+
+        /* Effect bila mouse lalu (Hover) */
+        div[data-testid="stVerticalBlock"] .stButton > button:hover {
+            background-color: #f0f2f6 !important;
+            color: #000000 !important;
             border: 2px solid #6c5ce7 !important;
         }
 
-        /* FIX LOG OUT BUTTON: Tulisan PUTIH atas background GELAP */
-        [data-testid="stSidebar"] .stButton > button {
+        /* 3. FIX LOG OUT BUTTON (Dalam Sidebar) */
+        /* Kita kekalkan tulisan putih supaya nampak atas butang merah */
+        section[data-testid="stSidebar"] .stButton > button {
             color: #FFFFFF !important;
             background-color: rgba(255, 75, 75, 0.2) !important;
             border: 1px solid #ff4b4b !important;
+        }
+        
+        section[data-testid="stSidebar"] .stButton > button:p {
+            color: #FFFFFF !important;
         }
         </style>
     """
@@ -93,7 +107,6 @@ st.markdown(f"""
     footer {{visibility: hidden;}}
     </style>
 """, unsafe_allow_html=True)
-
 # --- 5. HELPER FUNCTIONS ---
 def color_status(val):
     if val == 'APPROVED': return 'background-color: #d4edda; color: #155724;'
