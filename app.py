@@ -51,43 +51,45 @@ with st.sidebar:
 if dark_mode:
     bg_style = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)" 
     sidebar_bg = "rgba(15, 10, 25, 0.98)"
-    card_bg = "rgba(255, 255, 255, 0.05)"
     text_color = "#FFFFFF"
     plotly_theme = "plotly_dark"
     
     custom_dark_css = """
         <style>
-        /* Paksa semua teks utama jadi putih */
-        .stApp, .stMarkdown p, h1, h2, h3, label, .stWidgetLabel p {
+        /* 1. Paksa SEMUA teks dalam sidebar jadi putih (Label & Options) */
+        [data-testid="stSidebar"] *, 
+        [data-testid="stSidebar"] span, 
+        [data-testid="stSidebar"] p, 
+        [data-testid="stSidebar"] label {
+            color: #FFFFFF !important;
+        }
+
+        /* 2. Paksa tulisan radio button options (Maintenance/Equipment) jadi putih terang */
+        div[data-testid="stMarkdownContainer"] p {
+            color: #FFFFFF !important;
+        }
+
+        /* 3. Fix untuk Radio Button yang tak terpilih (unselected) supaya nampak */
+        div[data-testid="stWidgetLabel"] {
             color: #FFFFFF !important;
         }
         
-        /* FIX BUTTONS: Paksa tulisan dalam button jadi warna GELAP */
-        /* Kita guna selector yang sangat spesifik supaya Streamlit tak boleh override */
+        /* 4. Teks Dashboard Utama */
+        .stApp, h1, h2, h3 {
+            color: #FFFFFF !important;
+        }
+
+        /* 5. Button Status (OK/FAULTY/MISSING) - Tulisan Hitam atas Putih */
         div.stButton > button {
             color: #000000 !important; 
             background-color: #FFFFFF !important;
-            border: 2px solid #a29bfe !important;
-            font-weight: 800 !important;
-            text-transform: uppercase;
+            font-weight: bold !important;
         }
-
-        /* Hover effect supaya user tahu boleh klik */
-        div.stButton > button:hover {
-            border-color: #6c5ce7 !important;
-            background-color: #f0f0f0 !important;
-            color: #000000 !important;
-        }
-
-        /* Metric Fix */
-        [data-testid="stMetricValue"] { color: #FFFFFF !important; }
-        [data-testid="stMetricLabel"] p { color: #E0E0E0 !important; }
         </style>
     """
 else:
     bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7)"
     sidebar_bg = "rgba(255, 255, 255, 0.9)"
-    card_bg = "white"
     text_color = "#1e293b"
     plotly_theme = "plotly_white"
     custom_dark_css = ""
@@ -99,7 +101,6 @@ st.markdown(f"""
     <style>
     .stApp {{ background: {bg_style}; color: {text_color}; }}
     [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
-    .main .block-container {{ padding-bottom: 100px !important; }}
     footer {{visibility: hidden;}}
     </style>
 """, unsafe_allow_html=True)
