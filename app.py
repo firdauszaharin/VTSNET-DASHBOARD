@@ -182,7 +182,7 @@ elif menu_selection == "⚙️ Equipment Status":
             col_chart1, col_chart2 = st.columns(2)
 
             with col_chart1:
-                if 'SITE' in df_q.columns:
+                if 'Site' in df_q.columns:
                     st.markdown("### 🏗️ Status by Site")
                     fig_site = px.histogram(
                         df_q, x='SITE', color=selected_month,
@@ -195,7 +195,7 @@ elif menu_selection == "⚙️ Equipment Status":
                     st.warning("Kolum 'SITE' tidak dijumpai dalam Google Sheets.")
 
             with col_chart2:
-                if 'CATEGORY' in df_q.columns:
+                if 'Detail' in df_q.columns:
                     st.markdown("### 🗂️ Status by Category")
                     fig_cat = px.histogram(
                         df_q, x='CATEGORY', color=selected_month,
