@@ -273,7 +273,7 @@ elif menu_selection == "⚙️ Equipment Status":
                     )
                     
                     fig_type.update_layout(
-                        title_x=0.3, # Bar chart title betul-betul tengah
+                        title_x=0.4, # Bar chart title betul-betul tengah
                         margin=dict(l=20, r=20, t=60, b=20)
                     )
                     st.plotly_chart(fig_type, use_container_width=True)
