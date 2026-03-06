@@ -160,91 +160,17 @@ elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
         st.subheader("⚙️ Inventory & Equipment Status")
         
-        # 1. DETECT KOLUM (Bulan & Site)
-        month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026"])]
-        site_col = next((c for c in df_equip.columns if c.lower() == 'site'), None)
-        
-        if not month_cols:
-            st.warning("Tiada kolum bulan (2025/2026) dijumpai.")
-        else:
-            # --- ROW FILTER (BULAN & SITE) ---
-            c1, c2 = st.columns(2)
-            with c1:
-                selected_month = st.selectbox("📅 Select Report Month:", month_cols, index=len(month_cols)-1)
-            
-            df_working = df_equip.copy()
-            if site_col:
-                unique_sites = ["ALL SITES"] + sorted(df_working[site_col].dropna().unique().tolist())
-                with c2:
-                    selected_site = st.selectbox("🏗️ Select Site:", unique_sites)
-                
-                if selected_site != "ALL SITES":
-                    df_working = df_working[df_working[site_col] == selected_site]
-
-            st.divider()
-
-            # Clean status untuk charting
-            status_series = df_working[selected_month].astype(str).str.strip().str.upper()
-            df_plot = df_working.copy()
-            df_plot[selected_month] = status_series
-            
-            # 2. METRICS
-            me1, me2, me3 = st.columns(3)
-            me1.metric("🟢 Equipment OK", len(df_working[status_series == 'OK']))
-            me2.metric("🟡 Faulty ⚠️", len(df_working[status_series == 'FAULTY']))
-            me3.metric("🔴 Missing ❌", len(df_working[status_series == 'MISSING']))
-
-            # 3. VISUALISASI (DONUT & HISTOGRAM)
-            st.markdown(f"### 🎯 Performance Overview: {selected_site}")
-            col_chart1, col_chart2 = st.columns([0.4, 0.6]) # Donut kecil sedikit, Histogram lebar
-            
-            with col_chart1:
-                # --- DONUT CHART (OVERALL CONDITION) ---
-                fig_donut = px.pie(
-                    df_plot, names=selected_month, hole=0.6, 
-                    title=f'Overall Condition ({selected_month})',
-                    color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}
-                )
-                fig_donut.update_traces(textposition='inside', textinfo='percent+label')
-                st.plotly_chart(fig_donut, use_container_width=True)
-
-            with col_chart2:
-                # --- HISTOGRAM (DETAIL STATUS BY SITE) ---
-                if site_col:
-                    fig_site_hist = px.histogram(
-                        df_plot, 
-                        x=site_col, 
-                        color=selected_month, 
-                        barmode='group',
-                        title=f'Status Distribution by Site',
-                        color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'},
-                        text_auto=True # Tunjuk jumlah terus atas bar
-                    )
-                    fig_site_hist.update_layout(yaxis_title="Quantity", xaxis_title="Location")
-                    st.plotly_chart(fig_site_hist, use_container_width=True)
-
-            # --- HISTOGRAM CATEGORY (MERUJUK KOLUM C / TYPE Buang) ---
-          
-            
-          # --- PAGE 2: EQUIPMENT STATUS ---
-elif menu_selection == "⚙️ Equipment Status":
-    if not df_equip.empty:
-        st.subheader("⚙️ Inventory & Equipment Status")
-        
-        # 1. DETECT KOLUM (Bulan & Site)
-        # FIX: Kita tapis supaya "REMARK" tidak masuk dalam list pilihan bulan
+        # 1. DETECT KOLUM (Bulan & Site) - Tapis Remark keluar dari Dropdown
         month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026", "2027"]) 
                       and "REMARK" not in c.upper()]
-        
         site_col = next((c for c in df_equip.columns if c.lower() == 'site'), None)
         
         if not month_cols:
-            st.warning("Tiada kolum bulan (2025/2026/2027) dijumpai.")
+            st.warning("Tiada kolum status bulanan dijumpai.")
         else:
             # --- ROW FILTER (BULAN & SITE) ---
             c1, c2 = st.columns(2)
             with c1:
-                # Sekarang dropdown ini hanya akan tunjuk bulan sahaja (cth: MAY 2025)
                 selected_month = st.selectbox("📅 Select Report Month:", month_cols, index=len(month_cols)-1)
             
             df_working = df_equip.copy()
@@ -269,7 +195,7 @@ elif menu_selection == "⚙️ Equipment Status":
             me2.metric("🟡 Faulty ⚠️", len(df_working[status_series == 'FAULTY']))
             me3.metric("🔴 Missing ❌", len(df_working[status_series == 'MISSING']))
 
-            # 3. VISUALISASI (DONUT & HISTOGRAM)
+            # 3. VISUALISASI
             st.markdown(f"### 🎯 Performance Overview: {selected_site}")
             col_chart1, col_chart2 = st.columns([0.4, 0.6])
             
@@ -290,64 +216,58 @@ elif menu_selection == "⚙️ Equipment Status":
                         color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'},
                         text_auto=True
                     )
-                    fig_site_hist.update_layout(yaxis_title="Quantity", xaxis_title="Location")
                     st.plotly_chart(fig_site_hist, use_container_width=True)
 
-           # --- 4. DATA TABLE (FIX: JADUAL HILANG) ---
+            # --- 4. DATA TABLE (FIXED: ASSET LIST AKAN KELUAR) ---
             st.divider()
             st.subheader(f"📦 Inventory Asset List ({selected_site})")
             
             search_eq = st.text_input("🔍 Carian Pantas (SN, Nama, IP, Remark):", key="search_eq_box")
             
-            # Tentukan Quarter & Tahun berdasarkan selected_month
+            # Tentukan Quarter & Tahun berdasarkan selected_month untuk cari Remark
             year_match = re.search(r'202\d', selected_month)
             curr_yr = year_match.group(0) if year_match else "2025"
             m_up = selected_month.upper()
             
             if any(m in m_up for m in ['JAN', 'FEB', 'MAR']): q = "Q1"
-            elif any(m in month_up for m in ['APR', 'MAY', 'MEI', 'JUN']): q = "Q2"
-            elif any(m in month_up for m in ['JUL', 'AUG', 'SEP', 'OGO']): q = "Q3"
+            elif any(m in m_up for m in ['APR', 'MAY', 'MEI', 'JUN']): q = "Q2"
+            elif any(m in m_up for m in ['JUL', 'AUG', 'SEP', 'OGO']): q = "Q3"
             else: q = "Q4"
 
-            # 1. Kenalpasti Kolum Remark (Cari dalam df_equip asal)
-            target_remark = f"REMARK {q} {curr_yr}"
+            # Cari Kolum Remark (Smart search)
             actual_remark_col = next((c for c in df_equip.columns if "REMARK" in c.upper() and q in c.upper() and curr_yr in c.upper()), None)
 
-            # 2. Filter data ikut Site & Status Month
-            df_filtered = df_working.copy()
-            
-            # 3. Proses Carian (Search)
+            # Sediakan Data untuk Table (Jangan filter notna supaya list tak hilang)
+            df_table = df_working.copy()
+
             if search_eq:
-                df_filtered = df_filtered[df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
+                df_table = df_table[df_table.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
 
-            # 4. Bina Senarai Kolum yang WUJUD sahaja dalam DataFrame
+            # Susun kolum yang mahu dipaparkan (Hanya jika wujud dalam Sheet)
             display_cols = []
-            cols_to_check = ["Site", "Type", "Equipment", "Serial No", "IP Address", selected_month]
+            standard_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
+            for col in standard_cols:
+                match = next((c for c in df_table.columns if c.lower() == col.lower()), None)
+                if match: display_cols.append(match)
+            
+            if selected_month in df_table.columns:
+                display_cols.append(selected_month)
+            
             if actual_remark_col:
-                cols_to_check.append(actual_remark_col)
+                display_cols.append(actual_remark_col)
 
-            # Pastikan kolum betul-betul ada sebelum masukkan dalam list
-            for c in cols_to_check:
-                if c in df_filtered.columns:
-                    display_cols.append(c)
-
-            # 5. Paparkan Jadual
-            if not df_filtered.empty:
-                # Guna display_cols yang telah disemak
+            # Paparkan Jadual
+            if not df_table.empty:
                 st.dataframe(
-                    df_filtered[display_cols].style.map(
+                    df_table[display_cols].style.map(
                         lambda x: 'background-color: #D4EDDA; color: #155724;' if str(x).upper() == 'OK' else 
                                   ('background-color: #F8D7DA; color: #721C24;' if str(x).upper() == 'MISSING' else 
                                    ('background-color: #FFF3CD; color: #856404;' if str(x).upper() == 'FAULTY' else '')), 
                         subset=[selected_month] if selected_month in display_cols else None
                     ), 
-                    use_container_width=True, 
-                    hide_index=True
+                    use_container_width=True, hide_index=True
                 )
-                
                 if actual_remark_col:
-                    st.caption(f"📌 Menunjukkan nota daripada kolum: **{actual_remark_col}**")
-                else:
-                    st.info(f"ℹ️ Kolum `{target_remark}` tidak dijumpai di Google Sheets.")
+                    st.success(f"✅ Menunjukkan Remark: `{actual_remark_col}`")
             else:
-                st.warning(f"Tiada data ditemui untuk tapisan/carian ini.")
+                st.warning("Tiada aset ditemui.")
