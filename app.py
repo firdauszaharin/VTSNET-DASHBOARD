@@ -18,32 +18,6 @@ st.set_page_config(
 # --- AUTO REFRESH (5 MINIT) ---
 st_autorefresh(interval=300000, key="vts_refresh")
 
-    # Centering the Login UI
-    _, col_mid, _ = st.columns([1, 1.5, 1])
-
-    with col_mid:
-        st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        
-        st.markdown('<p class="login-subtitle">VTSNET Admin & Inventory Dashboard</p>', unsafe_allow_html=True)
-        
-        # Input Section
-        pwd = st.text_input("Enter Access Token", type="password", placeholder="••••••••", label_visibility="collapsed")
-        
-        # Security Logic
-        correct_password = st.secrets.get("PROJECT_PASSWORD", "vtsnet2026")
-        
-        if st.button("Unlock Dashboard", use_container_width=True):
-            if pwd == correct_password:
-                st.session_state.authenticated = True
-                st.balloons()
-                st.rerun()
-            else:
-                st.error("Access Denied: Invalid Project Token.")
-        
-        st.markdown('<p style="color: grey; font-size: 11px; margin-top: 20px;">SYSTEM VERSION 4.0.26 | SECURE ACCESS</p>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    st.stop()
-
 # --- 2. LOGIN SECURITY ---
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
