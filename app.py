@@ -22,7 +22,6 @@ st_autorefresh(interval=300000, key="vts_refresh")
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
-# Paparan Login jika belum authenticated
 if not st.session_state.authenticated:
     st.markdown("""
         <style>
@@ -66,14 +65,7 @@ if dark_mode:
     text_color = "#E0E0E0"
     shadow = "0 8px 32px rgba(108, 92, 231, 0.15)"
     plotly_theme = "plotly_dark"
-    
-    custom_dark_css = f"""
-        .stApp, .stMarkdown p, h1, h2, h3, h4, label, .stWidgetLabel p, [data-testid="stSidebar"] p {{ color: white !important; }}
-        [data-testid="stMetricValue"] {{ color: #ffffff !important; font-weight: 700 !important; }}
-        [data-testid="stMetricLabel"] p {{ color: #E0E0E0 !important; opacity: 0.9 !important; }}
-        .stButton > button {{ background-color: #1e293b !important; color: white !important; border: 1px solid #3e4e63 !important; border-radius: 10px !important; }}
-        [data-testid="stSidebarCollapseButton"] button {{ color: #a29bfe !important; background-color: rgba(255, 255, 255, 0.1) !important; }}
-    """
+    custom_dark_css = ".stApp, .stMarkdown p, h1, h2, h3, h4, label, .stWidgetLabel p, [data-testid='stSidebar'] p { color: white !important; }"
 else:
     bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7,#f8faff)"
     sidebar_bg = "rgba(255, 255, 255, 0.8)"
@@ -85,14 +77,12 @@ else:
 
 st.markdown(f"""
     <style>
-    .block-container {{ padding-top: 1rem !important; }}
-    header[data-testid="stHeader"] {{ background: transparent !important; visibility: visible !important; display: flex !important; }}
-    button[data-testid="baseButton-headerNoPadding"] {{ visibility: visible !important; color: #a29bfe !important; background-color: rgba(255,255,255,0.1) !important; z-index: 999999 !important; }}
+    .block-container {{ padding-top: 1rem !important; padding-bottom: 5rem !important; }}
     .stApp {{ background: {bg_style}; color: {text_color}; }}
     {custom_dark_css}
     [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
     [data-testid="stMetric"] {{ background: {card_bg} !important; padding: 20px !important; border-radius: 20px !important; box-shadow: {shadow} !important; }}
-    footer {{visibility: hidden;}}
+    footer {{visibility: hidden;}} /* Hide default Streamlit footer */
     </style>
 """, unsafe_allow_html=True)
 
@@ -244,29 +234,10 @@ elif menu_selection == "⚙️ Equipment Status":
                         subset=[selected_month] if selected_month in display_cols else None
                     ), use_container_width=True, hide_index=True
                 )
-# --- FOOTER SECTION (PASTIKAN DUDUK LUAR BLOK IF/ELIF) ---
-st.write("##") 
-st.write("##") 
 
+# --- FOOTER SECTION (Paling bawah, luar blok if-else) ---
 st.markdown(f"""
-    <style>
-    .footer {{
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        background-color: {sidebar_bg};
-        color: {text_color};
-        text-align: center;
-        padding: 10px;
-        font-size: 12px;
-        letter-spacing: 1px;
-        backdrop-filter: blur(10px);
-        z-index: 9999; /* Kita naikkan z-index biar dia paling depan */
-        border-top: 1px solid rgba(255,255,255,0.1);
-    }}
-    </style>
-    <div class="footer">
+    <div style="position: fixed; left: 0; bottom: 0; width: 100%; background-color: {sidebar_bg}; color: {text_color}; text-align: center; padding: 10px; font-size: 12px; backdrop-filter: blur(10px); z-index: 9999; border-top: 1px solid rgba(255,255,255,0.1);">
         <p>© 2026 GreenFinder VTMS Admin & Inventory Dashboard. All rights reserved.</p>
     </div>
 """, unsafe_allow_html=True)
