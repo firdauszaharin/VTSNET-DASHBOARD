@@ -203,6 +203,7 @@ elif menu_selection == "⚙️ Equipment Status":
                                       color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}, barmode='group')
                     st.plotly_chart(fig_type, use_container_width=True)
 
+         # --- INVENTORY ASSET LIST ---
             st.divider()
             st.subheader(f"📦 Inventory Asset List")
             search_eq = st.text_input("🔍 Quick Search (SN, Name, IP):", key="search_eq_box")
@@ -210,26 +211,31 @@ elif menu_selection == "⚙️ Equipment Status":
                 df_filtered = df_filtered[df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
 
             year_match = re.search(r'202\d', selected_month)
-            curr_yr = year_match.group(0) if year_match else "2026"
+            curr_yr = year_match.group(0) if year_match else "2025"
             m_up = selected_month.upper()
             if any(m in m_up for m in ['JAN', 'FEB', 'MAR']): q = "Q1"
-            elif any(m in m_up for m in ['APR', 'MAY', 'JUN']): q = "Q2"
-            elif any(m in m_up for m in ['JUL', 'AUG', 'SEP']): q = "Q3"
+            elif any(m in m_up for m in ['APR', 'MAY', 'MEI', 'JUN']): q = "Q2"
+            elif any(m in m_up for m in ['JUL', 'AUG', 'SEP', 'OGO']): q = "Q3"
             else: q = "Q4"
             actual_remark_col = next((c for c in df_equip.columns if "REMARK" in c.upper() and q in c.upper() and curr_yr in c.upper()), None)
 
-            display_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
-            valid_display = [c for c in display_cols if c in df_filtered.columns] + [selected_month]
-            if actual_remark_col: valid_display.append(actual_remark_col)
+            display_cols = []
+            standard_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
+            for col in standard_cols:
+                match = next((c for c in df_filtered.columns if c.lower() == col.lower()), None)
+                if match: display_cols.append(match)
+            if selected_month in df_filtered.columns: display_cols.append(selected_month)
+            if actual_remark_col: display_cols.append(actual_remark_col)
 
-            st.dataframe(
-                df_filtered[valid_display].style.map(
-                    lambda x: 'background-color: #D4EDDA; color: #155724;' if str(x).upper() == 'OK' else 
-                              ('background-color: #F8D7DA; color: #721C24;' if str(x).upper() == 'MISSING' else 
-                               ('background-color: #FFF3CD; color: #856404;' if str(x).upper() == 'FAULTY' else '')), 
-                    subset=[selected_month] if selected_month in valid_display else None
-                ), use_container_width=True, hide_index=True
-            )
+            if not df_filtered.empty:
+                st.dataframe(
+                    df_filtered[display_cols].style.map(
+                        lambda x: 'background-color: #D4EDDA; color: #155724;' if str(x).upper() == 'OK' else 
+                                  ('background-color: #F8D7DA; color: #721C24;' if str(x).upper() == 'MISSING' else 
+                                   ('background-color: #FFF3CD; color: #856404;' if str(x).upper() == 'FAULTY' else '')), 
+                        subset=[selected_month] if selected_month in display_cols else None
+                    ), use_container_width=True, hide_index=True
+                )
 
 # --- 8. FOOTER (GLOBAL) ---
 st.markdown(f"""
