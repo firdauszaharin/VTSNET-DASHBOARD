@@ -60,6 +60,16 @@ if dark_mode:
         .stApp, [data-testid="stSidebar"] *, .stMarkdown p, h1, h2, h3, label {
             color: #FFFFFF !important;
         }
+        /* 1.1 FULL DARK MODE: Sorok header putih kat atas tu */
+        header[data-testid="stHeader"] {
+            background-color: rgba(0,0,0,0) !important;
+            color: white !important;
+        }
+        
+        /* Buang garisan halus kat atas sekali */
+        [data-testid="stDecoration"] {
+            display: none;
+        }
 
         /* 2. FIX SEMUA BUTTON DALAM MAIN AREA (OK, FAULTY, MISSING, SHOW ALL) */
         /* Kita guna 'div[data-testid="stVerticalBlock"]' untuk target area content sahaja */
