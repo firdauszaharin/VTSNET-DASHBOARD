@@ -72,6 +72,20 @@ if dark_mode:
 
         /* 5. SIDEBAR FIX */
         [data-testid="stSidebar"] {{ color: {text_color} !important; }}
+        
+        /* 6. PAKSA BUTANG HIDE/SHOW SIDEBAR SENTIASA NAMPAK (TAMBAH INI) */
+        [data-testid="stSidebarCollapseButton"] button {{
+            color: #a29bfe !important; /* Warna ungu terang */
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(162, 155, 254, 0.5) !important;
+            margin-top: 5px !important;
+        }}
+        
+        /* Bila hover, dia jadi lagi terang */
+        [data-testid="stSidebarCollapseButton"] button:hover {{
+            background-color: #6c5ce7 !important;
+            color: white !important;
+        }}
     """
 else:
     bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7,#f8faff)"
