@@ -155,60 +155,85 @@ if menu_selection == "📝 Maintenance Reports":
     else:
         st.info("Waiting for data...")
 
-# --- TAB 2: EQUIPMENT STATUS ---
-with tab2:
+# --- PAGE 2: EQUIPMENT STATUS ---
+elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
         st.subheader("⚙️ Inventory & Equipment Status")
-        month_cols = [c for c in df_equip.columns if any(yr in c for yr in ["2025", "2026"])]
         
-        c_sel, _ = st.columns([0.4, 0.6])
-        with c_sel:
-            selected_month = st.selectbox("📅 Select Report Month:", month_cols, index=len(month_cols)-1)
+        # Detect kolum bulan (2025/2026)
+        month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026"])]
         
-        st.divider()
+        if not month_cols:
+            st.warning("Tiada kolum bulan (2025/2026) dijumpai dalam fail Equipment.")
+        else:
+            c_sel, _ = st.columns([0.4, 0.6])
+            with c_sel:
+                selected_month = st.selectbox("📅 Select Report Month:", month_cols, index=len(month_cols)-1)
+            
+            st.divider()
 
-        if selected_month in df_equip.columns:
+            # Clean data untuk charting
             status_series = df_equip[selected_month].astype(str).str.strip().str.upper()
-            df_pie = df_equip.copy()
-            df_pie[selected_month] = status_series
+            df_plot = df_equip.copy()
+            df_plot[selected_month] = status_series
             
+            # 1. METRICS
             me1, me2, me3 = st.columns(3)
-            me1.metric(f"Equipment OK", len(df_equip[status_series == 'OK']))
-            me2.metric(f"Faulty ⚠️", len(df_equip[status_series == 'FAULTY']))
-            me3.metric(f"Missing ❌", len(df_equip[status_series == 'MISSING']))
+            me1.metric("Equipment OK", len(df_equip[status_series == 'OK']))
+            me2.metric("Faulty ⚠️", len(df_equip[status_series == 'FAULTY']))
+            me3.metric("Missing ❌", len(df_equip[status_series == 'MISSING']))
 
-            st.markdown(f"### 🎯 Equipment Performance Overview ({selected_month})")
+            st.markdown(f"### 🎯 Performance Overview ({selected_month})")
             
-            # SUSUNAN DONUT DAN HISTOGRAM
+            # 2. CHARTS (BY SITE & CATEGORY)
             col_left, col_right = st.columns(2)
             
             with col_left:
+                # Donut Chart
                 fig_donut = px.pie(
-                    df_pie, 
-                    names=selected_month, 
-                    title='Condition Overview',
-                    hole=0.55, 
+                    df_plot, names=selected_month, hole=0.55, title='Overall Condition',
                     color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}
                 )
-                fig_donut.update_traces(textposition='inside', textinfo='percent+label')
                 st.plotly_chart(fig_donut, use_container_width=True)
 
             with col_right:
-                if 'Site' in df_pie.columns:
-                    st.plotly_chart(px.histogram(df_pie, x='Site', color=selected_month, barmode='group', title='Status by Location',
-                                                color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}), use_container_width=True)
+                # Site Chart (Guna 'Site' atau 'SITE')
+                site_col = next((c for c in df_plot.columns if c.lower() == 'site'), None)
+                if site_col:
+                    fig_site = px.histogram(
+                        df_plot, x=site_col, color=selected_month, barmode='group', title='Status by Location',
+                        color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}
+                    )
+                    st.plotly_chart(fig_site, use_container_width=True)
+
+            # Category/Type Chart
+            type_col = next((c for c in df_plot.columns if c.lower() in ['type', 'category']), None)
+            if type_col:
+                fig_type = px.histogram(
+                    df_plot, x=type_col, color=selected_month, barmode='group', title='Status by Equipment Category',
+                    color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}
+                )
+                st.plotly_chart(fig_type, use_container_width=True)
             
-            if 'Type' in df_pie.columns:
-                st.plotly_chart(px.histogram(df_pie, x='Type', color=selected_month, barmode='group', title='Status by Equipment Category',
-                                            color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}), use_container_width=True)
-            
+            # 3. DATA TABLE
             st.divider()
             st.subheader("📦 Inventory Asset List")
-            search_eq = st.text_input("🔍 Search Asset (SN, Name, Site):", key="search_eq_tab")
-            essential_cols = ["Site", "Type", "Serial No", "IP Address", selected_month]
-            df_eq_show = df_equip[[c for c in essential_cols if c in df_equip.columns]].copy()
+            search_eq = st.text_input("🔍 Search Asset (SN, Name, Site):", key="search_eq_box")
             
+            df_eq_show = df_equip.copy()
             if search_eq:
                 df_eq_show = df_eq_show[df_eq_show.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
 
-            st.dataframe(df_eq_show.style.map(lambda x: 'background-color: #D4EDDA' if x=='OK' else ('background-color: #F8D7DA' if x=='MISSING' else ('background-color: #FFF3CD' if x=='FAULTY' else '')), subset=[selected_month]), use_container_width=True, hide_index=True)
+            # Styling untuk table
+            st.dataframe(
+                df_eq_show.style.map(
+                    lambda x: 'background-color: #D4EDDA' if x=='OK' else 
+                              ('background-color: #F8D7DA' if x=='MISSING' else 
+                               ('background-color: #FFF3CD' if x=='FAULTY' else '')), 
+                    subset=[selected_month]
+                ), 
+                use_container_width=True, 
+                hide_index=True
+            )
+    else:
+        st.info("Sila pastikan SHEET_EQUIP_URL disambungkan dengan betul.")
