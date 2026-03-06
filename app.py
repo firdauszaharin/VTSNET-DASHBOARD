@@ -121,31 +121,70 @@ st.title("VTSNET Management Dashboard")
 # --- PAGE 1: MAINTENANCE REPORTS ---
 if menu_selection == "📝 Maintenance Reports":
     if not df_raw.empty:
-        df = df_raw.copy()
-        if search_report: df = df[df['REPORT CHECKLIST'].str.contains(search_report, case=False, na=False)]
-        if search_staff: df = df[df['Name'].str.contains(search_staff, case=False, na=False)]
-        if search_id != "ALL IDs":
-            df = df[df['ID'].astype(str) == search_id]
+        df_working = df_raw.copy()
         
-        m1, m2, m3 = st.columns(3)
-        m1.metric("Total Reports", len(df))
-        m2.metric("Approved ✅", len(df[df['STATUS'] == 'APPROVED']) if 'STATUS' in df.columns else 0)
-        m3.metric("Pending ⏳", len(df[~df['STATUS'].isin(['APPROVED', 'REJECTED'])]) if 'STATUS' in df.columns else 0)
-
-        c1, c2 = st.columns(2)
+        st.subheader("📝 Maintenance Service Reports")
+        
+        # --- FILTER AREA (ID, STAFF, SITE) ---
+        c1, c2, c3 = st.columns(3)
+        
         with c1:
-            st.plotly_chart(px.pie(df, names='STATUS', hole=0.4, title="Status Distribution", template=plotly_theme,
-                                   color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}), use_container_width=True)
+            # Dropdown ID Document (Tarik unik ID dari df_raw)
+            id_col = 'ID' # Pastikan nama kolum ni betul dalam Sheet kau
+            if id_col in df_working.columns:
+                id_list = ["ALL IDs"] + sorted(df_working[id_col].astype(str).unique().tolist())
+                selected_id = st.selectbox("🆔 Select Document ID:", id_list)
+            else:
+                selected_id = "ALL IDs"
+                st.caption("Column 'ID' not found")
+
         with c2:
-            st.plotly_chart(px.histogram(df, x='REPORT CHECKLIST', color='STATUS', title="Reports by Type", template=plotly_theme,
+            # Dropdown Staff
+            name_col = 'Name' # Pastikan nama kolum ni betul
+            if name_col in df_working.columns:
+                staff_list = ["ALL STAFF"] + sorted(df_working[name_col].dropna().unique().tolist())
+                selected_staff = st.selectbox("👤 Filter by Staff:", staff_list)
+            else:
+                selected_staff = "ALL STAFF"
+
+        with c3:
+            # Manual Search Site/Type
+            search_manual = st.text_input("🔎 Search Site/Type:", placeholder="Type here...")
+
+        # --- APPLY FILTERS (FIXED LOGIC) ---
+        if selected_id != "ALL IDs":
+            df_working = df_working[df_working[id_col].astype(str) == selected_id]
+            
+        if selected_staff != "ALL STAFF":
+            df_working = df_working[df_working[name_col] == selected_staff]
+            
+        if search_manual:
+            df_working = df_working[df_working['REPORT CHECKLIST'].str.contains(search_manual, case=False, na=False)]
+
+        st.divider()
+
+        # --- METRICS ---
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Total Reports", len(df_working))
+        m2.metric("Approved ✅", len(df_working[df_working['STATUS'] == 'APPROVED']) if 'STATUS' in df_working.columns else 0)
+        m3.metric("Pending ⏳", len(df_working[~df_working['STATUS'].isin(['APPROVED', 'REJECTED'])]) if 'STATUS' in df_working.columns else 0)
+
+        # --- CHARTS ---
+        col_chart1, col_chart2 = st.columns(2)
+        with col_chart1:
+            st.plotly_chart(px.pie(df_working, names='STATUS', hole=0.4, title="Status Distribution", template=plotly_theme,
+                                   color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}), use_container_width=True)
+        with col_chart2:
+            st.plotly_chart(px.histogram(df_working, x='REPORT CHECKLIST', color='STATUS', title="Reports by Type", template=plotly_theme,
                                          color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}), use_container_width=True)
 
+        # --- TABLE VIEW ---
         st.subheader("📋 Record Table")
-        styled_df = df.style.map(color_status, subset=['STATUS']) if 'STATUS' in df.columns else df
+        styled_df = df_working.style.map(color_status, subset=['STATUS']) if 'STATUS' in df_working.columns else df_working
         st.dataframe(styled_df, use_container_width=True, hide_index=True,
                     column_config={PDF_COL: st.column_config.LinkColumn("Report File", display_text="OPEN PDF 📄")})
-    else: st.info("Waiting for data...")
-
+    else:
+        st.info("Waiting for data...")
 # --- PAGE 2: EQUIPMENT STATUS ---
 elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
