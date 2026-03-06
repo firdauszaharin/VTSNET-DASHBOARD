@@ -17,34 +17,6 @@ st.set_page_config(
 
 # --- AUTO REFRESH (5 MINIT) ---
 st_autorefresh(interval=300000, key="vts_refresh")
-# --- 2. INTERACTIVE LOGIN PAGE (GLASSMORPHISM) ---
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-
-if not st.session_state.authenticated:
-    # Full-screen Dark Theme for Login
-    st.markdown("""
-        <style>
-        /* Hide Streamlit elements during login */
-        header {visibility: hidden;}
-        [data-testid="stSidebar"] {display: none;}
-        
-        /* Interactive Background Gradient */
-        .stApp {
-            background: radial-gradient(circle at 20% 30%, #1a0a2e 0%, #0f0a19 100%) !important;
-        }
-
-        /* Input Styling */
-        .stTextInput input {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            color: white !important;
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
-            border-radius: 12px !important;
-            height: 45px !important;
-        }
-        
-        </style>
-    """, unsafe_allow_html=True)
 
     # Centering the Login UI
     _, col_mid, _ = st.columns([1, 1.5, 1])
