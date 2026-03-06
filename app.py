@@ -96,16 +96,39 @@ else:
     plotly_theme = "plotly_white"
     custom_dark_css = ""
 
+# --- DYNAMIC CSS & LAYOUT FIX ---
 st.markdown(f"""
     <style>
+    /* 1. BUANG RUANG KOSONG PALING ATAS */
+    .block-container {{
+        padding-top: 0.5rem !important;
+        padding-bottom: 0rem !important;
+    }}
+
+    /* 2. TARIK TAJUK (H1) NAIK LAGI & BESARKAN */
+    h1 {{
+        margin-top: -45px !important; /* Tarik naik melepasi header */
+        padding-top: 0px !important;
+        font-size: 3.5rem !important; /* Saiz besar */
+        font-weight: 800 !important;
+        line-height: 1.2 !important;
+    }}
+
+    /* 3. SEMBUNYIKAN HEADER ASAL STREAMLIT */
+    header[data-testid="stHeader"] {{
+        visibility: hidden !important;
+        height: 0px !important;
+    }}
+
+    /* 4. TEMA WARNA & BACKGROUND */
     .stApp {{ background: {bg_style}; font-family: 'Inter', sans-serif; color: {text_color}; }}
     {custom_dark_css}
+    
     [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
     [data-testid="stMetric"] {{ background: {card_bg} !important; padding: 20px !important; border-radius: 20px !important; box-shadow: {shadow} !important; }}
     [data-testid="stMetricValue"] {{ color: {text_color} !important; }}
     [data-testid="stMetricLabel"] {{ color: {text_color} !important; opacity: 0.8; }}
-    header[data-testid="stHeader"] {{ background-color: rgba(0,0,0,0) !important; }}
-    .st-emotion-cache-hp888a {{ color: #0984E3 !important; }}
+    
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     </style>
