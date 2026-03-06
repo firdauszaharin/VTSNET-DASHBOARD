@@ -99,12 +99,28 @@ with st.sidebar:
     search_staff = st.text_input("👤 Search Staff Name:")
 
 # --- HEADER BANNER ---
-st.markdown(f"""
-    <div style="background: linear-gradient(90deg, #0984E3, #6c5ce7); padding: 30px; border-radius: 20px; color: white; margin-bottom: 25px;">
-        <h1 style="color: white; margin: 0;">VTSNET ASSET MONITORING CENTER</h1>
-        <p style="opacity: 0.9;">System Management Dashboard 2026</p>
-    </div>
-""", unsafe_allow_html=True)
+st.title("VTSNET Management Dashboard")
+
+if not df_equip.empty:
+    month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026"])]
+    latest_month = month_cols[-1] if month_cols else None
+    
+    if latest_month:
+        # Tampilkan Header Banner yang cantik
+        st.markdown(f"""
+            <div style="background: linear-gradient(90deg, #0984E3, #6c5ce7); padding: 30px; border-radius: 20px; color: white; margin-bottom: 25px;">
+                <h1 style="color: white; margin: 0;">EDM VTMS LPJ/PTP</h1>
+                <p style="font-size: 18px; opacity: 0.9;">System Status: {latest_month}</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        status_check = df_equip[latest_month].astype(str).str.strip().str.upper()
+        faulty_data = df_equip[status_check.isin(['FAULTY', 'MISSING'])]
+        
+        if len(faulty_data) > 0:
+            st.error(f"⚠️ Dikesan {len(faulty_data)} aset bermasalah pada bulan {latest_month}!")
+            st.download_button("📥 Download Faulty List", faulty_data.to_csv(index=False), "faulty_assets.csv")
+
 
 # --- PAGE 1: MAINTENANCE REPORTS ---
 if menu_selection == "📝 Maintenance Reports":
