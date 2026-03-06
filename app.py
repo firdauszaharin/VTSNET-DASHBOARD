@@ -30,19 +30,31 @@ if dark_mode:
     shadow = "0 10px 25px rgba(0,0,0,0.5)"
     plotly_theme = "plotly_dark"
     
-    # CSS KHAS UNTUK DARK MODE (PAKSA TULISAN PUTIH)
     custom_dark_css = f"""
-        [data-testid="stSidebar"] {{ color: {text_color} !important; }}
-        [data-testid="stSidebar"] .stWidgetLabel p, 
-        [data-testid="stSidebar"] label {{ color: {text_color} !important; }}
-        
-        /* Fix Input & Selectbox Text Visibility */
-        input, select, textarea, [data-baseweb="select"] div {{
+        /* 1. Paksa warna teks utama */
+        .stApp, .stMarkdown p, h1, h2, h3, h4, label, .stWidgetLabel p {{ 
+            color: {text_color} !important; 
+        }}
+
+        /* 2. FIX INPUT BOX (SEARCH BARS) */
+        input {{
             color: {text_color} !important;
+            background-color: rgba(255,255,255,0.05) !important;
             -webkit-text-fill-color: {text_color} !important;
         }}
+
+        /* 3. FIX SELECTBOX (DROPDOWNS) */
+        [data-baseweb="select"] > div {{
+            color: {text_color} !important;
+            background-color: rgba(255,255,255,0.05) !important;
+        }}
         
-        /* Dropdown list items inside the popover */
+        /* Tulisan dalam kotak selectbox yang dah dipilih */
+        [data-testid="stSelectbox"] div[data-baseweb="select"] {{
+            color: {text_color} !important;
+        }}
+
+        /* 4. FIX DROPDOWN LIST (THE MENU THAT POPS OUT) */
         [data-baseweb="popover"] ul {{
             background-color: #1e293b !important;
         }}
@@ -53,7 +65,8 @@ if dark_mode:
             background-color: #0984E3 !important;
         }}
 
-        .stMarkdown p, h1, h2, h3, h4 {{ color: {text_color} !important; }}
+        /* 5. SIDEBAR FIX */
+        [data-testid="stSidebar"] {{ color: {text_color} !important; }}
     """
 else:
     bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7,#f8faff)"
@@ -195,7 +208,7 @@ elif menu_selection == "⚙️ Equipment Status":
                                       color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}, barmode='group')
                     st.plotly_chart(fig_type, use_container_width=True)
 
-            # --- INVENTORY ASSET LIST (IKUT KOD ASAL SEBIJI) ---
+            # --- INVENTORY ASSET LIST ---
             st.divider()
             st.subheader(f"📦 Inventory Asset List")
             search_eq = st.text_input("🔍 Carian Pantas (SN, Nama, IP):", key="search_eq_box")
