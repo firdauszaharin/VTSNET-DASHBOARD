@@ -155,80 +155,60 @@ if menu_selection == "📝 Maintenance Reports":
     else:
         st.info("Waiting for data...")
 
-# --- PAGE 2: EQUIPMENT STATUS ---
-elif menu_selection == "⚙️ Equipment Status":
+# --- TAB 2: EQUIPMENT STATUS ---
+with tab2:
     if not df_equip.empty:
-        # 1. Pilih Bulan
-        month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026"])]
-        if month_cols:
-            selected_month = st.selectbox("📅 Pilih Bulan Laporan:", month_cols, index=len(month_cols)-1)
+        st.subheader("⚙️ Inventory & Equipment Status")
+        month_cols = [c for c in df_equip.columns if any(yr in c for yr in ["2025", "2026"])]
+        
+        c_sel, _ = st.columns([0.4, 0.6])
+        with c_sel:
+            selected_month = st.selectbox("📅 Select Report Month:", month_cols, index=len(month_cols)-1)
+        
+        st.divider()
+
+        if selected_month in df_equip.columns:
+            status_series = df_equip[selected_month].astype(str).str.strip().str.upper()
+            df_pie = df_equip.copy()
+            df_pie[selected_month] = status_series
             
-            df_q = df_equip.copy()
+            me1, me2, me3 = st.columns(3)
+            me1.metric(f"Equipment OK", len(df_equip[status_series == 'OK']))
+            me2.metric(f"Faulty ⚠️", len(df_equip[status_series == 'FAULTY']))
+            me3.metric(f"Missing ❌", len(df_equip[status_series == 'MISSING']))
+
+            st.markdown(f"### 🎯 Equipment Performance Overview ({selected_month})")
             
-            # Filter Search (jika ada)
-            if search_report:
-                df_q = df_q[df_q.astype(str).apply(lambda x: x.str.contains(search_report, case=False)).any(axis=1)]
-
-            # 2. Ringkasan Metrik
-            status_series = df_q[selected_month].astype(str).str.strip().str.upper()
-            e1, e2, e3 = st.columns(3)
-            e1.metric("🟢 OK", len(df_q[status_series == 'OK']))
-            e2.metric("🟡 FAULTY", len(df_q[status_series == 'FAULTY']))
-            e3.metric("🔴 MISSING", len(df_q[status_series == 'MISSING']))
-
-            st.divider()
-
-            # 3. VISUALISASI BARU (By Site & By Category)
-            col_chart1, col_chart2 = st.columns(2)
-
-            with col_chart1:
-                if 'Site' in df_q.columns:
-                    st.markdown("### 🏗️ Status by Site")
-                    fig_site = px.histogram(
-                        df_q, x='SITE', color=selected_month,
-                        barmode='group',
-                        color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'},
-                        height=400
-                    )
-                    st.plotly_chart(fig_site, use_container_width=True)
-                else:
-                    st.warning("Kolum 'SITE' tidak dijumpai dalam Google Sheets.")
-
-            with col_chart2:
-                if 'Detail' in df_q.columns:
-                    st.markdown("### 🗂️ Status by Category")
-                    fig_cat = px.histogram(
-                        df_q, x='CATEGORY', color=selected_month,
-                        barmode='group',
-                        color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'},
-                        height=400
-                    )
-                    st.plotly_chart(fig_cat, use_container_width=True)
-                else:
-                    st.warning("Kolum 'CATEGORY' tidak dijumpai dalam Google Sheets.")
-
-            # 4. Carta Individu Equipment (Jika data banyak, kita buat horizontal bar)
-            st.markdown("### 🛠️ Individual Equipment Health")
-            if 'EQUIPMENT' in df_q.columns:
-                fig_equip = px.bar(
-                    df_q, y='EQUIPMENT', x=selected_month, color=selected_month,
-                    orientation='h',
-                    color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'},
-                    height=max(400, len(df_q)*20) # Auto-adjust height ikut jumlah barang
+            # SUSUNAN DONUT DAN HISTOGRAM
+            col_left, col_right = st.columns(2)
+            
+            with col_left:
+                fig_donut = px.pie(
+                    df_pie, 
+                    names=selected_month, 
+                    title='Condition Overview',
+                    hole=0.55, 
+                    color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}
                 )
-                st.plotly_chart(fig_equip, use_container_width=True)
+                fig_donut.update_traces(textposition='inside', textinfo='percent+label')
+                st.plotly_chart(fig_donut, use_container_width=True)
 
-            st.divider()
+            with col_right:
+                if 'Site' in df_pie.columns:
+                    st.plotly_chart(px.histogram(df_pie, x='Site', color=selected_month, barmode='group', title='Status by Location',
+                                                color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}), use_container_width=True)
             
-            # 5. Jadual Data
-            def color_equip(val):
-                if val == 'OK': return 'background-color: #d4edda;'
-                if val == 'FAULTY': return 'background-color: #fff3cd;'
-                if val == 'MISSING': return 'background-color: #f8d7da;'
-                return ''
+            if 'Type' in df_pie.columns:
+                st.plotly_chart(px.histogram(df_pie, x='Type', color=selected_month, barmode='group', title='Status by Equipment Category',
+                                            color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}), use_container_width=True)
+            
+            st.divider()
+            st.subheader("📦 Inventory Asset List")
+            search_eq = st.text_input("🔍 Search Asset (SN, Name, Site):", key="search_eq_tab")
+            essential_cols = ["Site", "Type", "Serial No", "IP Address", selected_month]
+            df_eq_show = df_equip[[c for c in essential_cols if c in df_equip.columns]].copy()
+            
+            if search_eq:
+                df_eq_show = df_eq_show[df_eq_show.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
 
-            st.dataframe(
-                df_q.style.applymap(color_equip, subset=[selected_month]), 
-                use_container_width=True, 
-                hide_index=True
-            )
+            st.dataframe(df_eq_show.style.map(lambda x: 'background-color: #D4EDDA' if x=='OK' else ('background-color: #F8D7DA' if x=='MISSING' else ('background-color: #FFF3CD' if x=='FAULTY' else '')), subset=[selected_month]), use_container_width=True, hide_index=True)
