@@ -158,27 +158,69 @@ if menu_selection == "📝 Maintenance Reports":
 # --- PAGE 2: EQUIPMENT STATUS ---
 elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
+        # 1. Pilih Bulan
         month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026"])]
         if month_cols:
             selected_month = st.selectbox("📅 Pilih Bulan Laporan:", month_cols, index=len(month_cols)-1)
             
             df_q = df_equip.copy()
+            
+            # Filter Search (jika ada)
             if search_report:
                 df_q = df_q[df_q.astype(str).apply(lambda x: x.str.contains(search_report, case=False)).any(axis=1)]
 
+            # 2. Ringkasan Metrik
             status_series = df_q[selected_month].astype(str).str.strip().str.upper()
-            
             e1, e2, e3 = st.columns(3)
-            e1.metric("OK", len(df_q[status_series == 'OK']))
-            e2.metric("FAULTY", len(df_q[status_series == 'FAULTY']))
-            e3.metric("MISSING", len(df_q[status_series == 'MISSING']))
+            e1.metric("🟢 OK", len(df_q[status_series == 'OK']))
+            e2.metric("🟡 FAULTY", len(df_q[status_series == 'FAULTY']))
+            e3.metric("🔴 MISSING", len(df_q[status_series == 'MISSING']))
 
-            st.plotly_chart(px.pie(df_q, names=selected_month, hole=0.5, title=f"Health Status: {selected_month}",
-                                   color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}), use_container_width=True)
+            st.divider()
+
+            # 3. VISUALISASI BARU (By Site & By Category)
+            col_chart1, col_chart2 = st.columns(2)
+
+            with col_chart1:
+                if 'SITE' in df_q.columns:
+                    st.markdown("### 🏗️ Status by Site")
+                    fig_site = px.histogram(
+                        df_q, x='SITE', color=selected_month,
+                        barmode='group',
+                        color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'},
+                        height=400
+                    )
+                    st.plotly_chart(fig_site, use_container_width=True)
+                else:
+                    st.warning("Kolum 'SITE' tidak dijumpai dalam Google Sheets.")
+
+            with col_chart2:
+                if 'CATEGORY' in df_q.columns:
+                    st.markdown("### 🗂️ Status by Category")
+                    fig_cat = px.histogram(
+                        df_q, x='CATEGORY', color=selected_month,
+                        barmode='group',
+                        color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'},
+                        height=400
+                    )
+                    st.plotly_chart(fig_cat, use_container_width=True)
+                else:
+                    st.warning("Kolum 'CATEGORY' tidak dijumpai dalam Google Sheets.")
+
+            # 4. Carta Individu Equipment (Jika data banyak, kita buat horizontal bar)
+            st.markdown("### 🛠️ Individual Equipment Health")
+            if 'EQUIPMENT' in df_q.columns:
+                fig_equip = px.bar(
+                    df_q, y='EQUIPMENT', x=selected_month, color=selected_month,
+                    orientation='h',
+                    color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'},
+                    height=max(400, len(df_q)*20) # Auto-adjust height ikut jumlah barang
+                )
+                st.plotly_chart(fig_equip, use_container_width=True)
 
             st.divider()
             
-            # Styling untuk table inventori
+            # 5. Jadual Data
             def color_equip(val):
                 if val == 'OK': return 'background-color: #d4edda;'
                 if val == 'FAULTY': return 'background-color: #fff3cd;'
@@ -186,7 +228,7 @@ elif menu_selection == "⚙️ Equipment Status":
                 return ''
 
             st.dataframe(
-                df_q.style.map(color_equip, subset=[selected_month]), 
+                df_q.style.applymap(color_equip, subset=[selected_month]), 
                 use_container_width=True, 
                 hide_index=True
             )
