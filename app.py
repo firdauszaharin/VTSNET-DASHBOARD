@@ -14,19 +14,17 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- SIDEBAR: LOGO & THEME TOGGLE ---
+# --- SIDEBAR THEME TOGGLE ---
 with st.sidebar:
     if os.path.exists("logo.png"):
         st.image("logo.png", use_container_width=True)
     
-    st.title("🌓 DASHBOARD SETTINGS")
-    # Toggle untuk Dual Mode
+    st.title("🌓 SETTINGS")
     dark_mode = st.toggle("Dark Mode View", value=False)
     st.divider()
 
-# --- DYNAMIC CSS LOGIC (MODAL DUAL) ---
+# --- DYNAMIC CSS LOGIC ---
 if dark_mode:
-    # Warna MOD GELAP
     bg_style = "radial-gradient(circle at top right, #1e272e, #0f172a)"
     sidebar_bg = "rgba(30, 39, 46, 0.95)"
     card_bg = "#1e293b"
@@ -34,7 +32,6 @@ if dark_mode:
     shadow = "0 10px 25px rgba(0,0,0,0.5)"
     plotly_theme = "plotly_dark"
 else:
-    # Warna MOD ASAL (LIGHT)
     bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7,#f8faff)"
     sidebar_bg = "rgba(255, 255, 255, 0.8)"
     card_bg = "white"
@@ -44,48 +41,26 @@ else:
 
 st.markdown(f"""
     <style>
-    .stApp {{ 
-        background: {bg_style}; 
-        font-family: 'Inter', sans-serif; 
-        color: {text_color};
-    }}
-
-    [data-testid="stSidebar"] {{ 
-        background-color: {sidebar_bg} !important; 
-        backdrop-filter: blur(10px); 
-    }}
-
-    [data-testid="stMetric"] {{ 
-        background: {card_bg} !important; 
-        padding: 20px !important; 
-        border-radius: 20px !important; 
-        box-shadow: {shadow} !important; 
-    }}
-    
+    .stApp {{ background: {bg_style}; font-family: 'Inter', sans-serif; color: {text_color}; }}
+    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
+    [data-testid="stMetric"] {{ background: {card_bg} !important; padding: 20px !important; border-radius: 20px !important; box-shadow: {shadow} !important; }}
     [data-testid="stMetricValue"] {{ color: {text_color} !important; }}
     [data-testid="stMetricLabel"] {{ color: {text_color} !important; opacity: 0.8; }}
-
-    header[data-testid="stHeader"] {{
-        background-color: rgba(0,0,0,0) !important;
-        color: #0984E3 !important;
-    }}
-    
+    header[data-testid="stHeader"] {{ background-color: rgba(0,0,0,0) !important; color: #0984E3 !important; }}
     .st-emotion-cache-hp888a {{ color: #0984E3 !important; }}
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     </style>
 """, unsafe_allow_html=True)
 
-# --- SET MALAYSIA TIMEZONE ---
+# --- DATA LOAD & TIMEZONE ---
 msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
 waktu_msia = datetime.now(msia_tz)
 
-# 3. DATA LINKS
 SHEET_REPORT_URL = "https://docs.google.com/spreadsheets/d/1cJAnZVhxY_Nqjkfo39ze9DCAIZwWd_6dIdFgw0a2j_s/export?format=csv"
 SHEET_EQUIP_URL = "https://docs.google.com/spreadsheets/d/1IvOj5FqviwhZU7tGdnuh7zK5WUf-RsjUrVVa6HalkVU/export?format=csv"
 PDF_COL = "UPLOAD REPORT" 
 
-# 4. DATA LOAD FUNCTION
 @st.cache_data(ttl=60)
 def load_data(url):
     try:
@@ -96,8 +71,7 @@ def load_data(url):
             data[time_col] = pd.to_datetime(data[time_col], errors='coerce')
             data['Year'] = data[time_col].dt.year
         return data
-    except:
-        return pd.DataFrame()
+    except: return pd.DataFrame()
 
 df_raw = load_data(SHEET_REPORT_URL)
 df_equip = load_data(SHEET_EQUIP_URL)
@@ -118,19 +92,6 @@ with st.sidebar:
 
 st.title("VTSNET Management Dashboard")
 
-# --- HEADER BANNER (FAULTY CHECK) ---
-if not df_equip.empty:
-    month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026"])]
-    latest_month = month_cols[-1] if month_cols else None
-    
-    if latest_month:
-        status_check = df_equip[latest_month].astype(str).str.strip().str.upper()
-        faulty_data = df_equip[status_check.isin(['FAULTY', 'MISSING'])]
-        
-        if len(faulty_data) > 0:
-            st.error(f"⚠️ Dikesan {len(faulty_data)} aset bermasalah pada bulan {latest_month}!")
-            st.download_button("📥 Download Faulty List", faulty_data.to_csv(index=False), "faulty_assets.csv")
-
 # --- PAGE 1: MAINTENANCE REPORTS ---
 if menu_selection == "📝 Maintenance Reports":
     if not df_raw.empty:
@@ -145,20 +106,19 @@ if menu_selection == "📝 Maintenance Reports":
 
         c1, c2 = st.columns(2)
         with c1:
-            st.plotly_chart(px.pie(df, names='STATUS', hole=0.4, title="Status Distribution", 
-                                   template=plotly_theme, color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}), use_container_width=True)
+            st.plotly_chart(px.pie(df, names='STATUS', hole=0.4, title="Status Distribution", template=plotly_theme,
+                                   color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}), use_container_width=True)
         with c2:
-            st.plotly_chart(px.histogram(df, x='REPORT CHECKLIST', color='STATUS', title="Reports by Type",
-                                         template=plotly_theme, color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}), use_container_width=True)
+            st.plotly_chart(px.histogram(df, x='REPORT CHECKLIST', color='STATUS', title="Reports by Type", template=plotly_theme,
+                                         color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}), use_container_width=True)
 
         st.subheader("📋 Record Table")
         styled_df = df.style.map(color_status, subset=['STATUS']) if 'STATUS' in df.columns else df
         st.dataframe(styled_df, use_container_width=True, hide_index=True,
                     column_config={PDF_COL: st.column_config.LinkColumn("Report File", display_text="OPEN PDF 📄")})
-    else:
-        st.info("Waiting for data...")
+    else: st.info("Waiting for data...")
 
-# --- PAGE 2: EQUIPMENT STATUS ---
+# --- PAGE 2: EQUIPMENT STATUS (KEKAL LOGIK ASAL) ---
 elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
         st.subheader("⚙️ Inventory & Equipment Status")
@@ -182,12 +142,16 @@ elif menu_selection == "⚙️ Equipment Status":
             if 'filter_status' not in st.session_state: st.session_state.filter_status = "ALL"
 
             col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+            total_ok = len(df_working[status_series == 'OK'])
+            total_faulty = len(df_working[status_series == 'FAULTY'])
+            total_missing = len(df_working[status_series == 'MISSING'])
+
             with col_m1: 
-                if st.button(f"🟢 OK: {len(df_working[status_series == 'OK'])}", use_container_width=True): st.session_state.filter_status = "OK"
+                if st.button(f"🟢 OK: {total_ok}", use_container_width=True): st.session_state.filter_status = "OK"
             with col_m2: 
-                if st.button(f"🟡 FAULTY: {len(df_working[status_series == 'FAULTY'])}", use_container_width=True): st.session_state.filter_status = "FAULTY"
+                if st.button(f"🟡 FAULTY: {total_faulty}", use_container_width=True): st.session_state.filter_status = "FAULTY"
             with col_m3: 
-                if st.button(f"🔴 MISSING: {len(df_working[status_series == 'MISSING'])}", use_container_width=True): st.session_state.filter_status = "MISSING"
+                if st.button(f"🔴 MISSING: {total_missing}", use_container_width=True): st.session_state.filter_status = "MISSING"
             with col_m4: 
                 if st.button("🔵 SHOW ALL", use_container_width=True): st.session_state.filter_status = "ALL"
 
@@ -198,12 +162,11 @@ elif menu_selection == "⚙️ Equipment Status":
 
             st.markdown(f"### 🎯 Performance Overview: {selected_site} ({st.session_state.filter_status})")
             col_chart1, col_chart2 = st.columns([0.3, 0.7])
-            
             with col_chart1:
                 fig_donut = px.pie(df_working, names=selected_month, hole=0.6, template=plotly_theme,
                                    color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'})
+                fig_donut.update_traces(textposition='inside', textinfo='percent+label')
                 st.plotly_chart(fig_donut, use_container_width=True)
-
             with col_chart2:
                 type_col = next((c for c in df_filtered.columns if c.lower() == 'type'), None)
                 if type_col and not df_filtered.empty:
@@ -212,17 +175,39 @@ elif menu_selection == "⚙️ Equipment Status":
                                      color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}, barmode='group')
                     st.plotly_chart(fig_type, use_container_width=True)
 
-            # --- TABLE VIEW (WITH ORIGINAL LOGIC) ---
+            # --- TABLE VIEW (IKUT KOD ASAL SEBIJI) ---
             st.divider()
+            st.subheader(f"📦 Inventory Asset List")
             search_eq = st.text_input("🔍 Carian Pantas (SN, Nama, IP):", key="search_eq_box")
             if search_eq:
                 df_filtered = df_filtered[df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
 
-            st.dataframe(
-                df_filtered.style.map(
-                    lambda x: 'background-color: #D4EDDA; color: #155724;' if str(x).upper() == 'OK' else 
-                              ('background-color: #F8D7DA; color: #721C24;' if str(x).upper() == 'MISSING' else 
-                               ('background-color: #FFF3CD; color: #856404;' if str(x).upper() == 'FAULTY' else '')), 
-                    subset=[selected_month] if selected_month in df_filtered.columns else None
-                ), use_container_width=True, hide_index=True
-            )
+            # Logik Remark Suku Tahun
+            year_match = re.search(r'202\d', selected_month)
+            curr_yr = year_match.group(0) if year_match else "2025"
+            m_up = selected_month.upper()
+            if any(m in m_up for m in ['JAN', 'FEB', 'MAR']): q = "Q1"
+            elif any(m in m_up for m in ['APR', 'MAY', 'MEI', 'JUN']): q = "Q2"
+            elif any(m in m_up for m in ['JUL', 'AUG', 'SEP', 'OGO']): q = "Q3"
+            else: q = "Q4"
+            actual_remark_col = next((c for c in df_equip.columns if "REMARK" in c.upper() and q in c.upper() and curr_yr in c.upper()), None)
+
+            # Susun Kolum Ikut Kod Asal
+            display_cols = []
+            standard_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
+            for col in standard_cols:
+                match = next((c for c in df_filtered.columns if c.lower() == col.lower()), None)
+                if match: display_cols.append(match)
+            if selected_month in df_filtered.columns: display_cols.append(selected_month)
+            if actual_remark_col: display_cols.append(actual_remark_col)
+
+            if not df_filtered.empty:
+                st.dataframe(
+                    df_filtered[display_cols].style.map(
+                        lambda x: 'background-color: #D4EDDA; color: #155724;' if str(x).upper() == 'OK' else 
+                                  ('background-color: #F8D7DA; color: #721C24;' if str(x).upper() == 'MISSING' else 
+                                   ('background-color: #FFF3CD; color: #856404;' if str(x).upper() == 'FAULTY' else '')), 
+                        subset=[selected_month] if selected_month in display_cols else None
+                    ), use_container_width=True, hide_index=True
+                )
+            else: st.info("Tiada rekod untuk paparan ini.")
