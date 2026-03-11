@@ -306,21 +306,17 @@ elif menu_selection == "⚙️ Equipment Status":
 elif menu_selection == "📅 Staff Schedule":
     st.subheader("📅 Staff Duty Schedule - JADUAL VTSAIS (OneDrive Live)")
     
-    # MASUKKAN LINK DIRECT DOWNLOAD ONEDRIVE ANDA DI SINI
-ONEDRIVE_EXCEL_URL = "https://onedrive.live.com/download?resid=C3A2991B5C1E3D77&authkey=!AH89HlwbnBoZACA&em=2"
+    # Pastikan baris di bawah ini selari (4 jarak dari tepi)
+    ONEDRIVE_EXCEL_URL = "https://onedrive.live.com/download?resid=C3A2991B5C1E3D77&authkey=!AH89HlwbnBoZACA&em=2"
 
     @st.cache_data(ttl=600)
     def load_excel_sch(url):
         try:
-            # Membaca fail excel terus dari URL OneDrive
             df = pd.read_excel(url)
             df.columns = df.columns.str.strip()
             return df
         except Exception as e:
-            st.error(f"Gagal akses fail OneDrive. Sila pastikan link adalah 'Direct Download'.")
-            # Fallback ke fail lokal jika ada dalam GitHub
-            if os.path.exists("JADUAL VTSAIS.xlsx"):
-                return pd.read_excel("JADUAL VTSAIS.xlsx")
+            st.error(f"Gagal akses fail OneDrive.")
             return pd.DataFrame()
 
     df_sch = load_excel_sch(ONEDRIVE_EXCEL_URL)
