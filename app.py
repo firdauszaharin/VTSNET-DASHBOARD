@@ -221,17 +221,29 @@ elif menu_selection == "⚙️ Equipment Status":
 elif menu_selection == "📅 Staff Schedule":
     st.subheader("📅 Staff Duty Schedule - JADUAL VTSAIS (OneDrive Live)")
     
-    # Link Direct Download OneDrive yang telah dibetulkan
-    ONEDRIVE_EXCEL_URL = "https://1drv.ms/x/c/c3a2991b5c1e3d77/IQB3PR5cG5miIIDDrgQAAAAAAfo7GbHOFpLHjhNR0D6LX3w"
+    # GUNA LINK API INI (Sudah diconvert dari link yang anda beri)
+    ONEDRIVE_EXCEL_URL = "https://api.onedrive.com/v1.0/shares/u!aHR0cHM6Ly8xZHJ2Lm1zL3gvYy9jM2EyOTkxYjVjMWUzZDc3L0lRQjNQUjVjRzVtaUlJRERyZ1FBQUFBQUFYeWFRclctTjFDaUdjYU9hSnVweHdn/root/content"
 
-    @st.cache_data(ttl=600)
+    @st.cache_data(ttl=300)
     def load_excel_sch(url):
         try:
-            df = pd.read_excel(url)
-            df.columns = df.columns.str.strip()
+            import requests
+            from io import BytesIO
+            
+            # Tambah headers supaya OneDrive kenal akses ini
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            response = requests.get(url, headers=headers, timeout=15)
+            response.raise_for_status()
+            
+            # Membaca fail excel
+            df = pd.read_excel(BytesIO(response.content), engine='openpyxl')
+            
+            # Buang ruang kosong pada nama column
+            df.columns = df.columns.astype(str).str.strip()
             return df
         except Exception as e:
-            st.error(f"Gagal akses fail OneDrive. Sila pastikan link adalah 'Direct Download'.")
+            st.error(f"⚠️ Ralat Teknikal: {e}")
+            # Fallback jika ada fail backup dalam GitHub
             if os.path.exists("JADUAL VTSAIS.xlsx"):
                 return pd.read_excel("JADUAL VTSAIS.xlsx")
             return pd.DataFrame()
@@ -240,7 +252,9 @@ elif menu_selection == "📅 Staff Schedule":
 
     if not df_sch.empty:
         st.sidebar.subheader("Carian Jadual")
+        # Cari column yang ada perkataan NAME atau STAF
         staff_col = next((c for c in df_sch.columns if 'NAME' in c.upper() or 'STAF' in c.upper()), df_sch.columns[0])
+        
         staff_list = ["SEMUA STAF"] + sorted(df_sch[staff_col].dropna().unique().tolist())
         sel_staff = st.sidebar.selectbox("Pilih Nama Staf:", staff_list)
 
@@ -249,9 +263,8 @@ elif menu_selection == "📅 Staff Schedule":
             df_display = df_display[df_display[staff_col] == sel_staff]
 
         st.dataframe(df_display, use_container_width=True, hide_index=True)
-        st.info(f"🔗 [Buka Jadual OneDrive]({ONEDRIVE_EXCEL_URL})")
     else:
-        st.warning("Data jadual tidak dapat dipaparkan.")
+        st.warning("Jadual tidak dapat dimuatkan. Sila pastikan link OneDrive di set kepada 'Anyone with link can view'.")
 
 # --- 8. FOOTER ---
 st.markdown(f"""
