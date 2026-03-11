@@ -17,30 +17,7 @@ st.set_page_config(
 
 # --- AUTO REFRESH (5 MINIT) ---
 st_autorefresh(interval=300000, key="vts_refresh")
-# =========================
-# --- 2. LOGIN SECURITY ---
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
 
-if not st.session_state.authenticated:
-    
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.title("🔒 VTSNET Project Access")
-        pwd = st.text_input("Project Access Code:", type="password")
-
-        correct_password = st.secrets.get("PROJECT_PASSWORD")
-        if not correct_password:
-            st.error("PROJECT_PASSWORD not configured in secrets.toml")
-            st.stop()
-
-        if st.button("Unlock Dashboard", use_container_width=True):
-            if pwd == correct_password:
-                st.session_state.authenticated = True
-                st.rerun()
-            else:
-                st.error("Wrong Password!")
-    st.stop()
 import hmac
 from datetime import datetime, timedelta
 
