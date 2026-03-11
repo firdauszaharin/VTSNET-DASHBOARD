@@ -1,6 +1,6 @@
 streamlit
 pandas
 plotly
-pytz
-streamlit-autorefresh
 openpyxl
+requests
+streamlit-autorefresh
