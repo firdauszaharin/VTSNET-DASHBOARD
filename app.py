@@ -221,8 +221,9 @@ elif menu_selection == "⚙️ Equipment Status":
 elif menu_selection == "📅 Staff Schedule":
     st.subheader("📅 Staff Duty Schedule - JADUAL VTSAIS (OneDrive Live)")
     
-    # GANTI link di bawah dengan link yang anda dapat dari Generator tadi
-    DIRECT_DOWNLOAD_URL = "https://1drv.ms/x/c/c3a2991b5c1e3d77/IQB3PR5cG5miIIDDrgQAAAAAAfo7GbHOFpLHjhNR0D6LX3w?e=93Zbgx"
+    # LINK DIRECT DOWNLOAD (Sudah dibetulkan)
+    # Link ini akan terus mendownload fail tanpa melalui halaman login/preview
+    DIRECT_URL = "https://onedrive.live.com/download?resid=C3A2991B5C1E3D77&authkey=!AH89HlwbnBoZACA&em=2"
 
     @st.cache_data(ttl=300)
     def load_excel_sch(url):
@@ -230,13 +231,14 @@ elif menu_selection == "📅 Staff Schedule":
             import requests
             from io import BytesIO
             
-            # Kita guna requests untuk pastikan data ditarik dengan betul
+            # Gunakan headers untuk mengelakkan sekatan server
             headers = {'User-Agent': 'Mozilla/5.0'}
             response = requests.get(url, headers=headers, timeout=20)
             
             if response.status_code == 200:
-                # Membaca fail Excel
+                # Membaca fail Excel menggunakan openpyxl
                 df = pd.read_excel(BytesIO(response.content), engine='openpyxl')
+                # Bersihkan nama column
                 df.columns = df.columns.astype(str).str.strip()
                 return df
             else:
@@ -246,25 +248,26 @@ elif menu_selection == "📅 Staff Schedule":
             st.error(f"⚠️ Ralat Teknikal: {e}")
             return pd.DataFrame()
 
-    if "PASTE_LINK" not in DIRECT_DOWNLOAD_URL:
-        df_sch = load_excel_sch(DIRECT_DOWNLOAD_URL)
+    # Muat data
+    df_sch = load_excel_sch(DIRECT_URL)
 
-        if not df_sch.empty:
-            # Sidebar Filter
-            staff_col = next((c for c in df_sch.columns if 'NAME' in c.upper() or 'STAF' in c.upper()), df_sch.columns[0])
-            staff_list = ["SEMUA STAF"] + sorted(df_sch[staff_col].dropna().unique().tolist())
-            sel_staff = st.sidebar.selectbox("Pilih Nama Staf:", staff_list)
+    if not df_sch.empty:
+        # Filter Sidebar
+        staff_col = next((c for c in df_sch.columns if 'NAME' in c.upper() or 'STAF' in c.upper()), df_sch.columns[0])
+        staff_list = ["SEMUA STAF"] + sorted(df_sch[staff_col].dropna().unique().tolist())
+        
+        st.sidebar.subheader("Carian Jadual")
+        sel_staff = st.sidebar.selectbox("Pilih Nama Staf:", staff_list)
 
-            df_display = df_sch.copy()
-            if sel_staff != "SEMUA STAF":
-                df_display = df_display[df_display[staff_col] == sel_staff]
+        df_display = df_sch.copy()
+        if sel_staff != "SEMUA STAF":
+            df_display = df_display[df_display[staff_col] == sel_staff]
 
-            st.dataframe(df_display, use_container_width=True, hide_index=True)
-            st.success("✅ Jadual berjaya dimuatkan.")
-        else:
-            st.warning("Fail tidak dapat dibaca. Sila pastikan link adalah Direct Download Link.")
+        # Paparan Jadual
+        st.dataframe(df_display, use_container_width=True, hide_index=True)
+        st.success(f"✅ Jadual dikemaskini secara langsung (Last sync: {datetime.now(msia_tz).strftime('%H:%M:%S')})")
     else:
-        st.info("Sila masukkan link Direct Download yang baru dalam kod.")
+        st.warning("Jadual tidak dapat dipaparkan. Sila pastikan fail Excel di OneDrive tidak sedang dibuka (locked) atau link masih aktif.")
 # --- 8. FOOTER ---
 st.markdown(f"""
     <div style="position: fixed; left: 0; bottom: 0; width: 100%; background-color: {sidebar_bg}; text-align: center; padding: 10px; z-index: 9999; border-top: 1px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
