@@ -17,9 +17,9 @@ st.set_page_config(
 )
 
 # =========================================================
-# 2. AUTO REFRESH
+# 2. AUTO REFRESH (Setiap 5 Minit)
 # =========================================================
-st_autorefresh(interval=300000, key="vts_refresh")  # 5 minit
+st_autorefresh(interval=300000, key="vts_refresh")
 
 # =========================================================
 # 3. HELPER FUNCTIONS
@@ -34,7 +34,6 @@ def find_column(df, candidate_names):
             return normalized[key]
     return None
 
-
 def color_status_report(val):
     val = str(val).strip().upper()
     if val == "APPROVED":
@@ -42,7 +41,6 @@ def color_status_report(val):
     if val == "REJECTED":
         return "background-color: #f8d7da; color: #000000; font-weight: bold;"
     return ""
-
 
 def color_status_equipment(val):
     val = str(val).strip().upper()
@@ -52,22 +50,12 @@ def color_status_equipment(val):
         return "background-color: #F8D7DA; color: #721C24; font-weight: bold;"
     elif val == "FAULTY":
         return "background-color: #FFF3CD; color: #856404; font-weight: bold;"
-    elif val == "UNKNOWN":
-        return "background-color: #E2E3E5; color: #383d41; font-weight: bold;"
     return ""
-
 
 def clean_status_series(series):
     s = series.astype(str).str.strip().str.upper()
-    s = s.replace({
-        "": "UNKNOWN",
-        "NAN": "UNKNOWN",
-        "NONE": "UNKNOWN",
-        "NULL": "UNKNOWN",
-        "-": "UNKNOWN"
-    })
+    s = s.replace({"": "UNKNOWN", "NAN": "UNKNOWN", "NONE": "UNKNOWN"})
     return s
-
 
 @st.cache_data(ttl=60)
 def load_data(url):
@@ -76,18 +64,7 @@ def load_data(url):
         data.columns = data.columns.astype(str).str.strip()
         return data, None
     except Exception as e:
-        return pd.DataFrame(), f"Failed to load CSV data: {e}"
-
-
-@st.cache_data(ttl=300)
-def load_schedule_csv(url):
-    try:
-        df = pd.read_csv(url, on_bad_lines="skip")
-        df.columns = df.columns.astype(str).str.strip()
-        return df, None
-    except Exception as e:
-        return pd.DataFrame(), f"⚠️ Ralat Teknikal semasa baca jadual Google Sheet: {e}"
-
+        return pd.DataFrame(), f"Failed to load CSV: {e}"
 
 # =========================================================
 # 4. LOGIN SECURITY
@@ -100,12 +77,8 @@ if not st.session_state.authenticated:
     with col2:
         st.title("🔒 VTSNET Project Access")
         pwd = st.text_input("Project Access Code:", type="password")
-
-        correct_password = st.secrets.get("PROJECT_PASSWORD")
-        if not correct_password:
-            st.error("PROJECT_PASSWORD is not configured in Streamlit secrets.")
-            st.stop()
-
+        correct_password = st.secrets.get("PROJECT_PASSWORD", "vtsnet2026")
+        
         if st.button("Unlock Dashboard", use_container_width=True):
             if pwd == correct_password:
                 st.session_state.authenticated = True
@@ -115,121 +88,55 @@ if not st.session_state.authenticated:
     st.stop()
 
 # =========================================================
-# 5. SIDEBAR THEME / LOGOUT
+# 5. SIDEBAR & THEME
 # =========================================================
 with st.sidebar:
     if os.path.exists("logo.png"):
         st.image("logo.png", use_container_width=True)
-
+    
     dark_mode = st.toggle("Dark Mode View", value=False)
     st.divider()
-
     if st.button("🔒 Log Out", use_container_width=True):
         st.session_state.authenticated = False
         st.rerun()
 
-# =========================================================
-# 6. THEME / CSS
-# =========================================================
 if dark_mode:
-    bg_style = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)"
+    bg_style, text_color, plotly_theme = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)", "#FFFFFF", "plotly_dark"
     sidebar_bg = "rgba(15, 10, 25, 0.98)"
-    text_color = "#FFFFFF"
-    plotly_theme = "plotly_dark"
-    custom_css = """
-        <style>
-        .stApp, [data-testid="stSidebar"] *, .stMarkdown p, h1, h2, h3, label {
-            color: #FFFFFF !important;
-        }
-        header[data-testid="stHeader"] {
-            background-color: rgba(0,0,0,0) !important;
-            color: white !important;
-        }
-        [data-testid="stDecoration"] {
-            display: none;
-        }
-        div[data-testid="stVerticalBlock"] .stButton > button {
-            color: #000000 !important;
-            background-color: #FFFFFF !important;
-            font-weight: 900 !important;
-            border: 2px solid #FFFFFF !important;
-        }
-        [data-testid="stMetricValue"] {
-            color: #FFFFFF !important;
-            font-weight: 700 !important;
-        }
-        hr {
-            border-top: 2px solid rgba(255, 255, 255, 0.2) !important;
-        }
-        [data-testid="stMetric"] {
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
-            background: rgba(255, 255, 255, 0.03) !important;
-            border-radius: 12px !important;
-            padding: 20px !important;
-        }
-        section[data-testid="stSidebar"] .stButton > button {
-            color: #FFFFFF !important;
-            background-color: rgba(255, 75, 75, 0.2) !important;
-            border: 1px solid #ff4b4b !important;
-        }
-        </style>
-    """
+    custom_css = """<style>
+        .stApp, [data-testid="stSidebar"] *, .stMarkdown p, h1, h2, h3, label { color: #FFFFFF !important; }
+        [data-testid="stMetric"] { border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 15px; }
+    </style>"""
 else:
-    bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7)"
+    bg_style, text_color, plotly_theme = "radial-gradient(circle at top right, #f8faff, #eef2f7)", "#1e293b", "plotly_white"
     sidebar_bg = "rgba(255, 255, 255, 0.9)"
-    text_color = "#1e293b"
-    plotly_theme = "plotly_white"
     custom_css = ""
 
 st.markdown(custom_css, unsafe_allow_html=True)
-st.markdown(
-    f"""
-    <style>
-    .stApp {{
-        background: {bg_style};
-        color: {text_color};
-    }}
-    [data-testid="stSidebar"] {{
-        background-color: {sidebar_bg} !important;
-        backdrop-filter: blur(10px);
-    }}
-    .main .block-container {{
-        padding-top: 2rem !important;
-        padding-bottom: 100px !important;
-    }}
-    h1 {{
-        margin-top: -20px !important;
-        padding-top: 0px !important;
-    }}
-    footer {{
-        visibility: hidden;
-    }}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown(f"""<style>
+    .stApp {{ background: {bg_style}; color: {text_color}; }}
+    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; }}
+    footer {{ visibility: hidden; }}
+</style>""", unsafe_allow_html=True)
 
 # =========================================================
-# 7. DATA LOAD
+# 6. DATA SOURCE URLS
 # =========================================================
 msia_tz = pytz.timezone("Asia/Kuala_Lumpur")
 waktu_msia = datetime.now(msia_tz)
 
 SHEET_REPORT_URL = "https://docs.google.com/spreadsheets/d/1cJAnZVhxY_Nqjkfo39ze9DCAIZwWd_6dIdFgw0a2j_s/export?format=csv"
 SHEET_EQUIP_URL = "https://docs.google.com/spreadsheets/d/1IvOj5FqviwhZU7tGdnuh7zK5WUf-RsjUrVVa6HalkVU/export?format=csv"
+# Gunakan Google Sheet CSV Export untuk kestabilan jadual
 SHEET_SCHEDULE_URL = "https://docs.google.com/spreadsheets/d/1h9_vOwZWTrXTWo1m907T9g23LW211qcjCOw03q2kc3I/export?format=csv"
-PDF_COL_NAME = "UPLOAD REPORT"
 
 df_raw, report_error = load_data(SHEET_REPORT_URL)
 df_equip, equip_error = load_data(SHEET_EQUIP_URL)
 
 # =========================================================
-# 8. SIDEBAR NAVIGATION
+# 7. NAVIGATION
 # =========================================================
-menu_selection = st.sidebar.radio(
-    "Select Category:",
-    ["📝 Maintenance Reports", "⚙️ Equipment Status", "📅 Staff Schedule"]
-)
+menu_selection = st.sidebar.radio("Select Category:", ["📝 Maintenance Reports", "⚙️ Equipment Status", "📅 Staff Schedule"])
 st.sidebar.divider()
 st.sidebar.markdown(f"🕒 **Last Sync:** {waktu_msia.strftime('%H:%M:%S')}")
 
@@ -239,323 +146,90 @@ st.title("VTSNET: Tracker")
 # PAGE 1: MAINTENANCE REPORTS
 # =========================================================
 if menu_selection == "📝 Maintenance Reports":
-    search_report = st.sidebar.text_input("🔎 Search Site/Type (MET, VHF, etc):")
+    st.sidebar.subheader("🔍 Filter Options")
     search_staff = st.sidebar.text_input("👤 Search Staff Name:")
-
-    if report_error:
-        st.error(report_error)
+    
+    pm_checklist_options = ["ALL"] + [f"VTSNET/PM/Q{q}/{y} YEAR" for y in ["2ND", "3RD", "4TH", "5TH"] for q in range(1,5)]
+    selected_pm_checklist = st.sidebar.selectbox("📂 Filter PM Checklist:", pm_checklist_options)
+    search_report = st.sidebar.text_input("🔎 Search Site/Type (MET, VHF, etc):")
 
     if not df_raw.empty:
         df = df_raw.copy()
-
-        report_checklist_col = find_column(df, ["REPORT CHECKLIST"])
-        name_col = find_column(df, ["Name", "NAME", "Staff Name"])
+        
+        # Mapping Columns
+        report_col = find_column(df, ["REPORT CHECKLIST"])
+        name_col = find_column(df, ["Name", "NAME"])
         status_col = find_column(df, ["STATUS"])
-        pdf_col = find_column(df, [PDF_COL_NAME])
+        pdf_col = find_column(df, ["UPLOAD REPORT"])
 
-        if search_report and report_checklist_col:
-            df = df[df[report_checklist_col].astype(str).str.contains(search_report, case=False, na=False)]
-
+        # Apply Filters
         if search_staff and name_col:
             df = df[df[name_col].astype(str).str.contains(search_staff, case=False, na=False)]
+        if selected_pm_checklist != "ALL" and report_col:
+            df = df[df[report_col].astype(str).str.contains(selected_pm_checklist, case=False, na=False)]
+        if search_report and report_col:
+            df = df[df[report_col].astype(str).str.contains(search_report, case=False, na=False)]
 
+        # Metrics
         m1, m2, m3 = st.columns(3)
         m1.metric("Total Reports", len(df))
-
         if status_col:
-            status_clean = clean_status_series(df[status_col])
-            m2.metric("Approved ✅", int((status_clean == "APPROVED").sum()))
-            m3.metric("Pending ⏳", int((~status_clean.isin(["APPROVED", "REJECTED"])).sum()))
-        else:
-            m2.metric("Approved ✅", 0)
-            m3.metric("Pending ⏳", 0)
-            st.warning("Column STATUS not found in report data.")
+            s_clean = clean_status_series(df[status_col])
+            m2.metric("Approved ✅", int((s_clean == "APPROVED").sum()))
+            m3.metric("Pending ⏳", int((~s_clean.isin(["APPROVED", "REJECTED"])).sum()))
 
-        if status_col and report_checklist_col and not df.empty:
-            chart_df = df.copy()
-            chart_df[status_col] = clean_status_series(chart_df[status_col])
-
-            c1, c2 = st.columns(2)
-            with c1:
-                fig_pie = px.pie(
-                    chart_df,
-                    names=status_col,
-                    hole=0.55,
-                    title="Approval Overview",
-                    color_discrete_map={
-                        "APPROVED": "#2ecc71",
-                        "REJECTED": "#e74c3c",
-                        "PENDING": "#f1c40f",
-                        "UNKNOWN": "#95a5a6"
-                    },
-                    template=plotly_theme
-                )
-                st.plotly_chart(fig_pie, use_container_width=True)
-
-            with c2:
-                fig_hist = px.histogram(
-                    chart_df,
-                    x=report_checklist_col,
-                    color=status_col,
-                    title="Reports by Type",
-                    color_discrete_map={
-                        "APPROVED": "#2ecc71",
-                        "REJECTED": "#e74c3c",
-                        "PENDING": "#f1c40f",
-                        "UNKNOWN": "#95a5a6"
-                    },
-                    template=plotly_theme
-                )
-                st.plotly_chart(fig_hist, use_container_width=True)
-        else:
-            st.info("Chart tidak dapat dipaparkan kerana column penting tiada atau data kosong.")
-
-        st.subheader("📋 Report Tracking Status")
-
-        try:
-            if status_col:
-                styled_df = df.style.map(color_status_report, subset=[status_col])
-            else:
-                styled_df = df
-
-            column_config = {}
-            if pdf_col:
-                column_config[pdf_col] = st.column_config.LinkColumn(
-                    "Report File",
-                    display_text="OPEN PDF 📄"
-                )
-
-            st.dataframe(
-                styled_df,
-                use_container_width=True,
-                hide_index=True,
-                column_config=column_config
-            )
-        except Exception as e:
-            st.warning(f"Paparan table style fallback digunakan: {e}")
-            st.dataframe(df, use_container_width=True, hide_index=True)
-    else:
-        st.warning("No maintenance report data available.")
+        # Table
+        st.subheader("📋 Maintenance Report List")
+        styled_df = df.style.map(color_status_report, subset=[status_col]) if status_col else df
+        st.dataframe(styled_df, use_container_width=True, hide_index=True,
+                     column_config={pdf_col: st.column_config.LinkColumn("Report", display_text="OPEN PDF 📄")} if pdf_col else {})
 
 # =========================================================
 # PAGE 2: EQUIPMENT STATUS
 # =========================================================
 elif menu_selection == "⚙️ Equipment Status":
-    if equip_error:
-        st.error(equip_error)
-
     if not df_equip.empty:
         st.subheader("⚙️ Inventory & Equipment Status")
-
-        month_keywords = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
-        month_cols = [
-            c for c in df_equip.columns
-            if "REMARK" not in str(c).upper() and (
-                any(yr in str(c) for yr in ["2025", "2026", "2027"]) or
-                any(m in str(c).upper() for m in month_keywords)
-            )
-        ]
-
-        site_col = find_column(df_equip, ["Site", "SITE"])
-
+        month_cols = [c for c in df_equip.columns if any(m in str(c).upper() for m in ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"])]
+        
         if month_cols:
-            c1, c2 = st.columns(2)
-            with c1:
-                selected_month = st.selectbox("📅 Select Report Month:", month_cols, index=0)
-
-            df_working = df_equip.copy()
-            selected_site = "ALL SITES"
-
-            if site_col:
-                unique_sites = ["ALL SITES"] + sorted(df_working[site_col].dropna().astype(str).unique().tolist())
-                with c2:
-                    selected_site = st.selectbox("🏗️ Select Site:", unique_sites)
-
-                if selected_site != "ALL SITES":
-                    df_working = df_working[df_working[site_col].astype(str) == selected_site]
-
-            current_filter_context = f"{selected_month}_{selected_site}"
-            if st.session_state.get("filter_context") != current_filter_context:
-                st.session_state.filter_status = "ALL"
-                st.session_state.filter_context = current_filter_context
-
-            st.divider()
-
-            status_series = clean_status_series(df_working[selected_month])
-
-            if "filter_status" not in st.session_state:
-                st.session_state.filter_status = "ALL"
-
-            ok_count = int((status_series == "OK").sum())
-            faulty_count = int((status_series == "FAULTY").sum())
-            missing_count = int((status_series == "MISSING").sum())
-
-            col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-            with col_m1:
-                if st.button(f"🟢 OK: {ok_count}", use_container_width=True):
-                    st.session_state.filter_status = "OK"
-            with col_m2:
-                if st.button(f"🟡 FAULTY: {faulty_count}", use_container_width=True):
-                    st.session_state.filter_status = "FAULTY"
-            with col_m3:
-                if st.button(f"🔴 MISSING: {missing_count}", use_container_width=True):
-                    st.session_state.filter_status = "MISSING"
-            with col_m4:
-                if st.button("🔵 SHOW ALL", use_container_width=True):
-                    st.session_state.filter_status = "ALL"
-
-            df_filtered = df_working.copy()
-            filtered_status_series = clean_status_series(df_filtered[selected_month])
-
-            if st.session_state.filter_status != "ALL":
-                df_filtered = df_filtered[filtered_status_series == st.session_state.filter_status]
-
-            col_chart1, col_chart2 = st.columns([0.4, 0.6])
-
-            with col_chart1:
-                pie_df = status_series.value_counts().reset_index()
-                pie_df.columns = ["Status", "Count"]
-
-                fig_donut = px.pie(
-                    pie_df,
-                    names="Status",
-                    values="Count",
-                    hole=0.55,
-                    template=plotly_theme,
-                    title="Status Overall",
-                    color="Status",
-                    color_discrete_map={
-                        "OK": "#2ecc71",
-                        "FAULTY": "#f1c40f",
-                        "MISSING": "#e74c3c",
-                        "UNKNOWN": "#95a5a6"
-                    }
-                )
-                st.plotly_chart(fig_donut, use_container_width=True)
-
-            with col_chart2:
-                type_col = find_column(df_filtered, ["Type", "TYPE"])
-                if type_col and not df_filtered.empty:
-                    temp_df = df_filtered.copy()
-                    temp_df[selected_month] = clean_status_series(temp_df[selected_month])
-
-                    grouped = temp_df.groupby([type_col, selected_month]).size().reset_index(name="count")
-
-                    fig_type = px.bar(
-                        grouped,
-                        x=type_col,
-                        y="count",
-                        color=selected_month,
-                        template=plotly_theme,
-                        title="Analysis by Type",
-                        color_discrete_map={
-                            "OK": "#2ecc71",
-                            "FAULTY": "#f1c40f",
-                            "MISSING": "#e74c3c",
-                            "UNKNOWN": "#95a5a6"
-                        },
-                        barmode="group"
-                    )
-                    st.plotly_chart(fig_type, use_container_width=True)
-                else:
-                    st.info("Type analysis tidak tersedia.")
-
-            st.divider()
-            st.subheader("📦 Inventory Asset List")
-
-            search_eq = st.text_input("🔍 Quick Search (SN, Name, IP):", key="search_eq_box")
-
-            if search_eq:
-                mask = df_filtered.astype(str).apply(
-                    lambda col: col.str.contains(search_eq, case=False, na=False)
-                ).any(axis=1)
-                df_filtered = df_filtered[mask]
-
-            display_candidates = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
-            actual_display = []
-
-            for candidate in display_candidates:
-                found = find_column(df_filtered, [candidate])
-                if found and found not in actual_display:
-                    actual_display.append(found)
-
-            if selected_month in df_filtered.columns and selected_month not in actual_display:
-                actual_display.append(selected_month)
-
-            if not actual_display:
-                actual_display = df_filtered.columns.tolist()
-
-            try:
-                styled_eq = df_filtered[actual_display].style.map(
-                    color_status_equipment,
-                    subset=[selected_month] if selected_month in actual_display else None
-                )
-                st.dataframe(styled_eq, use_container_width=True, hide_index=True)
-            except Exception as e:
-                st.warning(f"Paparan styled inventory gagal, fallback table digunakan: {e}")
-                st.dataframe(df_filtered[actual_display], use_container_width=True, hide_index=True)
-        else:
-            st.warning("No valid month columns detected in equipment sheet.")
-    else:
-        st.warning("No equipment data available.")
+            sel_month = st.selectbox("📅 Select Month:", month_cols)
+            df_filtered = df_equip.copy()
+            
+            # Status Metrics
+            status_s = clean_status_series(df_filtered[sel_month])
+            c1, c2, c3 = st.columns(3)
+            c1.metric("🟢 OK", int((status_s == "OK").sum()))
+            c2.metric("🟡 FAULTY", int((status_s == "FAULTY").sum()))
+            c3.metric("🔴 MISSING", int((status_s == "MISSING").sum()))
+            
+            # Table
+            st.dataframe(df_filtered.style.map(color_status_equipment, subset=[sel_month]), use_container_width=True, hide_index=True)
 
 # =========================================================
 # PAGE 3: STAFF SCHEDULE
 # =========================================================
 elif menu_selection == "📅 Staff Schedule":
-    st.subheader("📅 Staff Duty Schedule - JADUAL VTSAIS (Google Sheet Live)")
-
-    df_sch, sch_error = load_schedule_csv(SHEET_SCHEDULE_URL)
-
-    if sch_error:
-        st.error(sch_error)
-
+    st.subheader("📅 Staff Duty Schedule (Live)")
+    df_sch, sch_err = load_data(SHEET_SCHEDULE_URL)
+    
     if not df_sch.empty:
-        staff_col = None
-        for c in df_sch.columns:
-            c_up = str(c).upper()
-            if "NAME" in c_up or "STAF" in c_up or "STAFF" in c_up:
-                staff_col = c
-                break
-
-        if staff_col is None:
-            staff_col = df_sch.columns[0]
-
-        staff_list = ["SEMUA STAF"] + sorted(df_sch[staff_col].dropna().astype(str).unique().tolist())
-
-        st.sidebar.subheader("Carian Jadual")
+        staff_col = next((c for c in df_sch.columns if "NAME" in c.upper() or "STAF" in c.upper()), df_sch.columns[0])
+        staff_list = ["SEMUA STAF"] + sorted(df_sch[staff_col].dropna().unique().tolist())
         sel_staff = st.sidebar.selectbox("Pilih Nama Staf:", staff_list)
-
-        df_display = df_sch.copy()
+        
+        df_disp = df_sch.copy()
         if sel_staff != "SEMUA STAF":
-            df_display = df_display[df_display[staff_col].astype(str) == sel_staff]
-
-        st.dataframe(df_display, use_container_width=True, hide_index=True)
-        st.success(f"✅ Jadual dikemaskini secara langsung (Last sync: {datetime.now(msia_tz).strftime('%H:%M:%S')})")
+            df_disp = df_disp[df_disp[staff_col] == sel_staff]
+            
+        st.dataframe(df_disp, use_container_width=True, hide_index=True)
+        st.success("✅ Jadual VTSAIS berjaya dimuatkan dari Google Sheets.")
     else:
-        st.warning("Jadual tidak dapat dipaparkan. Sila pastikan Google Sheet dikongsi dengan akses yang betul.")
+        st.warning("Jadual tidak dapat diakses.")
 
 # =========================================================
-# 9. FOOTER
+# 8. FOOTER
 # =========================================================
-st.markdown(
-    f"""
-    <div style="
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        background-color: {sidebar_bg};
-        text-align: center;
-        padding: 10px;
-        z-index: 9999;
-        border-top: 1px solid rgba(0,0,0,0.1);
-        backdrop-filter: blur(10px);
-    ">
-        <p style="color: {text_color} !important; margin: 0;">
-            © 2026 GreenFinder VTMS Dashboard. All rights reserved.
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown(f"""<div style="position: fixed; left: 0; bottom: 0; width: 100%; background-color: {sidebar_bg}; text-align: center; padding: 10px; border-top: 1px solid rgba(0,0,0,0.1);">
+    <p style="color: {text_color} !important; margin: 0;">© 2026 GreenFinder VTMS Dashboard. All rights reserved.</p>
+</div>""", unsafe_allow_html=True)
