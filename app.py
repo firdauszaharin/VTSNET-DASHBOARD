@@ -1,13 +1,16 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 import re
 import os
+import hmac
 from streamlit_autorefresh import st_autorefresh
 
+# =========================================================
 # 1. PAGE CONFIGURATION
+# =========================================================
 st.set_page_config(
     page_title="VTSNET Admin & Inventory Dashboard",
     layout="wide",
@@ -15,17 +18,17 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- AUTO REFRESH (5 MINIT) ---
+# =========================================================
+# 2. AUTO REFRESH (5 MINIT)
+# =========================================================
 st_autorefresh(interval=300000, key="vts_refresh")
 
-import hmac
-from datetime import datetime, timedelta
-
-# --- SECURITY SETTINGS ---
+# =========================================================
+# 3. LOGIN SECURITY
+# =========================================================
 MAX_LOGIN_ATTEMPTS = 5
 LOCKOUT_MINUTES = 10
 
-# --- SESSION INIT ---
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
@@ -36,25 +39,23 @@ if "lockout_until" not in st.session_state:
     st.session_state.lockout_until = None
 
 
-def is_locked_out():
+def is_locked_out() -> bool:
     if st.session_state.lockout_until is None:
         return False
     return datetime.now() < st.session_state.lockout_until
 
 
-# --- LOGIN SCREEN ---
 if not st.session_state.authenticated:
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
         st.title("🔒 VTSNET Project Access")
+        pwd = st.text_input("Project Access Code:", type="password")
 
         if is_locked_out():
             remaining = int((st.session_state.lockout_until - datetime.now()).total_seconds() // 60) + 1
             st.error(f"Too many failed attempts. Try again in {remaining} minute(s).")
             st.stop()
-
-        pwd = st.text_input("Project Access Code:", type="password")
 
         correct_password = st.secrets.get("PROJECT_PASSWORD")
         if not correct_password:
@@ -76,29 +77,34 @@ if not st.session_state.authenticated:
                 else:
                     remaining = MAX_LOGIN_ATTEMPTS - st.session_state.login_attempts
                     st.error(f"Wrong Password! Remaining attempts: {remaining}")
-
     st.stop()
 
-# --- 3. THEME TOGGLE & LOGOUT ---
+# =========================================================
+# 4. THEME TOGGLE & LOGOUT
+# =========================================================
 with st.sidebar:
     if os.path.exists("logo.png"):
         st.image("logo.png", use_container_width=True)
+
     dark_mode = st.toggle("Dark Mode View", value=False)
     st.divider()
+
     if st.button("🔒 Log Out", use_container_width=True):
         st.session_state.authenticated = False
         st.session_state.login_attempts = 0
         st.session_state.lockout_until = None
         st.rerun()
 
-# --- 4. DYNAMIC CSS LOGIC ---
+# =========================================================
+# 5. DYNAMIC CSS LOGIC
+# =========================================================
 if dark_mode:
     bg_style = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)"
     sidebar_bg = "rgba(15, 10, 25, 0.98)"
     text_color = "#FFFFFF"
     plotly_theme = "plotly_dark"
 
-    custom_dark_css = """
+    custom_css = """
         <style>
         .stApp, [data-testid="stSidebar"] *, .stMarkdown p, h1, h2, h3, label {
             color: #FFFFFF !important;
@@ -151,7 +157,7 @@ else:
     text_color = "#243447"
     plotly_theme = "plotly_white"
 
-    custom_dark_css = """
+    custom_css = """
         <style>
         .stApp, .stMarkdown p, h1, h2, h3, label {
             color: #243447 !important;
@@ -197,8 +203,9 @@ else:
         </style>
     """
 
-st.markdown(custom_dark_css, unsafe_allow_html=True)
-st.markdown(f"""
+st.markdown(custom_css, unsafe_allow_html=True)
+st.markdown(
+    f"""
     <style>
     .stApp {{ background: {bg_style}; color: {text_color}; }}
     [data-testid="stSidebar"] {{
@@ -213,33 +220,41 @@ st.markdown(f"""
         margin-top: -40px !important;
         padding-top: 0px !important;
     }}
-    footer {{visibility: hidden;}}
+    footer {{ visibility: hidden; }}
     </style>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+)
 
-# --- 5. HELPER FUNCTIONS ---
+# =========================================================
+# 6. HELPER FUNCTIONS
+# =========================================================
 def color_status(val):
     val = str(val).strip().upper()
-    if val == 'APPROVED':
-        return 'background-color: #d4edda; color: #000000; font-weight: bold;'
-    if val == 'REJECTED':
-        return 'background-color: #f8d7da; color: #000000; font-weight: bold;'
-    return ''
+    if val == "APPROVED":
+        return "background-color: #d4edda; color: #000000; font-weight: bold;"
+    if val == "REJECTED":
+        return "background-color: #f8d7da; color: #000000; font-weight: bold;"
+    return ""
+
 
 def find_col(df, keyword):
     return next((c for c in df.columns if keyword.upper() in c.upper()), None)
 
+
 @st.cache_data(ttl=60)
 def load_data(url):
     try:
-        data = pd.read_csv(url, on_bad_lines='skip')
+        data = pd.read_csv(url, on_bad_lines="skip")
         data.columns = data.columns.str.strip()
         return data
-    except:
+    except Exception:
         return pd.DataFrame()
 
-# --- 6. DATA LOAD ---
-msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
+# =========================================================
+# 7. DATA LOAD
+# =========================================================
+msia_tz = pytz.timezone("Asia/Kuala_Lumpur")
 waktu_msia = datetime.now(msia_tz)
 
 SHEET_REPORT_URL = "https://docs.google.com/spreadsheets/d/1cJAnZVhxY_Nqjkfo39ze9DCAIZwWd_6dIdFgw0a2j_s/export?format=csv"
@@ -249,14 +264,18 @@ PDF_COL = "UPLOAD REPORT"
 df_raw = load_data(SHEET_REPORT_URL)
 df_equip = load_data(SHEET_EQUIP_URL)
 
-# --- 7. SIDEBAR NAVIGATION ---
+# =========================================================
+# 8. SIDEBAR NAVIGATION
+# =========================================================
 menu_selection = st.sidebar.radio("Select Category:", ["📝 Maintenance Reports", "⚙️ Equipment Status"])
 st.sidebar.divider()
 st.sidebar.markdown(f"🕒 **Last Sync:** {waktu_msia.strftime('%H:%M:%S')}")
 
 st.title("VTSNET: Maintenance & Asset Lifecycle Tracker")
 
-# --- PAGE 1: MAINTENANCE REPORTS ---
+# =========================================================
+# PAGE 1: MAINTENANCE REPORTS
+# =========================================================
 if menu_selection == "📝 Maintenance Reports":
     st.subheader("📝 Maintenance Reports")
 
@@ -293,7 +312,7 @@ if menu_selection == "📝 Maintenance Reports":
             search_report = st.text_input("🔎 Search Site/Type (MET, VHF, etc):")
 
         with f3:
-            search_staff = st.text_input("👤 Search Staff Name:")
+            search_staff = st.text_input("👤 Search Team / Staff Name:")
 
     st.divider()
 
@@ -302,14 +321,10 @@ if menu_selection == "📝 Maintenance Reports":
 
         id_col = find_col(df, "ID DOCUMENT")
         checklist_col = find_col(df, "REPORT CHECKLIST")
-        name_col = next(
-    (c for c in df.columns if c.strip().upper() in ["TEAM DETAILS", "NAME"]),
-    None
-)
+        name_col = next((c for c in df.columns if c.strip().upper() in ["TEAM DETAILS", "NAME"]), None)
         status_col = find_col(df, "STATUS")
         pdf_col = next((c for c in df.columns if c.strip().upper() == PDF_COL.upper()), None)
 
-        # FILTER PM CHECKLIST / ID DOCUMENT
         if selected_pm_checklist != "ALL":
             if id_col and checklist_col:
                 df = df[
@@ -325,7 +340,6 @@ if menu_selection == "📝 Maintenance Reports":
                     df[checklist_col].astype(str).str.upper().str.contains(selected_pm_checklist.strip().upper(), na=False)
                 ]
 
-        # SEARCH SITE / TYPE
         if search_report:
             if id_col and checklist_col:
                 df = df[
@@ -337,7 +351,6 @@ if menu_selection == "📝 Maintenance Reports":
             elif checklist_col:
                 df = df[df[checklist_col].astype(str).str.contains(search_report, case=False, na=False)]
 
-        # SEARCH STAFF
         if search_staff and name_col:
             df = df[df[name_col].astype(str).str.contains(search_staff, case=False, na=False)]
 
@@ -345,11 +358,11 @@ if menu_selection == "📝 Maintenance Reports":
         m1.metric("Total Reports", len(df))
         m2.metric(
             "Approved ✅",
-            len(df[df[status_col].astype(str).str.upper() == 'APPROVED']) if status_col else 0
+            len(df[df[status_col].astype(str).str.upper() == "APPROVED"]) if status_col else 0
         )
         m3.metric(
             "Pending ⏳",
-            len(df[~df[status_col].astype(str).str.upper().isin(['APPROVED', 'REJECTED'])]) if status_col else 0
+            len(df[~df[status_col].astype(str).str.upper().isin(["APPROVED", "REJECTED"])]) if status_col else 0
         )
 
         c1, c2 = st.columns(2)
@@ -361,7 +374,7 @@ if menu_selection == "📝 Maintenance Reports":
                         names=status_col,
                         hole=0.55,
                         title="Approval Overview",
-                        color_discrete_map={'APPROVED': '#2ecc71', 'REJECTED': '#e74c3c'},
+                        color_discrete_map={"APPROVED": "#2ecc71", "REJECTED": "#e74c3c"},
                         template=plotly_theme
                     ),
                     use_container_width=True
@@ -377,7 +390,7 @@ if menu_selection == "📝 Maintenance Reports":
                         x=checklist_col,
                         color=status_col,
                         title="Reports by Type",
-                        color_discrete_map={'APPROVED': '#2ecc71', 'REJECTED': '#e74c3c'},
+                        color_discrete_map={"APPROVED": "#2ecc71", "REJECTED": "#e74c3c"},
                         template=plotly_theme
                     ),
                     use_container_width=True
@@ -401,13 +414,17 @@ if menu_selection == "📝 Maintenance Reports":
             hide_index=True,
             column_config=column_config
         )
+    else:
+        st.warning("No maintenance report data available.")
 
-# --- PAGE 2: EQUIPMENT STATUS ---
+# =========================================================
+# PAGE 2: EQUIPMENT STATUS
+# =========================================================
 elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
         st.subheader("⚙️ Inventory & Equipment Status")
         month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026", "2027"]) and "REMARK" not in c.upper()]
-        site_col = next((c for c in df_equip.columns if c.lower() == 'site'), None)
+        site_col = next((c for c in df_equip.columns if c.lower() == "site"), None)
 
         if month_cols:
             c1, c2 = st.columns(2)
@@ -424,7 +441,8 @@ elif menu_selection == "⚙️ Equipment Status":
 
             st.divider()
             status_series = df_working[selected_month].astype(str).str.strip().str.upper()
-            if 'filter_status' not in st.session_state:
+
+            if "filter_status" not in st.session_state:
                 st.session_state.filter_status = "ALL"
 
             col_m1, col_m2, col_m3, col_m4 = st.columns(4)
@@ -443,7 +461,9 @@ elif menu_selection == "⚙️ Equipment Status":
 
             df_filtered = df_working.copy()
             if st.session_state.filter_status != "ALL":
-                df_filtered = df_filtered[df_filtered[selected_month].astype(str).str.strip().str.upper() == st.session_state.filter_status]
+                df_filtered = df_filtered[
+                    df_filtered[selected_month].astype(str).str.strip().str.upper() == st.session_state.filter_status
+                ]
 
             col_chart1, col_chart2 = st.columns([0.4, 0.6])
             with col_chart1:
@@ -453,22 +473,22 @@ elif menu_selection == "⚙️ Equipment Status":
                     hole=0.55,
                     template=plotly_theme,
                     title="Status Overall",
-                    color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}
+                    color_discrete_map={"OK": "#2ecc71", "FAULTY": "#f1c40f", "MISSING": "#e74c3c"}
                 )
                 st.plotly_chart(fig_donut, use_container_width=True)
 
             with col_chart2:
-                type_col = next((c for c in df_filtered.columns if c.lower() == 'type'), None)
+                type_col = next((c for c in df_filtered.columns if c.lower() == "type"), None)
                 if type_col and not df_filtered.empty:
                     fig_type = px.bar(
-                        df_filtered.groupby([type_col, selected_month]).size().reset_index(name='count'),
+                        df_filtered.groupby([type_col, selected_month]).size().reset_index(name="count"),
                         x=type_col,
-                        y='count',
+                        y="count",
                         color=selected_month,
                         template=plotly_theme,
                         title="Analysis by Type",
-                        color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'},
-                        barmode='group'
+                        color_discrete_map={"OK": "#2ecc71", "FAULTY": "#f1c40f", "MISSING": "#e74c3c"},
+                        barmode="group"
                     )
                     st.plotly_chart(fig_type, use_container_width=True)
 
@@ -480,20 +500,23 @@ elif menu_selection == "⚙️ Equipment Status":
                     df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False, na=False)).any(axis=1)
                 ]
 
-            year_match = re.search(r'202\d', selected_month)
+            year_match = re.search(r"202\d", selected_month)
             curr_yr = year_match.group(0) if year_match else "2025"
             m_up = selected_month.upper()
 
-            if any(m in m_up for m in ['JAN', 'FEB', 'MAR']):
+            if any(m in m_up for m in ["JAN", "FEB", "MAR"]):
                 q = "Q1"
-            elif any(m in m_up for m in ['APR', 'MAY', 'MEI', 'JUN']):
+            elif any(m in m_up for m in ["APR", "MAY", "MEI", "JUN"]):
                 q = "Q2"
-            elif any(m in m_up for m in ['JUL', 'AUG', 'SEP', 'OGO']):
+            elif any(m in m_up for m in ["JUL", "AUG", "SEP", "OGO"]):
                 q = "Q3"
             else:
                 q = "Q4"
 
-            actual_remark_col = next((c for c in df_equip.columns if "REMARK" in c.upper() and q in c.upper() and curr_yr in c.upper()), None)
+            actual_remark_col = next(
+                (c for c in df_equip.columns if "REMARK" in c.upper() and q in c.upper() and curr_yr in c.upper()),
+                None
+            )
 
             display_cols = []
             standard_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
@@ -510,18 +533,25 @@ elif menu_selection == "⚙️ Equipment Status":
             if not df_filtered.empty:
                 st.dataframe(
                     df_filtered[display_cols].style.map(
-                        lambda x: 'background-color: #D4EDDA; color: #155724;' if str(x).upper() == 'OK' else
-                        ('background-color: #F8D7DA; color: #721C24;' if str(x).upper() == 'MISSING' else
-                         ('background-color: #FFF3CD; color: #856404;' if str(x).upper() == 'FAULTY' else '')),
+                        lambda x: "background-color: #D4EDDA; color: #155724;" if str(x).upper() == "OK" else
+                        ("background-color: #F8D7DA; color: #721C24;" if str(x).upper() == "MISSING" else
+                         ("background-color: #FFF3CD; color: #856404;" if str(x).upper() == "FAULTY" else "")),
                         subset=[selected_month] if selected_month in display_cols else None
                     ),
                     use_container_width=True,
                     hide_index=True
                 )
+    else:
+        st.warning("No equipment data available.")
 
-# --- 8. FOOTER (GLOBAL) ---
-st.markdown(f"""
+# =========================================================
+# 9. FOOTER
+# =========================================================
+st.markdown(
+    f"""
     <div style="position: fixed; left: 0; bottom: 0; width: 100%; background-color: {sidebar_bg}; text-align: center; padding: 10px; z-index: 9999; border-top: 1px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
         <p style="color: {text_color} !important;">© 2026 GreenFinder VTMS Dashboard. All rights reserved.</p>
     </div>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+)
