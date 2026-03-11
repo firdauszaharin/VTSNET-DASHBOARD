@@ -4,8 +4,6 @@ import plotly.express as px
 from datetime import datetime
 import pytz
 import os
-import requests
-from io import BytesIO
 from streamlit_autorefresh import st_autorefresh
 
 # =========================================================
@@ -27,25 +25,14 @@ st_autorefresh(interval=300000, key="vts_refresh")  # 5 minit
 # 3. HELPER FUNCTIONS
 # =========================================================
 def find_column(df, candidate_names):
-    """
-    Cari nama column secara flexible (case-insensitive).
-    """
     if df.empty:
         return None
-
     normalized = {str(c).strip().upper(): c for c in df.columns}
     for name in candidate_names:
         key = str(name).strip().upper()
         if key in normalized:
             return normalized[key]
     return None
-
-
-def has_columns(df, candidate_names):
-    """
-    Check semua column wujud.
-    """
-    return all(find_column(df, [c]) is not None for c in candidate_names)
 
 
 def color_status_report(val):
@@ -71,9 +58,6 @@ def color_status_equipment(val):
 
 
 def clean_status_series(series):
-    """
-    Bersihkan status untuk chart / filter.
-    """
     s = series.astype(str).str.strip().str.upper()
     s = s.replace({
         "": "UNKNOWN",
@@ -96,17 +80,13 @@ def load_data(url):
 
 
 @st.cache_data(ttl=300)
-def load_excel_sch(url):
+def load_schedule_csv(url):
     try:
-        headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers, timeout=20)
-        response.raise_for_status()
-
-        df = pd.read_excel(BytesIO(response.content), engine="openpyxl")
+        df = pd.read_csv(url, on_bad_lines="skip")
         df.columns = df.columns.astype(str).str.strip()
         return df, None
     except Exception as e:
-        return pd.DataFrame(), f"⚠️ Ralat Teknikal semasa baca fail jadual: {e}"
+        return pd.DataFrame(), f"⚠️ Ralat Teknikal semasa baca jadual Google Sheet: {e}"
 
 
 # =========================================================
@@ -121,9 +101,7 @@ if not st.session_state.authenticated:
         st.title("🔒 VTSNET Project Access")
         pwd = st.text_input("Project Access Code:", type="password")
 
-        # UPDATED: tiada fallback hardcoded
         correct_password = st.secrets.get("PROJECT_PASSWORD")
-
         if not correct_password:
             st.error("PROJECT_PASSWORD is not configured in Streamlit secrets.")
             st.stop()
@@ -239,6 +217,7 @@ waktu_msia = datetime.now(msia_tz)
 
 SHEET_REPORT_URL = "https://docs.google.com/spreadsheets/d/1cJAnZVhxY_Nqjkfo39ze9DCAIZwWd_6dIdFgw0a2j_s/export?format=csv"
 SHEET_EQUIP_URL = "https://docs.google.com/spreadsheets/d/1IvOj5FqviwhZU7tGdnuh7zK5WUf-RsjUrVVa6HalkVU/export?format=csv"
+SHEET_SCHEDULE_URL = "https://docs.google.com/spreadsheets/d/1h9_vOwZWTrXTWo1m907T9g23LW211qcjCOw03q2kc3I/export?format=csv"
 PDF_COL_NAME = "UPLOAD REPORT"
 
 df_raw, report_error = load_data(SHEET_REPORT_URL)
@@ -274,14 +253,12 @@ if menu_selection == "📝 Maintenance Reports":
         status_col = find_column(df, ["STATUS"])
         pdf_col = find_column(df, [PDF_COL_NAME])
 
-        # Filter
         if search_report and report_checklist_col:
             df = df[df[report_checklist_col].astype(str).str.contains(search_report, case=False, na=False)]
 
         if search_staff and name_col:
             df = df[df[name_col].astype(str).str.contains(search_staff, case=False, na=False)]
 
-        # Metrics
         m1, m2, m3 = st.columns(3)
         m1.metric("Total Reports", len(df))
 
@@ -294,7 +271,6 @@ if menu_selection == "📝 Maintenance Reports":
             m3.metric("Pending ⏳", 0)
             st.warning("Column STATUS not found in report data.")
 
-        # Charts
         if status_col and report_checklist_col and not df.empty:
             chart_df = df.copy()
             chart_df[status_col] = clean_status_series(chart_df[status_col])
@@ -334,7 +310,6 @@ if menu_selection == "📝 Maintenance Reports":
         else:
             st.info("Chart tidak dapat dipaparkan kerana column penting tiada atau data kosong.")
 
-        # Table
         st.subheader("📋 Report Tracking Status")
 
         try:
@@ -372,7 +347,6 @@ elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
         st.subheader("⚙️ Inventory & Equipment Status")
 
-        # Flexible month detection
         month_keywords = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
         month_cols = [
             c for c in df_equip.columns
@@ -400,7 +374,6 @@ elif menu_selection == "⚙️ Equipment Status":
                 if selected_site != "ALL SITES":
                     df_working = df_working[df_working[site_col].astype(str) == selected_site]
 
-            # UPDATED: reset filter status bila context bertukar
             current_filter_context = f"{selected_month}_{selected_site}"
             if st.session_state.get("filter_context") != current_filter_context:
                 st.session_state.filter_status = "ALL"
@@ -530,38 +503,9 @@ elif menu_selection == "⚙️ Equipment Status":
 # PAGE 3: STAFF SCHEDULE
 # =========================================================
 elif menu_selection == "📅 Staff Schedule":
-    st.subheader("📅 Staff Duty Schedule - JADUAL VTSAIS (OneDrive Live)")
+    st.subheader("📅 Staff Duty Schedule - JADUAL VTSAIS (Google Sheet Live)")
 
-    # Link share baru
-    ONEDRIVE_SHARE_URL = "https://1drv.ms/x/c/c3a2991b5c1e3d77/IQB3PR5cG5miIIDDrgQAAAAAAfo7GbHOFpLHjhNR0D6LX3w"
-
-    @st.cache_data(ttl=300)
-    def load_excel_from_onedrive(share_url):
-        try:
-            import base64
-            import requests
-            from io import BytesIO
-
-            # Convert share link -> OneDrive API direct download
-            encoded_url = base64.b64encode(share_url.encode()).decode()
-            encoded_url = encoded_url.replace("/", "_").replace("+", "-").rstrip("=")
-            api_url = f"https://api.onedrive.com/v1.0/shares/u!{encoded_url}/root/content"
-
-            headers = {
-                "User-Agent": "Mozilla/5.0"
-            }
-
-            response = requests.get(api_url, headers=headers, timeout=30)
-            response.raise_for_status()
-
-            df = pd.read_excel(BytesIO(response.content), engine="openpyxl")
-            df.columns = df.columns.astype(str).str.strip()
-            return df, None
-
-        except Exception as e:
-            return pd.DataFrame(), f"⚠️ Ralat Teknikal semasa baca fail jadual: {e}"
-
-    df_sch, sch_error = load_excel_from_onedrive(ONEDRIVE_SHARE_URL)
+    df_sch, sch_error = load_schedule_csv(SHEET_SCHEDULE_URL)
 
     if sch_error:
         st.error(sch_error)
@@ -589,7 +533,7 @@ elif menu_selection == "📅 Staff Schedule":
         st.dataframe(df_display, use_container_width=True, hide_index=True)
         st.success(f"✅ Jadual dikemaskini secara langsung (Last sync: {datetime.now(msia_tz).strftime('%H:%M:%S')})")
     else:
-        st.warning("Jadual tidak dapat dipaparkan. Sila semak sama ada fail OneDrive masih dikongsi secara public dan link masih aktif.")
+        st.warning("Jadual tidak dapat dipaparkan. Sila pastikan Google Sheet dikongsi dengan akses yang betul.")
 
 # =========================================================
 # 9. FOOTER
