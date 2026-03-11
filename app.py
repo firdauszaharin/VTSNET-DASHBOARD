@@ -17,6 +17,115 @@ st.set_page_config(
 
 # --- AUTO REFRESH (5 MINIT) ---
 st_autorefresh(interval=300000, key="vts_refresh")
+st.markdown("""
+<style>
+/* Hide default Streamlit header spacing */
+[data-testid="stHeader"] {
+    background: rgba(0,0,0,0);
+}
+
+/* Main app background for login */
+.login-page-bg {
+    min-height: 100vh;
+}
+
+/* Login wrapper */
+.login-card {
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 24px;
+    padding: 34px 30px 28px 30px;
+    box-shadow: 0 10px 35px rgba(31, 41, 55, 0.12);
+    margin-top: 70px;
+}
+
+/* Dark mode login card */
+@media (prefers-color-scheme: dark) {
+    .login-card {
+        background: rgba(22, 28, 45, 0.72);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+    }
+}
+
+/* Brand chip */
+.login-chip {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(99,102,241,0.12));
+    color: #335c99;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 14px;
+}
+
+/* Title */
+.login-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #1f2a44;
+    margin-bottom: 10px;
+}
+
+/* Subtitle */
+.login-subtitle {
+    color: #5b6474;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 18px;
+}
+
+/* Divider line */
+.login-divider {
+    height: 1px;
+    background: linear-gradient(90deg, rgba(148,163,184,0.15), rgba(148,163,184,0.5), rgba(148,163,184,0.15));
+    margin: 14px 0 20px 0;
+}
+
+/* Better label spacing */
+div[data-testid="stTextInputRootElement"] label,
+div[data-testid="stTextInput"] label {
+    font-weight: 600 !important;
+}
+
+/* Input styling */
+div[data-testid="stTextInput"] input {
+    border-radius: 14px !important;
+    border: 1px solid rgba(148,163,184,0.35) !important;
+    background: rgba(248,250,252,0.92) !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+}
+
+/* Button styling */
+div[data-testid="stButton"] > button {
+    border-radius: 14px !important;
+    font-weight: 700 !important;
+    min-height: 3rem !important;
+    border: 1px solid rgba(59,130,246,0.25) !important;
+    background: linear-gradient(135deg, #2563eb, #4f46e5) !important;
+    color: white !important;
+    box-shadow: 0 10px 20px rgba(79, 70, 229, 0.18) !important;
+}
+
+div[data-testid="stButton"] > button:hover {
+    border: 1px solid rgba(59,130,246,0.35) !important;
+    filter: brightness(1.03);
+}
+
+/* Small footer note */
+.login-note {
+    margin-top: 16px;
+    color: #7b8596;
+    font-size: 0.88rem;
+}
+</style>
+""", unsafe_allow_html=True)
 
 import hmac
 from datetime import datetime, timedelta
