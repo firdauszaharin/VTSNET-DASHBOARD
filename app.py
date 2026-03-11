@@ -75,7 +75,7 @@ if not st.session_state.authenticated:
     st.stop()
 
 # =========================================================
-# 4. SIDEBAR & THEME
+# 4. SIDEBAR & THEME (FIXED VISIBILITY)
 # =========================================================
 with st.sidebar:
     if os.path.exists("logo.png"): st.image("logo.png", use_container_width=True)
@@ -86,16 +86,23 @@ with st.sidebar:
         st.rerun()
 
 if dark_mode:
-    bg_style, text_color, plotly_theme = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)", "#FFFFFF", "plotly_dark"
-    sidebar_bg = "rgba(15, 10, 25, 0.98)"
+    bg_style, text_color, plotly_theme = "linear-gradient(135deg, #0e1117 0%, #262730 100%)", "#FFFFFF", "plotly_dark"
+    sidebar_bg = "#0e1117"
+    metric_bg = "rgba(255, 255, 255, 0.05)"
+    text_shadow = "1px 1px 2px black"
 else:
     bg_style, text_color, plotly_theme = "radial-gradient(circle at top right, #f8faff, #eef2f7)", "#1e293b", "plotly_white"
-    sidebar_bg = "rgba(255, 255, 255, 0.9)"
+    sidebar_bg = "#FFFFFF"
+    metric_bg = "#FFFFFF"
+    text_shadow = "none"
 
 st.markdown(f"""<style>
     .stApp {{ background: {bg_style}; color: {text_color}; }}
     [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; }}
-    [data-testid="stMetric"] {{ border: 1px solid rgba(128,128,128,0.2); background: rgba(128,128,128,0.05); border-radius: 10px; padding: 10px; }}
+    [data-testid="stMetricValue"] {{ color: {text_color} !important; font-weight: bold; }}
+    [data-testid="stMetricLabel"] {{ color: {text_color} !important; opacity: 0.8; }}
+    [data-testid="stMetric"] {{ border: 1px solid rgba(128,128,128,0.2); background: {metric_bg}; border-radius: 10px; padding: 15px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }}
+    .stMarkdown p, h1, h2, h3, label {{ color: {text_color} !important; text-shadow: {text_shadow}; }}
 </style>""", unsafe_allow_html=True)
 
 # =========================================================
@@ -114,7 +121,7 @@ df_equip, _ = load_data(SHEET_EQUIP_URL)
 menu_selection = st.sidebar.radio("Select Category:", ["📝 Maintenance Reports", "⚙️ Equipment Status", "📅 Staff Schedule"])
 
 # =========================================================
-# PAGE 1: MAINTENANCE REPORTS (DENGAN CARTA)
+# PAGE 1: MAINTENANCE REPORTS
 # =========================================================
 if menu_selection == "📝 Maintenance Reports":
     st.sidebar.subheader("🔍 Filters")
@@ -130,12 +137,10 @@ if menu_selection == "📝 Maintenance Reports":
         status_col = find_column(df, ["STATUS"])
         pdf_col = find_column(df, ["UPLOAD REPORT"])
 
-        # Filtering
         if search_staff and name_col: df = df[df[name_col].astype(str).str.contains(search_staff, case=False, na=False)]
         if selected_pm != "ALL" and report_col: df = df[df[report_col].astype(str).str.contains(selected_pm, case=False, na=False)]
         if search_report and report_col: df = df[df[report_col].astype(str).str.contains(search_report, case=False, na=False)]
 
-        # Metrics
         m1, m2, m3 = st.columns(3)
         m1.metric("Total Reports", len(df))
         if status_col:
@@ -143,35 +148,62 @@ if menu_selection == "📝 Maintenance Reports":
             m2.metric("Approved ✅", int((s_clean == "APPROVED").sum()))
             m3.metric("Pending ⏳", int((~s_clean.isin(["APPROVED", "REJECTED"])).sum()))
 
-        # --- CHARTS (Dah Masukkan Semula) ---
         st.divider()
         c1, c2 = st.columns(2)
         with c1:
             if status_col:
-                fig_pie = px.pie(df, names=status_col, hole=0.5, title="Approval Status", template=plotly_theme,
+                fig_pie = px.pie(df, names=status_col, hole=0.5, title="Approval Status Overview", template=plotly_theme,
                                  color_discrete_map={"APPROVED":"#2ecc71", "REJECTED":"#e74c3c", "PENDING":"#f1c40f"})
                 st.plotly_chart(fig_pie, use_container_width=True)
         with c2:
             if report_col:
                 fig_bar = px.histogram(df, x=report_col, color=status_col if status_col else None, 
-                                       title="Reports by Type", template=plotly_theme, barmode="group")
+                                       title="Reports by Type Count", template=plotly_theme, barmode="group")
                 st.plotly_chart(fig_bar, use_container_width=True)
 
-        st.subheader("📋 Report Details")
+        st.subheader("📋 Report Details List")
         styled_df = df.style.map(color_status_report, subset=[status_col]) if status_col else df
         st.dataframe(styled_df, use_container_width=True, hide_index=True,
                      column_config={pdf_col: st.column_config.LinkColumn("Link", display_text="OPEN PDF 📄")} if pdf_col else {})
 
 # =========================================================
-# PAGE 2: EQUIPMENT STATUS
+# PAGE 2: EQUIPMENT STATUS (FIXED GRAPHS)
 # =========================================================
 elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
-        st.subheader("⚙️ Inventory Status")
+        st.subheader("⚙️ Inventory & Equipment Status")
         month_cols = [c for c in df_equip.columns if any(m in str(c).upper() for m in ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"])]
+        
         if month_cols:
-            sel_month = st.selectbox("📅 Select Month:", month_cols)
+            sel_month = st.selectbox("📅 Select Inspection Month:", month_cols)
             df_status = df_equip.copy()
+            status_s = clean_status_series(df_status[sel_month])
+            
+            # Metrics
+            mc1, mc2, mc3 = st.columns(3)
+            mc1.metric("🟢 OK", int((status_s == "OK").sum()))
+            mc2.metric("🟡 FAULTY", int((status_s == "FAULTY").sum()))
+            mc3.metric("🔴 MISSING", int((status_s == "MISSING").sum()))
+            
+            # --- CHARTS FOR EQUIPMENT ---
+            st.divider()
+            ec1, ec2 = st.columns([0.4, 0.6])
+            with ec1:
+                pie_data = status_s.value_counts().reset_index()
+                pie_data.columns = ["Status", "Count"]
+                fig_equip_pie = px.pie(pie_data, names="Status", values="Count", hole=0.5, title="Overall Condition",
+                                       template=plotly_theme, color="Status",
+                                       color_discrete_map={"OK":"#2ecc71", "FAULTY":"#f1c40f", "MISSING":"#e74c3c", "UNKNOWN":"#95a5a6"})
+                st.plotly_chart(fig_equip_pie, use_container_width=True)
+            with ec2:
+                type_col = find_column(df_status, ["Type", "TYPE"])
+                if type_col:
+                    fig_equip_bar = px.histogram(df_status, x=type_col, color=sel_month, title="Condition by Equipment Type",
+                                                 template=plotly_theme, barmode="group",
+                                                 color_discrete_map={"OK":"#2ecc71", "FAULTY":"#f1c40f", "MISSING":"#e74c3c"})
+                    st.plotly_chart(fig_equip_bar, use_container_width=True)
+            
+            st.subheader("📦 Asset List Details")
             st.dataframe(df_status.style.map(color_status_equipment, subset=[sel_month]), use_container_width=True, hide_index=True)
 
 # =========================================================
@@ -187,13 +219,13 @@ elif menu_selection == "📅 Staff Schedule":
         df_disp = df_sch.copy()
         if sel_staff != "SEMUA STAF": df_disp = df_disp[df_disp[staff_col] == sel_staff]
         st.dataframe(df_disp, use_container_width=True, hide_index=True)
-        st.success("✅ Live Schedule Loaded")
+        st.success("✅ Schedule Synced with Google Sheets")
 
 # =========================================================
 # 8. FOOTER
 # =========================================================
 st.sidebar.divider()
 st.sidebar.markdown(f"🕒 **Last Sync:** {waktu_msia.strftime('%H:%M:%S')}")
-st.markdown(f"""<div style="position: fixed; left: 0; bottom: 0; width: 100%; background-color: {sidebar_bg}; text-align: center; padding: 5px; border-top: 1px solid rgba(0,0,0,0.1); font-size: 12px;">
+st.markdown(f"""<div style="position: fixed; left: 0; bottom: 0; width: 100%; background-color: {sidebar_bg}; text-align: center; padding: 5px; border-top: 1px solid rgba(0,0,0,0.1); font-size: 12px; color: {text_color};">
     © 2026 GreenFinder VTMS Dashboard.
 </div>""", unsafe_allow_html=True)
