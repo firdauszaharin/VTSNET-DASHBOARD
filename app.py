@@ -203,10 +203,13 @@ if menu_selection == "📝 Maintenance Reports":
     if not df_raw.empty:
         df = df_raw.copy()
 
+        # FIX: guna contains, bukan exact match
         if selected_pm_checklist != "ALL":
             df = df[
-                df['REPORT CHECKLIST'].astype(str).str.strip().str.upper() ==
-                selected_pm_checklist.strip().upper()
+                df['REPORT CHECKLIST'].astype(str).str.upper().str.contains(
+                    selected_pm_checklist.strip().upper(),
+                    na=False
+                )
             ]
 
         if search_report:
@@ -222,29 +225,36 @@ if menu_selection == "📝 Maintenance Reports":
 
         c1, c2 = st.columns(2)
         with c1:
-            st.plotly_chart(
-                px.pie(
-                    df,
-                    names='STATUS',
-                    hole=0.55,
-                    title="Approval Overview",
-                    color_discrete_map={'APPROVED': '#2ecc71', 'REJECTED': '#e74c3c'},
-                    template=plotly_theme
-                ),
-                use_container_width=True
-            )
+            if not df.empty and 'STATUS' in df.columns:
+                st.plotly_chart(
+                    px.pie(
+                        df,
+                        names='STATUS',
+                        hole=0.55,
+                        title="Approval Overview",
+                        color_discrete_map={'APPROVED': '#2ecc71', 'REJECTED': '#e74c3c'},
+                        template=plotly_theme
+                    ),
+                    use_container_width=True
+                )
+            else:
+                st.info("No data for selected filter.")
+
         with c2:
-            st.plotly_chart(
-                px.histogram(
-                    df,
-                    x='REPORT CHECKLIST',
-                    color='STATUS',
-                    title="Reports by Type",
-                    color_discrete_map={'APPROVED': '#2ecc71', 'REJECTED': '#e74c3c'},
-                    template=plotly_theme
-                ),
-                use_container_width=True
-            )
+            if not df.empty and 'REPORT CHECKLIST' in df.columns and 'STATUS' in df.columns:
+                st.plotly_chart(
+                    px.histogram(
+                        df,
+                        x='REPORT CHECKLIST',
+                        color='STATUS',
+                        title="Reports by Type",
+                        color_discrete_map={'APPROVED': '#2ecc71', 'REJECTED': '#e74c3c'},
+                        template=plotly_theme
+                    ),
+                    use_container_width=True
+                )
+            else:
+                st.info("No data for selected filter.")
 
         st.subheader("📋 Report Tracking Status")
         styled_df = df.style.map(color_status, subset=['STATUS']) if 'STATUS' in df.columns else df
@@ -329,11 +339,14 @@ elif menu_selection == "⚙️ Equipment Status":
             st.subheader("📦 Inventory Asset List")
             search_eq = st.text_input("🔍 Quick Search (SN, Name, IP):", key="search_eq_box")
             if search_eq:
-                df_filtered = df_filtered[df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
+                df_filtered = df_filtered[
+                    df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False, na=False)).any(axis=1)
+                ]
 
             year_match = re.search(r'202\d', selected_month)
             curr_yr = year_match.group(0) if year_match else "2025"
             m_up = selected_month.upper()
+
             if any(m in m_up for m in ['JAN', 'FEB', 'MAR']):
                 q = "Q1"
             elif any(m in m_up for m in ['APR', 'MAY', 'MEI', 'JUN']):
