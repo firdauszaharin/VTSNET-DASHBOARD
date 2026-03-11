@@ -307,7 +307,7 @@ elif menu_selection == "📅 Staff Schedule":
     st.subheader("📅 Staff Duty Schedule - JADUAL VTSAIS (OneDrive Live)")
     
     # MASUKKAN LINK DIRECT DOWNLOAD ONEDRIVE ANDA DI SINI
-    ONEDRIVE_EXCEL_URL = "MASUKKAN_LINK_DIRECT_DOWNLOAD_ONEDRIVE_DI_SINI"
+    ONEDRIVE_EXCEL_URL = "https://1drv.ms/x/c/c3a2991b5c1e3d77/IQB3PR5cG5miIIDDrgQAAAAAAfo7GbHOFpLHjhNR0D6LX3w"
 
     @st.cache_data(ttl=600)
     def load_excel_sch(url):
