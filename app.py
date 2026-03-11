@@ -86,10 +86,10 @@ with st.sidebar:
     dark_mode = st.toggle("Dark Mode View", value=False)
     st.divider()
     if st.button("🔒 Log Out", use_container_width=True):
-    st.session_state.authenticated = False
-    st.session_state.login_attempts = 0
-    st.session_state.lockout_until = None
-    st.rerun()
+        st.session_state.authenticated = False
+        st.session_state.login_attempts = 0
+        st.session_state.lockout_until = None
+        st.rerun()
 
 # --- 4. DYNAMIC CSS LOGIC ---
 if dark_mode:
