@@ -52,12 +52,38 @@ if dark_mode:
     sidebar_bg = "rgba(15, 10, 25, 0.98)"
     text_color = "#FFFFFF"
     plotly_theme = "plotly_dark"
+
     custom_dark_css = """
         <style>
-        .stApp, [data-testid="stSidebar"] *, .stMarkdown p, h1, h2, h3, label { color: #FFFFFF !important; }
-        [data-testid="stMetric"] { border: 1px solid rgba(255, 255, 255, 0.2) !important; background: rgba(255, 255, 255, 0.03) !important; border-radius: 12px !important; padding: 20px !important; }
-        [data-testid="stMetricValue"] { color: #FFFFFF !important; }
-        .stDataFrame { background-color: rgba(0,0,0,0) !important; }
+        .stApp, [data-testid="stSidebar"] *, .stMarkdown p, h1, h2, h3, label {
+            color: #FFFFFF !important;
+        }
+        /* Dropdown/Selectbox Visibility in Dark Mode */
+        div[data-baseweb="select"] > div {
+            background-color: #2c3e50 !important;
+            color: white !important;
+        }
+        header[data-testid="stHeader"] {
+            background-color: rgba(0,0,0,0) !important;
+            color: white !important;
+        }
+        [data-testid="stMetricValue"] {
+            color: #FFFFFF !important;
+            -webkit-text-fill-color: #FFFFFF !important;
+            font-weight: 700 !important;
+        }
+        [data-testid="stMetric"] {
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        /* Button Styling */
+        div[data-testid="stVerticalBlock"] .stButton > button {
+            color: #000000 !important;
+            background-color: #FFFFFF !important;
+            font-weight: 900 !important;
+        }
         </style>
     """
 else:
@@ -72,6 +98,8 @@ st.markdown(f"""
     <style>
     .stApp {{ background: {bg_style}; color: {text_color}; }}
     [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
+    .main .block-container {{ padding-top: 2rem !important; padding-bottom: 120px !important; }}
+    h1 {{ margin-top: -80px !important; padding-top: 0px !important; }}
     footer {{visibility: hidden;}}
     </style>
 """, unsafe_allow_html=True)
@@ -101,27 +129,30 @@ waktu_msia = datetime.now(msia_tz)
 
 SHEET_REPORT_URL = "https://docs.google.com/spreadsheets/d/1cJAnZVhxY_Nqjkfo39ze9DCAIZwWd_6dIdFgw0a2j_s/export?format=csv"
 SHEET_EQUIP_URL = "https://docs.google.com/spreadsheets/d/1IvOj5FqviwhZU7tGdnuh7zK5WUf-RsjUrVVa6HalkVU/export?format=csv"
-SHEET_SCHEDULE_URL = "https://docs.google.com/spreadsheets/d/1h9_vOwZWTrXTWo1m907T9g23LW211qcjCOw03q2kc3I/export?format=csv"
 
 df_raw = load_data(SHEET_REPORT_URL)
 df_equip = load_data(SHEET_EQUIP_URL)
 
 # --- 7. SIDEBAR NAVIGATION ---
-menu_selection = st.sidebar.radio("Select Category:", ["📝 Maintenance Reports", "⚙️ Equipment Status", "📅 Staff Schedule"])
+menu_selection = st.sidebar.radio("Select Category:", ["📝 Maintenance Reports", "⚙️ Equipment Status"])
 st.sidebar.divider()
 st.sidebar.markdown(f"🕒 **Last Sync:** {waktu_msia.strftime('%H:%M:%S')}")
 
-st.title("VTSNET Dashboard")
+st.title("VTSNET: Maintenance & Asset Tracker")
 
 # --- PAGE 1: MAINTENANCE REPORTS ---
 if menu_selection == "📝 Maintenance Reports":
     st.subheader("📝 Maintenance Reports")
-    pm_checklist_options = ["ALL"] + [f"VTSNET/PM/Q{q}/{y} YEAR" for y in ["2ND", "3RD", "4TH", "5TH"] for q in range(1, 5)]
+    
+    pm_checklist_options = ["ALL"] + [f"VTSNET/PM/Q{q}/{y} YEAR" for y in ["2ND", "3RD", "4TH", "5TH"] for q in range(1,5)]
 
-    f1, f2, f3 = st.columns([1.5, 1, 1])
-    with f1: selected_pm_checklist = st.selectbox("📂 PM Checklist Filter", pm_checklist_options)
-    with f2: search_report = st.text_input("🔎 Search Site/Type (MET, VHF, etc):")
-    with f3: search_staff = st.text_input("👤 Search Staff Name:")
+    with st.container():
+        f1, f2, f3 = st.columns([1.5, 1, 1])
+        with f1: selected_pm_checklist = st.selectbox("📂 PM Checklist Filter", pm_checklist_options)
+        with f2: search_report = st.text_input("🔎 Search Site/Type (MET, VHF, etc):")
+        with f3: search_staff = st.text_input("👤 Search Staff Name:")
+
+    st.divider()
 
     if not df_raw.empty:
         df = df_raw.copy()
@@ -129,11 +160,12 @@ if menu_selection == "📝 Maintenance Reports":
         checklist_col = find_col(df, "REPORT CHECKLIST")
         name_col = next((c for c in df.columns if c.strip().upper() == "NAME"), None)
         status_col = find_col(df, "STATUS")
-        pdf_col = next((c for c in df.columns if c.strip().upper() == "UPLOAD REPORT"), None)
+        pdf_col = find_col(df, "UPLOAD REPORT")
 
+        # Filtering Logic
         if selected_pm_checklist != "ALL":
-            col_check = id_col if id_col else checklist_col
-            df = df[df[col_check].astype(str).str.upper().str.contains(selected_pm_checklist.upper(), na=False)]
+            col = id_col if id_col else checklist_col
+            df = df[df[col].astype(str).str.upper().str.contains(selected_pm_checklist.upper(), na=False)]
         if search_report and checklist_col:
             df = df[df[checklist_col].astype(str).str.contains(search_report, case=False, na=False)]
         if search_staff and name_col:
@@ -148,11 +180,13 @@ if menu_selection == "📝 Maintenance Reports":
         c1, c2 = st.columns(2)
         with c1:
             if not df.empty and status_col:
-                st.plotly_chart(px.pie(df, names=status_col, hole=0.5, title="Approval Overview", template=plotly_theme,
-                                      color_discrete_map={'APPROVED': '#2ecc71', 'REJECTED': '#e74c3c'}), use_container_width=True)
+                fig_pie = px.pie(df, names=status_col, hole=0.55, title="Approval Overview", template=plotly_theme,
+                                 color_discrete_map={'APPROVED': '#2ecc71', 'REJECTED': '#e74c3c'})
+                st.plotly_chart(fig_pie, use_container_width=True)
         with c2:
             if not df.empty and checklist_col:
-                st.plotly_chart(px.histogram(df, x=checklist_col, color=status_col if status_col else None, title="Reports by Type", template=plotly_theme), use_container_width=True)
+                fig_bar = px.histogram(df, x=checklist_col, color=status_col if status_col else None, title="Reports by Type", template=plotly_theme)
+                st.plotly_chart(fig_bar, use_container_width=True)
 
         st.dataframe(df.style.map(color_status, subset=[status_col]) if status_col else df, use_container_width=True, hide_index=True,
                      column_config={pdf_col: st.column_config.LinkColumn("Report File", display_text="OPEN PDF 📄")} if pdf_col else {})
@@ -160,45 +194,52 @@ if menu_selection == "📝 Maintenance Reports":
 # --- PAGE 2: EQUIPMENT STATUS ---
 elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
-        st.subheader("⚙️ Equipment Status")
-        month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026", "2027"])]
+        st.subheader("⚙️ Inventory & Equipment Status")
+        month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026", "2027"]) and "REMARK" not in c.upper()]
+        site_col = find_col(df_equip, "SITE")
+
         if month_cols:
-            sel_month = st.selectbox("📅 Select Month:", month_cols)
-            df_filtered = df_equip.copy()
+            c1, c2 = st.columns(2)
+            with c1: selected_month = st.selectbox("📅 Select Report Month:", month_cols)
+            with c2:
+                unique_sites = ["ALL SITES"] + sorted(df_equip[site_col].dropna().unique().tolist()) if site_col else ["ALL SITES"]
+                selected_site = st.selectbox("🏗️ Select Site:", unique_sites)
+
+            df_working = df_equip.copy()
+            if selected_site != "ALL SITES":
+                df_working = df_working[df_working[site_col] == selected_site]
+
+            st.divider()
             
-            # --- Donuts & Bar Charts (Sama seperti kod anda) ---
-            ec1, ec2 = st.columns([0.4, 0.6])
-            with ec1:
-                st.plotly_chart(px.pie(df_filtered, names=sel_month, hole=0.5, title="Status Overall", template=plotly_theme,
+            # Button Filters
+            status_series = df_working[selected_month].astype(str).str.strip().str.upper()
+            if 'filter_status' not in st.session_state: st.session_state.filter_status = "ALL"
+            
+            bm1, bm2, bm3, bm4 = st.columns(4)
+            if bm1.button(f"🟢 OK: {len(df_working[status_series == 'OK'])}", use_container_width=True): st.session_state.filter_status = "OK"
+            if bm2.button(f"🟡 FAULTY: {len(df_working[status_series == 'FAULTY'])}", use_container_width=True): st.session_state.filter_status = "FAULTY"
+            if bm3.button(f"🔴 MISSING: {len(df_working[status_series == 'MISSING'])}", use_container_width=True): st.session_state.filter_status = "MISSING"
+            if bm4.button("🔵 SHOW ALL", use_container_width=True): st.session_state.filter_status = "ALL"
+
+            df_filtered = df_working if st.session_state.filter_status == "ALL" else df_working[df_working[selected_month].astype(str).str.strip().str.upper() == st.session_state.filter_status]
+
+            # Charts
+            ch1, ch2 = st.columns([0.4, 0.6])
+            with ch1:
+                st.plotly_chart(px.pie(df_working, names=selected_month, hole=0.55, template=plotly_theme, title="Status Overall",
                                       color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}), use_container_width=True)
-            with ec2:
+            with ch2:
                 type_col = find_col(df_filtered, "TYPE")
                 if type_col:
-                    st.plotly_chart(px.bar(df_filtered, x=type_col, color=sel_month, barmode="group", template=plotly_theme,
-                                          color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}), use_container_width=True)
-            
-            st.dataframe(df_filtered, use_container_width=True, hide_index=True)
+                    st.plotly_chart(px.bar(df_filtered.groupby([type_col, selected_month]).size().reset_index(name='count'), 
+                                          x=type_col, y='count', color=selected_month, template=plotly_theme, title="Analysis by Type",
+                                          color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}, barmode='group'), use_container_width=True)
 
-# --- PAGE 3: STAFF SCHEDULE (NEWLY ADDED) ---
-elif menu_selection == "📅 Staff Schedule":
-    st.subheader("📅 Staff Duty Schedule")
-    df_sch = load_data(SHEET_SCHEDULE_URL)
-    if not df_sch.empty:
-        staff_col = next((c for c in df_sch.columns if "NAME" in c.upper() or "STAF" in c.upper()), df_sch.columns[0])
-        staff_list = ["ALL"] + sorted(df_sch[staff_col].dropna().unique().tolist())
-        sel_staff = st.sidebar.selectbox("Filter Staff Name:", staff_list)
-        
-        df_disp = df_sch.copy()
-        if sel_staff != "ALL":
-            df_disp = df_disp[df_disp[staff_col] == sel_staff]
-        
-        st.dataframe(df_disp, use_container_width=True, hide_index=True)
-    else:
-        st.error("Schedule data not found.")
+            st.dataframe(df_filtered, use_container_width=True, hide_index=True)
 
 # --- 8. FOOTER ---
 st.markdown(f"""
-    <div style="position: fixed; left: 0; bottom: 0; width: 100%; background-color: {sidebar_bg}; text-align: center; padding: 10px; border-top: 1px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
-        <p style="color: {text_color} !important; margin: 0;">© 2026 GreenFinder VTMS Dashboard. All rights reserved.</p>
+    <div style="position: fixed; left: 0; bottom: 0; width: 100%; background-color: {sidebar_bg}; text-align: center; padding: 15px; z-index: 9999; border-top: 1px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
+        <p style="color: {text_color} !important; margin: 0; font-size: 14px; font-weight: 500;">© 2026 GreenFinder VTMS Dashboard. All rights reserved.</p>
     </div>
 """, unsafe_allow_html=True)
