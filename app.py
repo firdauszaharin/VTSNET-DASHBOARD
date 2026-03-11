@@ -304,56 +304,45 @@ elif menu_selection == "⚙️ Equipment Status":
                 )
 # --- PAGE 3: STAFF SCHEDULE ---
 elif menu_selection == "📅 Staff Schedule":
-    st.subheader("📅 Staff Duty Schedule - JADUAL VTSAIS")
+    st.subheader("📅 Staff Duty Schedule - JADUAL VTSAIS (OneDrive Live)")
     
-    # Memandangkan anda menggunakan fail fizikal .xlsx
-    FILE_NAME = "JADUAL VTSAIS.xlsx"
+    # MASUKKAN LINK DIRECT DOWNLOAD ONEDRIVE ANDA DI SINI
+    ONEDRIVE_EXCEL_URL = "MASUKKAN_LINK_DIRECT_DOWNLOAD_ONEDRIVE_DI_SINI"
 
     @st.cache_data(ttl=600)
-    def load_excel_sch():
-        if os.path.exists(FILE_NAME):
-            try:
-                # Membaca fail excel
-                df = pd.read_excel(FILE_NAME)
-                # Membersihkan nama column daripada sebarang space yang tak nampak
-                df.columns = df.columns.str.strip()
-                return df
-            except Exception as e:
-                st.error(f"Masalah membaca fail: {e}")
-                return pd.DataFrame()
-        return pd.DataFrame()
+    def load_excel_sch(url):
+        try:
+            # Membaca fail excel terus dari URL OneDrive
+            df = pd.read_excel(url)
+            df.columns = df.columns.str.strip()
+            return df
+        except Exception as e:
+            st.error(f"Gagal akses fail OneDrive. Sila pastikan link adalah 'Direct Download'.")
+            # Fallback ke fail lokal jika ada dalam GitHub
+            if os.path.exists("JADUAL VTSAIS.xlsx"):
+                return pd.read_excel("JADUAL VTSAIS.xlsx")
+            return pd.DataFrame()
 
-    df_sch = load_excel_sch()
+    df_sch = load_excel_sch(ONEDRIVE_EXCEL_URL)
 
     if not df_sch.empty:
-        # Filter Sidebar khusus untuk Jadual
         st.sidebar.subheader("Carian Jadual")
-        
-        # Cari column Staff Name (Ganti 'STAFF NAME' ikut column dalam Excel anda)
         staff_col = next((c for c in df_sch.columns if 'NAME' in c.upper() or 'STAF' in c.upper()), df_sch.columns[0])
         
         staff_list = ["SEMUA STAF"] + sorted(df_sch[staff_col].dropna().unique().tolist())
         sel_staff = st.sidebar.selectbox("Pilih Nama Staf:", staff_list)
 
-        # Proses Filtering
         df_display = df_sch.copy()
         if sel_staff != "SEMUA STAF":
             df_display = df_display[df_display[staff_col] == sel_staff]
 
-        # Paparan Jadual Utama
+        # Paparan Jadual
         st.dataframe(df_display, use_container_width=True, hide_index=True)
         
-        # Butang untuk muat turun fail asal
-        st.divider()
-        with open(FILE_NAME, "rb") as f:
-            st.download_button(
-                label="📥 Muat Turun Fail Excel Asal",
-                data=f,
-                file_name=FILE_NAME,
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+        # Link asal untuk staf buka/edit di OneDrive
+        st.info(f"🔗 [Buka/Edit Jadual di OneDrive]({ONEDRIVE_EXCEL_URL})")
     else:
-        st.warning(f"Fail '{FILE_NAME}' tidak dijumpai. Sila pastikan anda muat naik fail Excel ini ke GitHub dalam folder yang sama dengan app.py.")
+        st.warning("Data jadual tidak dapat dipaparkan. Sila semak link OneDrive anda.")
 
 # --- 8. FOOTER (GLOBAL) ---
 st.markdown(f"""
