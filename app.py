@@ -18,7 +18,7 @@ st.set_page_config(
 # --- AUTO REFRESH (5 MINIT) ---
 st_autorefresh(interval=300000, key="vts_refresh")
 # =========================
-# SIMPLE MODERN LOGIN PAGE
+# SIMPLE LOGIN PAGE
 # =========================
 
 import hmac
@@ -48,26 +48,26 @@ if not st.session_state.authenticated:
 
     st.markdown("""
     <style>
-    .login-box {
+    .login-card {
         background: rgba(255,255,255,0.75);
-        border-radius: 18px;
+        border-radius: 20px;
         padding: 40px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.08);
         backdrop-filter: blur(10px);
-        text-align: center;
     }
 
     .login-title {
-        font-size: 2.3rem;
+        font-size: 2.4rem;
         font-weight: 800;
-        margin-bottom: 8px;
+        text-align: center;
+        margin-bottom: 5px;
         color: #1f2a44;
     }
 
     .login-sub {
+        text-align: center;
         color: #5b6474;
         margin-bottom: 20px;
-        font-size: 0.95rem;
     }
 
     div[data-testid="stButton"] > button {
@@ -84,10 +84,10 @@ if not st.session_state.authenticated:
 
     with center:
 
-        st.markdown('<div class="login-box">', unsafe_allow_html=True)
+        st.markdown('<div class="login-card">', unsafe_allow_html=True)
 
         st.markdown('<div class="login-title">🔐 VTSNET</div>', unsafe_allow_html=True)
-        st.markdown('<div class="login-sub">Vessel Traffic Monitoring Dashboard</div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-sub">VTSNET Project Access</div>', unsafe_allow_html=True)
 
         if is_locked_out():
             remaining = int((st.session_state.lockout_until - datetime.now()).total_seconds() // 60) + 1
@@ -97,7 +97,6 @@ if not st.session_state.authenticated:
         pwd = st.text_input("Project Access Code", type="password")
 
         correct_password = st.secrets.get("PROJECT_PASSWORD")
-
         if not correct_password:
             st.error("PROJECT_PASSWORD not configured in secrets.toml")
             st.stop()
@@ -109,7 +108,6 @@ if not st.session_state.authenticated:
                 st.session_state.login_attempts = 0
                 st.session_state.lockout_until = None
                 st.rerun()
-
             else:
                 st.session_state.login_attempts += 1
 
@@ -120,7 +118,7 @@ if not st.session_state.authenticated:
                     remaining = MAX_LOGIN_ATTEMPTS - st.session_state.login_attempts
                     st.error(f"Wrong Password! Remaining attempts: {remaining}")
 
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     st.stop()
 import hmac
