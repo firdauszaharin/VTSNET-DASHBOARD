@@ -23,7 +23,6 @@ if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
-    
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
         st.title("🔒 VTSNET Project Access")
@@ -53,78 +52,25 @@ if dark_mode:
     sidebar_bg = "rgba(15, 10, 25, 0.98)"
     text_color = "#FFFFFF"
     plotly_theme = "plotly_dark"
-    
     custom_dark_css = """
         <style>
-        /* 1. Paksa SEMUA teks dashboard & sidebar jadi putih */
-        .stApp, [data-testid="stSidebar"] *, .stMarkdown p, h1, h2, h3, label {
-            color: #FFFFFF !important;
-        }
-        /* 1.1 FULL DARK MODE: Sorok header putih kat atas tu */
-        header[data-testid="stHeader"] {
-            background-color: rgba(0,0,0,0) !important;
-            color: white !important;
-        }
-        
-        /* Buang garisan halus kat atas sekali */
-        [data-testid="stDecoration"] {
-            display: none;
-        }
-
-        /* 2. FIX SEMUA BUTTON DALAM MAIN AREA (OK, FAULTY, MISSING, SHOW ALL) */
-        /* Kita guna 'div[data-testid="stVerticalBlock"]' untuk target area content sahaja */
+        .stApp, [data-testid="stSidebar"] *, .stMarkdown p, h1, h2, h3, label { color: #FFFFFF !important; }
+        header[data-testid="stHeader"] { background-color: rgba(0,0,0,0) !important; color: white !important; }
+        [data-testid="stDecoration"] { display: none; }
         div[data-testid="stVerticalBlock"] .stButton > button {
-            color: #000000 !important; 
-            background-color: #FFFFFF !important;
-            font-weight: 900 !important;
-            border: 2px solid #FFFFFF !important;
-            opacity: 1 !important;
+            color: #000000 !important; background-color: #FFFFFF !important;
+            font-weight: 900 !important; border: 2px solid #FFFFFF !important;
         }
-
-        /* Effect bila mouse lalu (Hover) */
-        div[data-testid="stVerticalBlock"] .stButton > button:hover {
-            background-color: #f0f2f6 !important;
-            color: #000000 !important;
-            border: 2px solid #6c5ce7 !important;
-        }
-        /* 2.1 FIX METRIC VALUE (Contoh: Angka '1' yang pudar tu) */
-        [data-testid="stMetricValue"] {
-            color: #FFFFFF !important;
-            -webkit-text-fill-color: #FFFFFF !important;
-            font-weight: 700 !important;
-        }
-        /* 2.2 BAGI NAMPAK LINE (DIVIDER & BORDER) */
-        /* Tukar warna garisan st.divider() */
-        hr {
-            border-top: 2px solid rgba(255, 255, 255, 0.2) !important;
-            margin-top: 20px !important;
-            margin-bottom: 20px !important;
-        }
-        /* 3. BAGI NAMPAK LINE & BORDER (GLOW EFFECT) */
-        hr {
-            border-top: 2px solid rgba(162, 155, 254, 0.5) !important; /* Warna purple cair */
-            margin: 20px 0 !important;
-        }
-        
-        /* Border keliling kotak Metric supaya nampak 'line' pemisah */
+        [data-testid="stMetricValue"] { color: #FFFFFF !important; font-weight: 700 !important; }
+        hr { border-top: 2px solid rgba(255, 255, 255, 0.2) !important; }
         [data-testid="stMetric"] {
             border: 1px solid rgba(255, 255, 255, 0.2) !important;
             background: rgba(255, 255, 255, 0.03) !important;
-            border-radius: 12px !important;
-            padding: 20px !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border-radius: 12px !important; padding: 20px !important;
         }
-
-        /* 3.1 FIX LOG OUT BUTTON (Dalam Sidebar) */
-        /* Kita kekalkan tulisan putih supaya nampak atas butang merah */
         section[data-testid="stSidebar"] .stButton > button {
-            color: #FFFFFF !important;
-            background-color: rgba(255, 75, 75, 0.2) !important;
+            color: #FFFFFF !important; background-color: rgba(255, 75, 75, 0.2) !important;
             border: 1px solid #ff4b4b !important;
-        }
-        
-        section[data-testid="stSidebar"] .stButton > button:p {
-            color: #FFFFFF !important;
         }
         </style>
     """
@@ -140,30 +86,16 @@ st.markdown(f"""
     <style>
     .stApp {{ background: {bg_style}; color: {text_color}; }}
     [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
-    
-    /* ADJUST KAT SINI */
-    .main .block-container {{ 
-        padding-top: 2rem !important;  /* Kecilkan nombor ni kalau nak Title lagi tinggi ke atas */
-        padding-bottom: 100px !important; 
-    }}
-    
-    /* Tambahan: Kalau nak adjust saiz Title tu sendiri */
-    h1 {{
-        margin-top: -80px !important; /* Gunakan nombor negatif untuk paksa Title naik atas */
-        padding-top: 0px !important;
-    }}
-    
+    .main .block-container {{ padding-top: 2rem !important; padding-bottom: 100px !important; }}
+    h1 {{ margin-top: -80px !important; padding-top: 0px !important; }}
     footer {{visibility: hidden;}}
     </style>
 """, unsafe_allow_html=True)
 
-# --- 5. HELPER FUNCTIONS (Warna Table) ---
+# --- 5. HELPER FUNCTIONS ---
 def color_status(val):
-    # Kita paksa warna teks jadi HITAM (#000000) supaya nampak atas hijau/merah
-    if val == 'APPROVED': 
-        return 'background-color: #d4edda; color: #000000; font-weight: bold;'
-    if val == 'REJECTED': 
-        return 'background-color: #f8d7da; color: #000000; font-weight: bold;'
+    if val == 'APPROVED': return 'background-color: #d4edda; color: #000000; font-weight: bold;'
+    if val == 'REJECTED': return 'background-color: #f8d7da; color: #000000; font-weight: bold;'
     return ''
 
 @st.cache_data(ttl=60)
@@ -190,7 +122,7 @@ menu_selection = st.sidebar.radio("Select Category:", ["📝 Maintenance Reports
 st.sidebar.divider()
 st.sidebar.markdown(f"🕒 **Last Sync:** {waktu_msia.strftime('%H:%M:%S')}")
 
-st.title("VTSNET: Maintenance & Asset Lifecycle Tracker")
+st.title("VTSNET: Tracker")
 
 # --- PAGE 1: MAINTENANCE REPORTS ---
 if menu_selection == "📝 Maintenance Reports":
@@ -230,7 +162,6 @@ elif menu_selection == "⚙️ Equipment Status":
         if month_cols:
             c1, c2 = st.columns(2)
             with c1: selected_month = st.selectbox("📅 Select Report Month:", month_cols, index=0)
-            
             df_working = df_equip.copy()
             if site_col:
                 unique_sites = ["ALL SITES"] + sorted(df_working[site_col].dropna().unique().tolist())
@@ -269,44 +200,28 @@ elif menu_selection == "⚙️ Equipment Status":
                                       color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}, barmode='group')
                     st.plotly_chart(fig_type, use_container_width=True)
 
-         # --- INVENTORY ASSET LIST ---
             st.divider()
             st.subheader(f"📦 Inventory Asset List")
             search_eq = st.text_input("🔍 Quick Search (SN, Name, IP):", key="search_eq_box")
             if search_eq:
                 df_filtered = df_filtered[df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False)).any(axis=1)]
 
-            year_match = re.search(r'202\d', selected_month)
-            curr_yr = year_match.group(0) if year_match else "2025"
-            m_up = selected_month.upper()
-            if any(m in m_up for m in ['JAN', 'FEB', 'MAR']): q = "Q1"
-            elif any(m in m_up for m in ['APR', 'MAY', 'MEI', 'JUN']): q = "Q2"
-            elif any(m in m_up for m in ['JUL', 'AUG', 'SEP', 'OGO']): q = "Q3"
-            else: q = "Q4"
-            actual_remark_col = next((c for c in df_equip.columns if "REMARK" in c.upper() and q in c.upper() and curr_yr in c.upper()), None)
+            display_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
+            actual_display = [c for c in df_filtered.columns if any(sc.lower() == c.lower() for sc in display_cols)]
+            if selected_month in df_filtered.columns: actual_display.append(selected_month)
 
-            display_cols = []
-            standard_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
-            for col in standard_cols:
-                match = next((c for c in df_filtered.columns if c.lower() == col.lower()), None)
-                if match: display_cols.append(match)
-            if selected_month in df_filtered.columns: display_cols.append(selected_month)
-            if actual_remark_col: display_cols.append(actual_remark_col)
+            st.dataframe(df_filtered[actual_display].style.map(
+                lambda x: 'background-color: #D4EDDA; color: #155724;' if str(x).upper() == 'OK' else 
+                          ('background-color: #F8D7DA; color: #721C24;' if str(x).upper() == 'MISSING' else 
+                           ('background-color: #FFF3CD; color: #856404;' if str(x).upper() == 'FAULTY' else '')), 
+                subset=[selected_month] if selected_month in actual_display else None
+            ), use_container_width=True, hide_index=True)
 
-            if not df_filtered.empty:
-                st.dataframe(
-                    df_filtered[display_cols].style.map(
-                        lambda x: 'background-color: #D4EDDA; color: #155724;' if str(x).upper() == 'OK' else 
-                                  ('background-color: #F8D7DA; color: #721C24;' if str(x).upper() == 'MISSING' else 
-                                   ('background-color: #FFF3CD; color: #856404;' if str(x).upper() == 'FAULTY' else '')), 
-                        subset=[selected_month] if selected_month in display_cols else None
-                    ), use_container_width=True, hide_index=True
-                )
 # --- PAGE 3: STAFF SCHEDULE ---
 elif menu_selection == "📅 Staff Schedule":
     st.subheader("📅 Staff Duty Schedule - JADUAL VTSAIS (OneDrive Live)")
     
-    # Pastikan baris di bawah ini selari (4 jarak dari tepi)
+    # Link Direct Download OneDrive yang telah dibetulkan
     ONEDRIVE_EXCEL_URL = "https://onedrive.live.com/download?resid=C3A2991B5C1E3D77&authkey=!AH89HlwbnBoZACA&em=2"
 
     @st.cache_data(ttl=600)
@@ -316,7 +231,9 @@ elif menu_selection == "📅 Staff Schedule":
             df.columns = df.columns.str.strip()
             return df
         except Exception as e:
-            st.error(f"Gagal akses fail OneDrive.")
+            st.error(f"Gagal akses fail OneDrive. Sila pastikan link adalah 'Direct Download'.")
+            if os.path.exists("JADUAL VTSAIS.xlsx"):
+                return pd.read_excel("JADUAL VTSAIS.xlsx")
             return pd.DataFrame()
 
     df_sch = load_excel_sch(ONEDRIVE_EXCEL_URL)
@@ -324,7 +241,6 @@ elif menu_selection == "📅 Staff Schedule":
     if not df_sch.empty:
         st.sidebar.subheader("Carian Jadual")
         staff_col = next((c for c in df_sch.columns if 'NAME' in c.upper() or 'STAF' in c.upper()), df_sch.columns[0])
-        
         staff_list = ["SEMUA STAF"] + sorted(df_sch[staff_col].dropna().unique().tolist())
         sel_staff = st.sidebar.selectbox("Pilih Nama Staf:", staff_list)
 
@@ -332,15 +248,12 @@ elif menu_selection == "📅 Staff Schedule":
         if sel_staff != "SEMUA STAF":
             df_display = df_display[df_display[staff_col] == sel_staff]
 
-        # Paparan Jadual
         st.dataframe(df_display, use_container_width=True, hide_index=True)
-        
-        # Link asal untuk staf buka/edit di OneDrive
-        st.info(f"🔗 [Buka/Edit Jadual di OneDrive]({ONEDRIVE_EXCEL_URL})")
+        st.info(f"🔗 [Buka Jadual OneDrive]({ONEDRIVE_EXCEL_URL})")
     else:
-        st.warning("Data jadual tidak dapat dipaparkan. Sila semak link OneDrive anda.")
+        st.warning("Data jadual tidak dapat dipaparkan.")
 
-# --- 8. FOOTER (GLOBAL) ---
+# --- 8. FOOTER ---
 st.markdown(f"""
     <div style="position: fixed; left: 0; bottom: 0; width: 100%; background-color: {sidebar_bg}; text-align: center; padding: 10px; z-index: 9999; border-top: 1px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
         <p style="color: {text_color} !important;">© 2026 GreenFinder VTMS Dashboard. All rights reserved.</p>
