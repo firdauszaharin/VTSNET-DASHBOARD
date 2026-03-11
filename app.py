@@ -209,7 +209,10 @@ if menu_selection == "📝 Maintenance Reports":
 
         id_col = find_col(df, "ID DOCUMENT")
         checklist_col = find_col(df, "REPORT CHECKLIST")
-        name_col = next((c for c in df.columns if c.strip().upper() == "NAME"), None)
+        name_col = next(
+    (c for c in df.columns if c.strip().upper() in ["TEAM DETAILS", "NAME"]),
+    None
+)
         status_col = find_col(df, "STATUS")
         pdf_col = next((c for c in df.columns if c.strip().upper() == PDF_COL.upper()), None)
 
