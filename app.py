@@ -18,22 +18,65 @@ st.set_page_config(
 # --- AUTO REFRESH (5 MINIT) ---
 st_autorefresh(interval=300000, key="vts_refresh")
 
-# --- 2. LOGIN SECURITY ---
+import hmac
+from datetime import datetime, timedelta
+
+# --- SECURITY SETTINGS ---
+MAX_LOGIN_ATTEMPTS = 5
+LOCKOUT_MINUTES = 10
+
+# --- SESSION INIT ---
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
+if "login_attempts" not in st.session_state:
+    st.session_state.login_attempts = 0
+
+if "lockout_until" not in st.session_state:
+    st.session_state.lockout_until = None
+
+
+def is_locked_out():
+    if st.session_state.lockout_until is None:
+        return False
+    return datetime.now() < st.session_state.lockout_until
+
+
+# --- LOGIN SCREEN ---
 if not st.session_state.authenticated:
     col1, col2, col3 = st.columns([1, 2, 1])
+
     with col2:
         st.title("🔒 VTSNET Project Access")
+
+        if is_locked_out():
+            remaining = int((st.session_state.lockout_until - datetime.now()).total_seconds() // 60) + 1
+            st.error(f"Too many failed attempts. Try again in {remaining} minute(s).")
+            st.stop()
+
         pwd = st.text_input("Project Access Code:", type="password")
-        correct_password = st.secrets.get("PROJECT_PASSWORD", "vtsnet2026")
+
+        correct_password = st.secrets.get("PROJECT_PASSWORD")
+        if not correct_password:
+            st.error("PROJECT_PASSWORD not configured in secrets.toml")
+            st.stop()
+
         if st.button("Unlock Dashboard", use_container_width=True):
-            if pwd == correct_password:
+            if hmac.compare_digest(str(pwd), str(correct_password)):
                 st.session_state.authenticated = True
+                st.session_state.login_attempts = 0
+                st.session_state.lockout_until = None
                 st.rerun()
             else:
-                st.error("Wrong Password!")
+                st.session_state.login_attempts += 1
+
+                if st.session_state.login_attempts >= MAX_LOGIN_ATTEMPTS:
+                    st.session_state.lockout_until = datetime.now() + timedelta(minutes=LOCKOUT_MINUTES)
+                    st.error("Too many failed attempts. Access temporarily locked.")
+                else:
+                    remaining = MAX_LOGIN_ATTEMPTS - st.session_state.login_attempts
+                    st.error(f"Wrong Password! Remaining attempts: {remaining}")
+
     st.stop()
 
 # --- 3. THEME TOGGLE & LOGOUT ---
@@ -43,8 +86,10 @@ with st.sidebar:
     dark_mode = st.toggle("Dark Mode View", value=False)
     st.divider()
     if st.button("🔒 Log Out", use_container_width=True):
-        st.session_state.authenticated = False
-        st.rerun()
+    st.session_state.authenticated = False
+    st.session_state.login_attempts = 0
+    st.session_state.lockout_until = None
+    st.rerun()
 
 # --- 4. DYNAMIC CSS LOGIC ---
 if dark_mode:
