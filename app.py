@@ -532,9 +532,36 @@ elif menu_selection == "⚙️ Equipment Status":
 elif menu_selection == "📅 Staff Schedule":
     st.subheader("📅 Staff Duty Schedule - JADUAL VTSAIS (OneDrive Live)")
 
-    DIRECT_URL = "https://onedrive.live.com/download?resid=C3A2991B5C1E3D77&authkey=!AH89HlwbnBoZACA&em=2"
+    # Link share baru
+    ONEDRIVE_SHARE_URL = "https://1drv.ms/x/c/c3a2991b5c1e3d77/IQB3PR5cG5miIIDDrgQAAAAAAfo7GbHOFpLHjhNR0D6LX3w"
 
-    df_sch, sch_error = load_excel_sch(DIRECT_URL)
+    @st.cache_data(ttl=300)
+    def load_excel_from_onedrive(share_url):
+        try:
+            import base64
+            import requests
+            from io import BytesIO
+
+            # Convert share link -> OneDrive API direct download
+            encoded_url = base64.b64encode(share_url.encode()).decode()
+            encoded_url = encoded_url.replace("/", "_").replace("+", "-").rstrip("=")
+            api_url = f"https://api.onedrive.com/v1.0/shares/u!{encoded_url}/root/content"
+
+            headers = {
+                "User-Agent": "Mozilla/5.0"
+            }
+
+            response = requests.get(api_url, headers=headers, timeout=30)
+            response.raise_for_status()
+
+            df = pd.read_excel(BytesIO(response.content), engine="openpyxl")
+            df.columns = df.columns.astype(str).str.strip()
+            return df, None
+
+        except Exception as e:
+            return pd.DataFrame(), f"⚠️ Ralat Teknikal semasa baca fail jadual: {e}"
+
+    df_sch, sch_error = load_excel_from_onedrive(ONEDRIVE_SHARE_URL)
 
     if sch_error:
         st.error(sch_error)
@@ -562,7 +589,7 @@ elif menu_selection == "📅 Staff Schedule":
         st.dataframe(df_display, use_container_width=True, hide_index=True)
         st.success(f"✅ Jadual dikemaskini secara langsung (Last sync: {datetime.now(msia_tz).strftime('%H:%M:%S')})")
     else:
-        st.warning("Jadual tidak dapat dipaparkan. Sila pastikan fail Excel di OneDrive tidak sedang dibuka (locked) atau link masih aktif.")
+        st.warning("Jadual tidak dapat dipaparkan. Sila semak sama ada fail OneDrive masih dikongsi secara public dan link masih aktif.")
 
 # =========================================================
 # 9. FOOTER
