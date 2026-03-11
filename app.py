@@ -18,83 +18,16 @@ st.set_page_config(
 # --- AUTO REFRESH (5 MINIT) ---
 st_autorefresh(interval=300000, key="vts_refresh")
 # =========================
-# SIMPLE LOGIN PAGE
-# =========================
-
-import hmac
-from datetime import datetime, timedelta
-
-MAX_LOGIN_ATTEMPTS = 5
-LOCKOUT_MINUTES = 10
-
+# --- 2. LOGIN SECURITY ---
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
-if "login_attempts" not in st.session_state:
-    st.session_state.login_attempts = 0
-
-if "lockout_until" not in st.session_state:
-    st.session_state.lockout_until = None
-
-
-def is_locked_out():
-    if st.session_state.lockout_until is None:
-        return False
-    return datetime.now() < st.session_state.lockout_until
-
-
-# --- LOGIN PAGE ---
 if not st.session_state.authenticated:
-
-    st.markdown("""
-    <style>
-    .login-card {
-        background: rgba(255,255,255,0.75);
-        border-radius: 20px;
-        padding: 40px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        backdrop-filter: blur(10px);
-    }
-
-    .login-title {
-        font-size: 2.4rem;
-        font-weight: 800;
-        text-align: center;
-        margin-bottom: 5px;
-        color: #1f2a44;
-    }
-
-    .login-sub {
-        text-align: center;
-        color: #5b6474;
-        margin-bottom: 20px;
-    }
-
-    div[data-testid="stButton"] > button {
-        border-radius: 12px !important;
-        font-weight: 700 !important;
-        background: linear-gradient(135deg,#2563eb,#4f46e5) !important;
-        color: white !important;
-        height: 48px !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    left, center, right = st.columns([1,1.4,1])
-
-    with center:
-
-        st.markdown('<div class="login-card">', unsafe_allow_html=True)
-
-        st.markdown('<div class="login-title">🔐 VTSNET</div>', unsafe_allow_html=True)
-        st.markdown('<div class="login-sub">VTSNET Project Access</div>', unsafe_allow_html=True)
-
-        if is_locked_out():
-            remaining = int((st.session_state.lockout_until - datetime.now()).total_seconds() // 60) + 1
-            st.error(f"Too many failed attempts. Try again in {remaining} minute(s).")
-            st.stop()
-
-        pwd = st.text_input("Project Access Code", type="password")
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.title("🔒 VTSNET Project Access")
+        pwd = st.text_input("Project Access Code:", type="password")
 
         correct_password = st.secrets.get("PROJECT_PASSWORD")
         if not correct_password:
@@ -102,24 +35,11 @@ if not st.session_state.authenticated:
             st.stop()
 
         if st.button("Unlock Dashboard", use_container_width=True):
-
-            if hmac.compare_digest(str(pwd), str(correct_password)):
+            if pwd == correct_password:
                 st.session_state.authenticated = True
-                st.session_state.login_attempts = 0
-                st.session_state.lockout_until = None
                 st.rerun()
             else:
-                st.session_state.login_attempts += 1
-
-                if st.session_state.login_attempts >= MAX_LOGIN_ATTEMPTS:
-                    st.session_state.lockout_until = datetime.now() + timedelta(minutes=LOCKOUT_MINUTES)
-                    st.error("Too many failed attempts. Access temporarily locked.")
-                else:
-                    remaining = MAX_LOGIN_ATTEMPTS - st.session_state.login_attempts
-                    st.error(f"Wrong Password! Remaining attempts: {remaining}")
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
+                st.error("Wrong Password!")
     st.stop()
 import hmac
 from datetime import datetime, timedelta
