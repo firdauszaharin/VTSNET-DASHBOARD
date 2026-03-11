@@ -17,14 +17,16 @@ st.set_page_config(
 
 # --- AUTO REFRESH (5 MINIT) ---
 st_autorefresh(interval=300000, key="vts_refresh")
+# =========================
+# SIMPLE MODERN LOGIN PAGE
+# =========================
+
 import hmac
 from datetime import datetime, timedelta
 
-# --- SECURITY SETTINGS ---
 MAX_LOGIN_ATTEMPTS = 5
 LOCKOUT_MINUTES = 10
 
-# --- SESSION INIT ---
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
@@ -41,343 +43,73 @@ def is_locked_out():
     return datetime.now() < st.session_state.lockout_until
 
 
-# =========================
-# SPLIT-SCREEN LOGIN PAGE
-# =========================
+# --- LOGIN PAGE ---
 if not st.session_state.authenticated:
+
     st.markdown("""
     <style>
-    header[data-testid="stHeader"] {
-        background: rgba(0,0,0,0) !important;
-    }
-
-    [data-testid="stToolbar"] {
-        right: 1rem;
-    }
-
-    .main .block-container {
-        max-width: 100% !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-    }
-
-    .stApp {
-        background: #091a31 !important;
-    }
-
-    .login-left {
-        min-height: 100vh;
-        background: linear-gradient(180deg, #081a33 0%, #0b203f 60%, #0d274a 100%);
-        padding: 52px 56px 40px 56px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .login-right {
-        min-height: 100vh;
-        position: relative;
-        background:
-            linear-gradient(rgba(6,18,37,0.22), rgba(6,18,37,0.28)),
-            url("https://images.unsplash.com/photo-1517581177682-a085bb7ffb15?auto=format&fit=crop&w=1600&q=80");
-        background-size: cover;
-        background-position: center;
-    }
-
-    .right-overlay {
-        position: absolute;
-        inset: 0;
-        background:
-            linear-gradient(135deg, rgba(7,19,39,0.12), rgba(249,115,22,0.18));
-    }
-
-    .top-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 8px 14px;
-        border-radius: 0;
-        border-left: 4px solid #f97316;
-        background: rgba(249,115,22,0.10);
-        color: #ffd4b2;
-        font-size: 0.82rem;
-        font-weight: 800;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        margin-bottom: 18px;
-        width: fit-content;
-    }
-
-    .brand-row {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        margin-bottom: 24px;
-    }
-
-    .brand-icon {
-        width: 52px;
-        height: 52px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #0ea5e9, #2563eb);
-        color: white;
-        font-size: 1.25rem;
-        font-weight: 900;
-        border-radius: 6px;
-        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.22);
-    }
-
-    .brand-title {
-        color: #ffffff;
-        font-size: 2.05rem;
-        font-weight: 800;
-        letter-spacing: 0.04em;
-        line-height: 1;
-    }
-
-    .brand-subtitle {
-        color: rgba(255,255,255,0.55);
-        font-size: 0.9rem;
-        margin-top: 4px;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
+    .login-box {
+        background: rgba(255,255,255,0.75);
+        border-radius: 18px;
+        padding: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        backdrop-filter: blur(10px);
+        text-align: center;
     }
 
     .login-title {
-        color: #ffffff;
-        font-size: 2.35rem;
+        font-size: 2.3rem;
         font-weight: 800;
-        line-height: 1.12;
-        margin-bottom: 14px;
-        max-width: 560px;
+        margin-bottom: 8px;
+        color: #1f2a44;
     }
 
-    .login-desc {
-        color: rgba(255,255,255,0.72);
-        font-size: 1rem;
-        line-height: 1.7;
-        max-width: 560px;
-        margin-bottom: 24px;
-    }
-
-    .login-line {
-        width: 100%;
-        max-width: 560px;
-        height: 1px;
-        background: linear-gradient(
-            90deg,
-            rgba(255,255,255,0.04),
-            rgba(255,255,255,0.20),
-            rgba(255,255,255,0.04)
-        );
-        margin-bottom: 24px;
-    }
-
-    .system-points {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 26px;
-        max-width: 560px;
-    }
-
-    .system-chip {
-        padding: 8px 12px;
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.08);
-        color: #dbe7f5;
-        font-size: 0.84rem;
-        font-weight: 600;
-        border-radius: 0;
-    }
-
-    .login-left label {
-        color: #dbe7f5 !important;
-        font-weight: 700 !important;
-        font-size: 0.95rem !important;
-    }
-
-    div[data-testid="stTextInput"] input {
-        min-height: 54px !important;
-        border-radius: 0 !important;
-        border: 1px solid rgba(255,255,255,0.16) !important;
-        background: rgba(255,255,255,0.08) !important;
-        color: #ffffff !important;
-        padding-left: 14px !important;
-    }
-
-    div[data-testid="stTextInput"] input::placeholder {
-        color: rgba(255,255,255,0.42) !important;
-    }
-
-    div[data-testid="stTextInput"] svg {
-        color: rgba(255,255,255,0.72) !important;
+    .login-sub {
+        color: #5b6474;
+        margin-bottom: 20px;
+        font-size: 0.95rem;
     }
 
     div[data-testid="stButton"] > button {
-        min-height: 54px !important;
-        border-radius: 0 !important;
-        border: none !important;
-        background: linear-gradient(135deg, #f97316, #ea580c) !important;
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        background: linear-gradient(135deg,#2563eb,#4f46e5) !important;
         color: white !important;
-        font-weight: 800 !important;
-        letter-spacing: 0.05em !important;
-        text-transform: uppercase !important;
-        box-shadow: 0 14px 28px rgba(249,115,22,0.18) !important;
-    }
-
-    div[data-testid="stButton"] > button:hover {
-        background: linear-gradient(135deg, #fb923c, #f97316) !important;
-        color: white !important;
-    }
-
-    .security-note {
-        margin-top: 16px;
-        color: rgba(255,255,255,0.52);
-        font-size: 0.87rem;
-        max-width: 560px;
-    }
-
-    .hero-caption {
-        position: absolute;
-        left: 42px;
-        bottom: 42px;
-        right: 42px;
-        z-index: 2;
-        color: white;
-        max-width: 580px;
-    }
-
-    .hero-kicker {
-        font-size: 0.84rem;
-        font-weight: 800;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        margin-bottom: 10px;
-        color: rgba(255,255,255,0.85);
-    }
-
-    .hero-title {
-        font-size: 2.15rem;
-        line-height: 1.12;
-        font-weight: 800;
-        margin-bottom: 12px;
-    }
-
-    .hero-desc {
-        font-size: 1rem;
-        line-height: 1.65;
-        color: rgba(255,255,255,0.90);
-        max-width: 560px;
-    }
-
-    .hero-panel-box {
-        margin-top: 18px;
-        display: inline-block;
-        padding: 12px 14px;
-        border-left: 4px solid #38bdf8;
-        background: rgba(7, 19, 39, 0.36);
-        backdrop-filter: blur(6px);
-        color: #e5eef8;
-        font-size: 0.9rem;
-        font-weight: 600;
-    }
-
-    @media (max-width: 900px) {
-        .login-left, .login-right {
-            min-height: auto;
-        }
-
-        .login-left {
-            padding: 34px 24px;
-        }
-
-        .login-right {
-            min-height: 320px;
-        }
-
-        .hero-caption {
-            left: 24px;
-            bottom: 24px;
-            right: 24px;
-        }
-
-        .brand-title {
-            font-size: 1.6rem;
-        }
-
-        .login-title {
-            font-size: 1.8rem;
-        }
-
-        .hero-title {
-            font-size: 1.6rem;
-        }
+        height: 48px !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    left_col, right_col = st.columns([1, 1.08], gap="small")
+    left, center, right = st.columns([1,1.4,1])
 
-    with left_col:
-        st.markdown('<div class="login-left">', unsafe_allow_html=True)
+    with center:
 
-        st.markdown("""
-            <div class="top-badge">Authorized Personnel Only</div>
+        st.markdown('<div class="login-box">', unsafe_allow_html=True)
 
-            <div class="brand-row">
-                <div class="brand-icon">⌁</div>
-                <div>
-                    <div class="brand-title">VTSNET</div>
-                    <div class="brand-subtitle">Maritime Surveillance System</div>
-                </div>
-            </div>
-
-            <div class="login-title">Secure access to maintenance, monitoring and technical control.</div>
-
-            <div class="login-desc">
-                Access is restricted to authorized project personnel. Use your secure
-                project access code to enter the vessel traffic services dashboard.
-            </div>
-
-            <div class="login-line"></div>
-
-            <div class="system-points">
-                <div class="system-chip">Maintenance Reports</div>
-                <div class="system-chip">Asset Lifecycle</div>
-                <div class="system-chip">Equipment Visibility</div>
-                <div class="system-chip">Operational Monitoring</div>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown('<div class="login-title">🔐 VTSNET</div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-sub">Vessel Traffic Monitoring Dashboard</div>', unsafe_allow_html=True)
 
         if is_locked_out():
             remaining = int((st.session_state.lockout_until - datetime.now()).total_seconds() // 60) + 1
             st.error(f"Too many failed attempts. Try again in {remaining} minute(s).")
-            st.markdown("</div>", unsafe_allow_html=True)
             st.stop()
 
-        pwd = st.text_input(
-            "Project Access Code",
-            type="password",
-            placeholder="Enter secure access code"
-        )
+        pwd = st.text_input("Project Access Code", type="password")
 
         correct_password = st.secrets.get("PROJECT_PASSWORD")
+
         if not correct_password:
             st.error("PROJECT_PASSWORD not configured in secrets.toml")
-            st.markdown("</div>", unsafe_allow_html=True)
             st.stop()
 
         if st.button("Unlock Dashboard", use_container_width=True):
+
             if hmac.compare_digest(str(pwd), str(correct_password)):
                 st.session_state.authenticated = True
                 st.session_state.login_attempts = 0
                 st.session_state.lockout_until = None
                 st.rerun()
+
             else:
                 st.session_state.login_attempts += 1
 
@@ -388,33 +120,7 @@ if not st.session_state.authenticated:
                     remaining = MAX_LOGIN_ATTEMPTS - st.session_state.login_attempts
                     st.error(f"Wrong Password! Remaining attempts: {remaining}")
 
-        st.markdown("""
-            <div class="security-note">
-                Protected system • GreenFinder VTMS Dashboard • Unauthorized access is prohibited
-            </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with right_col:
-        st.markdown("""
-            <div class="login-right">
-                <div class="right-overlay"></div>
-                <div class="hero-caption">
-                    <div class="hero-kicker">Coastal Communications Infrastructure</div>
-                    <div class="hero-title">
-                        Reliable maritime visibility for surveillance, control and operational readiness.
-                    </div>
-                    <div class="hero-desc">
-                        Integrated support for technical maintenance, reporting workflows,
-                        and asset health insight across vessel traffic service environments.
-                    </div>
-                    <div class="hero-panel-box">
-                        Live dashboard access for mission-critical VTMS support operations.
-                    </div>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     st.stop()
 import hmac
