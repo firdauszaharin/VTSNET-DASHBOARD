@@ -70,7 +70,6 @@ if not st.session_state.authenticated:
                 st.rerun()
             else:
                 st.session_state.login_attempts += 1
-
                 if st.session_state.login_attempts >= MAX_LOGIN_ATTEMPTS:
                     st.session_state.lockout_until = datetime.now() + timedelta(minutes=LOCKOUT_MINUTES)
                     st.error("Too many failed attempts. Access temporarily locked.")
@@ -238,8 +237,76 @@ def color_status(val):
     return ""
 
 
+def color_equipment_status(val):
+    val = str(val).strip().upper()
+    if val == "OK":
+        return "background-color: #D4EDDA; color: #155724;"
+    if val == "MISSING":
+        return "background-color: #F8D7DA; color: #721C24;"
+    if val == "FAULTY":
+        return "background-color: #FFF3CD; color: #856404;"
+    return ""
+
+
 def find_col(df, keyword):
     return next((c for c in df.columns if keyword.upper() in c.upper()), None)
+
+
+def find_first_matching_col(df, candidates):
+    for candidate in candidates:
+        match = next((c for c in df.columns if c.strip().upper() == candidate.strip().upper()), None)
+        if match:
+            return match
+    return None
+
+
+def clean_status_series(series):
+    return series.astype(str).str.strip().str.upper()
+
+
+def extract_pm_options(df):
+    """
+    Ambil checklist PM auto dari data.
+    Cari dalam ID DOCUMENT dan REPORT CHECKLIST.
+    """
+    values = []
+
+    id_col = find_col(df, "ID DOCUMENT")
+    checklist_col = find_col(df, "REPORT CHECKLIST")
+
+    pattern = re.compile(r"VTSNET\s*/\s*PM\s*/\s*Q[1-4]\s*/\s*[2-5](?:ND|RD|TH)\s*YEAR", re.IGNORECASE)
+
+    for col in [id_col, checklist_col]:
+        if col and col in df.columns:
+            for val in df[col].dropna().astype(str):
+                matches = pattern.findall(val.upper())
+                for m in matches:
+                    cleaned = re.sub(r"\s+", "", m.upper())
+                    cleaned = cleaned.replace("VTSNET/PM/", "VTSNET/PM/")
+                    cleaned = cleaned.replace("/Q", "/Q")
+                    # Normalise back with slashes only
+                    cleaned = cleaned.replace(" ", "")
+                    values.append(cleaned)
+
+    unique_values = sorted(set(values))
+    return ["ALL"] + unique_values if unique_values else ["ALL"]
+
+
+def build_quarter_from_month(selected_month):
+    year_match = re.search(r"202\d", selected_month)
+    curr_yr = year_match.group(0) if year_match else "2025"
+    m_up = selected_month.upper()
+
+    if any(m in m_up for m in ["JAN", "FEB", "MAR"]):
+        q = "Q1"
+    elif any(m in m_up for m in ["APR", "MAY", "MEI", "JUN"]):
+        q = "Q2"
+    elif any(m in m_up for m in ["JUL", "AUG", "SEP", "OGO"]):
+        q = "Q3"
+    else:
+        q = "Q4"
+
+    return q, curr_yr
 
 
 @st.cache_data(ttl=60)
@@ -279,34 +346,13 @@ st.title("VTSNET: Maintenance & Asset Lifecycle Tracker")
 if menu_selection == "📝 Maintenance Reports":
     st.subheader("📝 Maintenance Reports")
 
-    pm_checklist_options = [
-        "ALL",
-        "VTSNET/PM/Q1/2ND YEAR",
-        "VTSNET/PM/Q2/2ND YEAR",
-        "VTSNET/PM/Q3/2ND YEAR",
-        "VTSNET/PM/Q4/2ND YEAR",
-        "VTSNET/PM/Q1/3RD YEAR",
-        "VTSNET/PM/Q2/3RD YEAR",
-        "VTSNET/PM/Q3/3RD YEAR",
-        "VTSNET/PM/Q4/3RD YEAR",
-        "VTSNET/PM/Q1/4TH YEAR",
-        "VTSNET/PM/Q2/4TH YEAR",
-        "VTSNET/PM/Q3/4TH YEAR",
-        "VTSNET/PM/Q4/4TH YEAR",
-        "VTSNET/PM/Q1/5TH YEAR",
-        "VTSNET/PM/Q2/5TH YEAR",
-        "VTSNET/PM/Q3/5TH YEAR",
-        "VTSNET/PM/Q4/5TH YEAR"
-    ]
+    pm_checklist_options = extract_pm_options(df_raw) if not df_raw.empty else ["ALL"]
 
     with st.container():
         f1, f2, f3 = st.columns([1.5, 1, 1])
 
         with f1:
-            selected_pm_checklist = st.selectbox(
-                "📂 PM Checklist Filter",
-                pm_checklist_options
-            )
+            selected_pm_checklist = st.selectbox("📂 PM Checklist Filter", pm_checklist_options)
 
         with f2:
             search_report = st.text_input("🔎 Search Site/Type (MET, VHF, etc):")
@@ -321,24 +367,20 @@ if menu_selection == "📝 Maintenance Reports":
 
         id_col = find_col(df, "ID DOCUMENT")
         checklist_col = find_col(df, "REPORT CHECKLIST")
-        name_col = next((c for c in df.columns if c.strip().upper() in ["TEAM DETAILS", "NAME"]), None)
+        name_col = find_first_matching_col(df, ["TEAM DETAILS", "NAME"])
         status_col = find_col(df, "STATUS")
-        pdf_col = next((c for c in df.columns if c.strip().upper() == PDF_COL.upper()), None)
+        pdf_col = find_first_matching_col(df, [PDF_COL])
 
         if selected_pm_checklist != "ALL":
             if id_col and checklist_col:
                 df = df[
-                    df[id_col].astype(str).str.upper().str.contains(selected_pm_checklist.strip().upper(), na=False) |
-                    df[checklist_col].astype(str).str.upper().str.contains(selected_pm_checklist.strip().upper(), na=False)
+                    df[id_col].astype(str).str.upper().str.contains(selected_pm_checklist, na=False) |
+                    df[checklist_col].astype(str).str.upper().str.contains(selected_pm_checklist, na=False)
                 ]
             elif id_col:
-                df = df[
-                    df[id_col].astype(str).str.upper().str.contains(selected_pm_checklist.strip().upper(), na=False)
-                ]
+                df = df[df[id_col].astype(str).str.upper().str.contains(selected_pm_checklist, na=False)]
             elif checklist_col:
-                df = df[
-                    df[checklist_col].astype(str).str.upper().str.contains(selected_pm_checklist.strip().upper(), na=False)
-                ]
+                df = df[df[checklist_col].astype(str).str.upper().str.contains(selected_pm_checklist, na=False)]
 
         if search_report:
             if id_col and checklist_col:
@@ -366,11 +408,15 @@ if menu_selection == "📝 Maintenance Reports":
         )
 
         c1, c2 = st.columns(2)
+
         with c1:
             if not df.empty and status_col:
+                pie_df = df.copy()
+                pie_df[status_col] = clean_status_series(pie_df[status_col])
+
                 st.plotly_chart(
                     px.pie(
-                        df,
+                        pie_df,
                         names=status_col,
                         hole=0.55,
                         title="Approval Overview",
@@ -384,9 +430,12 @@ if menu_selection == "📝 Maintenance Reports":
 
         with c2:
             if not df.empty and checklist_col and status_col:
+                hist_df = df.copy()
+                hist_df[status_col] = clean_status_series(hist_df[status_col])
+
                 st.plotly_chart(
                     px.histogram(
-                        df,
+                        hist_df,
                         x=checklist_col,
                         color=status_col,
                         title="Reports by Type",
@@ -423,24 +472,37 @@ if menu_selection == "📝 Maintenance Reports":
 elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
         st.subheader("⚙️ Inventory & Equipment Status")
-        month_cols = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026", "2027"]) and "REMARK" not in c.upper()]
+
+        month_cols = [
+            c for c in df_equip.columns
+            if any(yr in str(c) for yr in ["2025", "2026", "2027"]) and "REMARK" not in c.upper()
+        ]
         site_col = next((c for c in df_equip.columns if c.lower() == "site"), None)
 
         if month_cols:
             c1, c2 = st.columns(2)
+
             with c1:
                 selected_month = st.selectbox("📅 Select Report Month:", month_cols, index=0)
 
             df_working = df_equip.copy()
+            selected_site = "ALL SITES"
+
             if site_col:
-                unique_sites = ["ALL SITES"] + sorted(df_working[site_col].dropna().unique().tolist())
+                unique_sites = ["ALL SITES"] + sorted(df_working[site_col].dropna().astype(str).unique().tolist())
                 with c2:
                     selected_site = st.selectbox("🏗️ Select Site:", unique_sites)
                 if selected_site != "ALL SITES":
-                    df_working = df_working[df_working[site_col] == selected_site]
+                    df_working = df_working[df_working[site_col].astype(str) == selected_site]
+
+            # Reset filter status bila month/site bertukar
+            current_context = f"{selected_month}|{selected_site}"
+            if st.session_state.get("equipment_filter_context") != current_context:
+                st.session_state.filter_status = "ALL"
+                st.session_state.equipment_filter_context = current_context
 
             st.divider()
-            status_series = df_working[selected_month].astype(str).str.strip().str.upper()
+            status_series = clean_status_series(df_working[selected_month])
 
             if "filter_status" not in st.session_state:
                 st.session_state.filter_status = "ALL"
@@ -462,17 +524,23 @@ elif menu_selection == "⚙️ Equipment Status":
             df_filtered = df_working.copy()
             if st.session_state.filter_status != "ALL":
                 df_filtered = df_filtered[
-                    df_filtered[selected_month].astype(str).str.strip().str.upper() == st.session_state.filter_status
+                    clean_status_series(df_filtered[selected_month]) == st.session_state.filter_status
                 ]
 
             col_chart1, col_chart2 = st.columns([0.4, 0.6])
+
             with col_chart1:
+                pie_df = status_series.value_counts().reset_index()
+                pie_df.columns = ["Status", "Count"]
+
                 fig_donut = px.pie(
-                    df_working,
-                    names=selected_month,
+                    pie_df,
+                    names="Status",
+                    values="Count",
                     hole=0.55,
                     template=plotly_theme,
                     title="Status Overall",
+                    color="Status",
                     color_discrete_map={"OK": "#2ecc71", "FAULTY": "#f1c40f", "MISSING": "#e74c3c"}
                 )
                 st.plotly_chart(fig_donut, use_container_width=True)
@@ -480,8 +548,11 @@ elif menu_selection == "⚙️ Equipment Status":
             with col_chart2:
                 type_col = next((c for c in df_filtered.columns if c.lower() == "type"), None)
                 if type_col and not df_filtered.empty:
+                    chart_df = df_filtered.copy()
+                    chart_df[selected_month] = clean_status_series(chart_df[selected_month])
+
                     fig_type = px.bar(
-                        df_filtered.groupby([type_col, selected_month]).size().reset_index(name="count"),
+                        chart_df.groupby([type_col, selected_month]).size().reset_index(name="count"),
                         x=type_col,
                         y="count",
                         color=selected_month,
@@ -494,24 +565,16 @@ elif menu_selection == "⚙️ Equipment Status":
 
             st.divider()
             st.subheader("📦 Inventory Asset List")
+
             search_eq = st.text_input("🔍 Quick Search (SN, Name, IP):", key="search_eq_box")
             if search_eq:
                 df_filtered = df_filtered[
-                    df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False, na=False)).any(axis=1)
+                    df_filtered.astype(str).apply(
+                        lambda x: x.str.contains(search_eq, case=False, na=False)
+                    ).any(axis=1)
                 ]
 
-            year_match = re.search(r"202\d", selected_month)
-            curr_yr = year_match.group(0) if year_match else "2025"
-            m_up = selected_month.upper()
-
-            if any(m in m_up for m in ["JAN", "FEB", "MAR"]):
-                q = "Q1"
-            elif any(m in m_up for m in ["APR", "MAY", "MEI", "JUN"]):
-                q = "Q2"
-            elif any(m in m_up for m in ["JUL", "AUG", "SEP", "OGO"]):
-                q = "Q3"
-            else:
-                q = "Q4"
+            q, curr_yr = build_quarter_from_month(selected_month)
 
             actual_remark_col = next(
                 (c for c in df_equip.columns if "REMARK" in c.upper() and q in c.upper() and curr_yr in c.upper()),
@@ -520,6 +583,7 @@ elif menu_selection == "⚙️ Equipment Status":
 
             display_cols = []
             standard_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
+
             for col in standard_cols:
                 match = next((c for c in df_filtered.columns if c.lower() == col.lower()), None)
                 if match:
@@ -530,12 +594,10 @@ elif menu_selection == "⚙️ Equipment Status":
             if actual_remark_col:
                 display_cols.append(actual_remark_col)
 
-            if not df_filtered.empty:
+            if not df_filtered.empty and display_cols:
                 st.dataframe(
                     df_filtered[display_cols].style.map(
-                        lambda x: "background-color: #D4EDDA; color: #155724;" if str(x).upper() == "OK" else
-                        ("background-color: #F8D7DA; color: #721C24;" if str(x).upper() == "MISSING" else
-                         ("background-color: #FFF3CD; color: #856404;" if str(x).upper() == "FAULTY" else "")),
+                        color_equipment_status,
                         subset=[selected_month] if selected_month in display_cols else None
                     ),
                     use_container_width=True,
