@@ -124,13 +124,17 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# --- 5. HELPER FUNCTIONS (Warna Table) ---
+# --- 5. HELPER FUNCTIONS ---
 def color_status(val):
+    val = str(val).strip().upper()
     if val == 'APPROVED':
         return 'background-color: #d4edda; color: #000000; font-weight: bold;'
     if val == 'REJECTED':
         return 'background-color: #f8d7da; color: #000000; font-weight: bold;'
     return ''
+
+def find_col(df, keyword):
+    return next((c for c in df.columns if keyword.upper() in c.upper()), None)
 
 @st.cache_data(ttl=60)
 def load_data(url):
@@ -203,33 +207,62 @@ if menu_selection == "📝 Maintenance Reports":
     if not df_raw.empty:
         df = df_raw.copy()
 
-        # FIX: guna contains, bukan exact match
+        id_col = find_col(df, "ID DOCUMENT")
+        checklist_col = find_col(df, "REPORT CHECKLIST")
+        name_col = next((c for c in df.columns if c.strip().upper() == "NAME"), None)
+        status_col = find_col(df, "STATUS")
+        pdf_col = next((c for c in df.columns if c.strip().upper() == PDF_COL.upper()), None)
+
+        # FILTER PM CHECKLIST / ID DOCUMENT
         if selected_pm_checklist != "ALL":
-            df = df[
-                df['REPORT CHECKLIST'].astype(str).str.upper().str.contains(
-                    selected_pm_checklist.strip().upper(),
-                    na=False
-                )
-            ]
+            if id_col and checklist_col:
+                df = df[
+                    df[id_col].astype(str).str.upper().str.contains(selected_pm_checklist.strip().upper(), na=False) |
+                    df[checklist_col].astype(str).str.upper().str.contains(selected_pm_checklist.strip().upper(), na=False)
+                ]
+            elif id_col:
+                df = df[
+                    df[id_col].astype(str).str.upper().str.contains(selected_pm_checklist.strip().upper(), na=False)
+                ]
+            elif checklist_col:
+                df = df[
+                    df[checklist_col].astype(str).str.upper().str.contains(selected_pm_checklist.strip().upper(), na=False)
+                ]
 
+        # SEARCH SITE / TYPE
         if search_report:
-            df = df[df['REPORT CHECKLIST'].astype(str).str.contains(search_report, case=False, na=False)]
+            if id_col and checklist_col:
+                df = df[
+                    df[id_col].astype(str).str.contains(search_report, case=False, na=False) |
+                    df[checklist_col].astype(str).str.contains(search_report, case=False, na=False)
+                ]
+            elif id_col:
+                df = df[df[id_col].astype(str).str.contains(search_report, case=False, na=False)]
+            elif checklist_col:
+                df = df[df[checklist_col].astype(str).str.contains(search_report, case=False, na=False)]
 
-        if search_staff:
-            df = df[df['Name'].astype(str).str.contains(search_staff, case=False, na=False)]
+        # SEARCH STAFF
+        if search_staff and name_col:
+            df = df[df[name_col].astype(str).str.contains(search_staff, case=False, na=False)]
 
         m1, m2, m3 = st.columns(3)
         m1.metric("Total Reports", len(df))
-        m2.metric("Approved ✅", len(df[df['STATUS'] == 'APPROVED']) if 'STATUS' in df.columns else 0)
-        m3.metric("Pending ⏳", len(df[~df['STATUS'].isin(['APPROVED', 'REJECTED'])]) if 'STATUS' in df.columns else 0)
+        m2.metric(
+            "Approved ✅",
+            len(df[df[status_col].astype(str).str.upper() == 'APPROVED']) if status_col else 0
+        )
+        m3.metric(
+            "Pending ⏳",
+            len(df[~df[status_col].astype(str).str.upper().isin(['APPROVED', 'REJECTED'])]) if status_col else 0
+        )
 
         c1, c2 = st.columns(2)
         with c1:
-            if not df.empty and 'STATUS' in df.columns:
+            if not df.empty and status_col:
                 st.plotly_chart(
                     px.pie(
                         df,
-                        names='STATUS',
+                        names=status_col,
                         hole=0.55,
                         title="Approval Overview",
                         color_discrete_map={'APPROVED': '#2ecc71', 'REJECTED': '#e74c3c'},
@@ -241,12 +274,12 @@ if menu_selection == "📝 Maintenance Reports":
                 st.info("No data for selected filter.")
 
         with c2:
-            if not df.empty and 'REPORT CHECKLIST' in df.columns and 'STATUS' in df.columns:
+            if not df.empty and checklist_col and status_col:
                 st.plotly_chart(
                     px.histogram(
                         df,
-                        x='REPORT CHECKLIST',
-                        color='STATUS',
+                        x=checklist_col,
+                        color=status_col,
                         title="Reports by Type",
                         color_discrete_map={'APPROVED': '#2ecc71', 'REJECTED': '#e74c3c'},
                         template=plotly_theme
@@ -257,12 +290,20 @@ if menu_selection == "📝 Maintenance Reports":
                 st.info("No data for selected filter.")
 
         st.subheader("📋 Report Tracking Status")
-        styled_df = df.style.map(color_status, subset=['STATUS']) if 'STATUS' in df.columns else df
+        styled_df = df.style.map(color_status, subset=[status_col]) if status_col else df
+
+        column_config = {}
+        if pdf_col:
+            column_config[pdf_col] = st.column_config.LinkColumn(
+                "Report File",
+                display_text="OPEN PDF 📄"
+            )
+
         st.dataframe(
             styled_df,
             use_container_width=True,
             hide_index=True,
-            column_config={PDF_COL: st.column_config.LinkColumn("Report File", display_text="OPEN PDF 📄")}
+            column_config=column_config
         )
 
 # --- PAGE 2: EQUIPMENT STATUS ---
