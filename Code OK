@@ -5,6 +5,7 @@ from datetime import datetime
 import pytz
 import re
 import os
+from streamlit_autorefresh import st_autorefresh
 
 # 1. PAGE CONFIGURATION
 st.set_page_config(
@@ -14,141 +15,156 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- SIDEBAR: THEME TOGGLE ---
+# --- AUTO REFRESH (5 MINIT) ---
+st_autorefresh(interval=300000, key="vts_refresh")
+
+# --- 2. LOGIN SECURITY ---
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+if not st.session_state.authenticated:
+    
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        st.title("🔒 VTSNET Project Access")
+        pwd = st.text_input("Project Access Code:", type="password")
+        correct_password = st.secrets.get("PROJECT_PASSWORD", "vtsnet2026")
+        if st.button("Unlock Dashboard", use_container_width=True):
+            if pwd == correct_password:
+                st.session_state.authenticated = True
+                st.rerun()
+            else:
+                st.error("Wrong Password!")
+    st.stop()
+
+# --- 3. THEME TOGGLE & LOGOUT ---
 with st.sidebar:
     if os.path.exists("logo.png"):
         st.image("logo.png", use_container_width=True)
     dark_mode = st.toggle("Dark Mode View", value=False)
     st.divider()
+    if st.button("🔒 Log Out", use_container_width=True):
+        st.session_state.authenticated = False
+        st.rerun()
 
-# --- DYNAMIC CSS LOGIC (FIX VISIBILITY & SIDEBAR) ---
+# --- 4. DYNAMIC CSS LOGIC ---
 if dark_mode:
-    # --- TEMA SILVER PURPLE (METALLIC GLOW) ---
-    # Gradient dari Ungu Hitam ke Silver Gelap
     bg_style = "linear-gradient(135deg, #1a0a2e 0%, #2c3e50 100%)" 
-    sidebar_bg = "rgba(15, 10, 25, 0.98)" # Sidebar ungu hampir hitam
-    card_bg = "rgba(255, 255, 255, 0.05)" # Kotak lutsinar (Glassmorphism effect)
-    text_color = "#E0E0E0"              # Putih Silver (tak sakit mata)
-    shadow = "0 8px 32px rgba(108, 92, 231, 0.15)" # Glow ungu halus
+    sidebar_bg = "rgba(15, 10, 25, 0.98)"
+    text_color = "#FFFFFF"
     plotly_theme = "plotly_dark"
     
-    custom_dark_css = f"""
-        /* 1. Paksa semua tulisan utama jadi putih */
-        .stApp, .stMarkdown p, h1, h2, h3, h4, label, .stWidgetLabel p, [data-testid="stSidebar"] p {{ 
-            color: white !important; 
-        }}
+    custom_dark_css = """
+        <style>
+        /* 1. Paksa SEMUA teks dashboard & sidebar jadi putih */
+        .stApp, [data-testid="stSidebar"] *, .stMarkdown p, h1, h2, h3, label {
+            color: #FFFFFF !important;
+        }
+        /* 1.1 FULL DARK MODE: Sorok header putih kat atas tu */
+        header[data-testid="stHeader"] {
+            background-color: rgba(0,0,0,0) !important;
+            color: white !important;
+        }
         
-        /* 2. FIX NOMBOR METRIC (Total Reports, Approved, Pending) */
-        [data-testid="stMetricValue"] {{
-            color: #ffffff !important;
+        /* Buang garisan halus kat atas sekali */
+        [data-testid="stDecoration"] {
+            display: none;
+        }
+
+        /* 2. FIX SEMUA BUTTON DALAM MAIN AREA (OK, FAULTY, MISSING, SHOW ALL) */
+        /* Kita guna 'div[data-testid="stVerticalBlock"]' untuk target area content sahaja */
+        div[data-testid="stVerticalBlock"] .stButton > button {
+            color: #000000 !important; 
+            background-color: #FFFFFF !important;
+            font-weight: 900 !important;
+            border: 2px solid #FFFFFF !important;
+            opacity: 1 !important;
+        }
+
+        /* Effect bila mouse lalu (Hover) */
+        div[data-testid="stVerticalBlock"] .stButton > button:hover {
+            background-color: #f0f2f6 !important;
+            color: #000000 !important;
+            border: 2px solid #6c5ce7 !important;
+        }
+        /* 2.1 FIX METRIC VALUE (Contoh: Angka '1' yang pudar tu) */
+        [data-testid="stMetricValue"] {
+            color: #FFFFFF !important;
+            -webkit-text-fill-color: #FFFFFF !important;
             font-weight: 700 !important;
-        }}
+        }
+        /* 2.2 BAGI NAMPAK LINE (DIVIDER & BORDER) */
+        /* Tukar warna garisan st.divider() */
+        hr {
+            border-top: 2px solid rgba(255, 255, 255, 0.2) !important;
+            margin-top: 20px !important;
+            margin-bottom: 20px !important;
+        }
+        /* 3. BAGI NAMPAK LINE & BORDER (GLOW EFFECT) */
+        hr {
+            border-top: 2px solid rgba(162, 155, 254, 0.5) !important; /* Warna purple cair */
+            margin: 20px 0 !important;
+        }
         
-        /* 3. FIX LABEL METRIC (Tulisan kecil atas nombor) */
-        [data-testid="stMetricLabel"] p {{
-            color: #E0E0E0 !important;
-            opacity: 0.9 !important;
-        }}
+        /* Border keliling kotak Metric supaya nampak 'line' pemisah */
+        [data-testid="stMetric"] {
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+            border-radius: 12px !important;
+            padding: 20px !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
 
-        /* 4. Fix Butang */
-        .stButton > button {{
-            background-color: #1e293b !important;
-            color: white !important;
-            border: 1px solid #3e4e63 !important;
-            border-radius: 10px !important;
-        }}
-    
-
-        /* 5. SIDEBAR FIX */
-        [data-testid="stSidebar"] {{ color: {text_color} !important; }}
+        /* 3.1 FIX LOG OUT BUTTON (Dalam Sidebar) */
+        /* Kita kekalkan tulisan putih supaya nampak atas butang merah */
+        section[data-testid="stSidebar"] .stButton > button {
+            color: #FFFFFF !important;
+            background-color: rgba(255, 75, 75, 0.2) !important;
+            border: 1px solid #ff4b4b !important;
+        }
         
-        /* 6. PAKSA BUTANG HIDE/SHOW SIDEBAR SENTIASA NAMPAK (TAMBAH INI) */
-        [data-testid="stSidebarCollapseButton"] button {{
-            color: #a29bfe !important; /* Warna ungu terang */
-            background-color: rgba(255, 255, 255, 0.1) !important;
-            border: 1px solid rgba(162, 155, 254, 0.5) !important;
-            margin-top: 5px !important;
-        }}
-        
-        /* Bila hover, dia jadi lagi terang */
-        [data-testid="stSidebarCollapseButton"] button:hover {{
-            background-color: #6c5ce7 !important;
-            color: white !important;
-        }}
+        section[data-testid="stSidebar"] .stButton > button:p {
+            color: #FFFFFF !important;
+        }
+        </style>
     """
 else:
-    bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7,#f8faff)"
-    sidebar_bg = "rgba(255, 255, 255, 0.8)"
-    card_bg = "white"
+    bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7)"
+    sidebar_bg = "rgba(255, 255, 255, 0.9)"
     text_color = "#1e293b"
-    shadow = "0 10px 25px rgba(0,0,0,0.03)"
     plotly_theme = "plotly_white"
     custom_dark_css = ""
 
-# --- DYNAMIC CSS & LAYOUT FIX ---
+st.markdown(custom_dark_css, unsafe_allow_html=True)
 st.markdown(f"""
     <style>
-    .block-container {{
-        padding-top: 1rem !important;
-        padding-bottom: 0rem !important;
-    }}
-
-    /* --- 1. PAKSA HEADER & BUTTON SIDEBAR MUNCUL --- */
-    header[data-testid="stHeader"] {{
-        background-color: rgba(0,0,0,0) !important;
-        visibility: visible !important;
-        display: flex !important;
-    }}
-
-    /* Butang Phone (Hamburger) */
-    button[data-testid="baseButton-headerNoPadding"] {{
-        visibility: visible !important;
-        display: flex !important;
-        color: #a29bfe !important; 
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        z-index: 999999 !important;
-    }}
-
-    /* Butang Laptop (Anak Panah / Collapse) */
-    [data-testid="stSidebarCollapseButton"] {{
-        visibility: visible !important;
-        display: block !important;
-    }}
-    
-    [data-testid="stSidebarCollapseButton"] button {{
-        color: #a29bfe !important;
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        border: 1px solid rgba(162, 155, 254, 0.3) !important;
-    }}
-
-    /* --- 2. THEME STYLES --- */
     .stApp {{ background: {bg_style}; color: {text_color}; }}
-    {custom_dark_css}
+    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
     
-    [data-testid="stSidebar"] {{ 
-        background-color: {sidebar_bg} !important; 
-        backdrop-filter: blur(10px); 
+    /* ADJUST KAT SINI */
+    .main .block-container {{ 
+        padding-top: 2rem !important;  /* Kecilkan nombor ni kalau nak Title lagi tinggi ke atas */
+        padding-bottom: 100px !important; 
     }}
     
-    [data-testid="stMetric"] {{ 
-        background: {card_bg} !important; 
-        padding: 20px !important; 
-        border-radius: 20px !important; 
-        box-shadow: {shadow} !important; 
+    /* Tambahan: Kalau nak adjust saiz Title tu sendiri */
+    h1 {{
+        margin-top: -80px !important; /* Gunakan nombor negatif untuk paksa Title naik atas */
+        padding-top: 0px !important;
     }}
     
-    /* Buang footer tapi biarkan MainMenu supaya tak kacau header */
     footer {{visibility: hidden;}}
-    [data-testid="stDecoration"] {{display:none;}}
     </style>
 """, unsafe_allow_html=True)
-# --- DATA LOAD ---
-msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
-waktu_msia = datetime.now(msia_tz)
 
-SHEET_REPORT_URL = "https://docs.google.com/spreadsheets/d/1cJAnZVhxY_Nqjkfo39ze9DCAIZwWd_6dIdFgw0a2j_s/export?format=csv"
-SHEET_EQUIP_URL = "https://docs.google.com/spreadsheets/d/1IvOj5FqviwhZU7tGdnuh7zK5WUf-RsjUrVVa6HalkVU/export?format=csv"
-PDF_COL = "UPLOAD REPORT" 
+# --- 5. HELPER FUNCTIONS (Warna Table) ---
+def color_status(val):
+    # Kita paksa warna teks jadi HITAM (#000000) supaya nampak atas hijau/merah
+    if val == 'APPROVED': 
+        return 'background-color: #d4edda; color: #000000; font-weight: bold;'
+    if val == 'REJECTED': 
+        return 'background-color: #f8d7da; color: #000000; font-weight: bold;'
+    return ''
 
 @st.cache_data(ttl=60)
 def load_data(url):
@@ -158,34 +174,29 @@ def load_data(url):
         return data
     except: return pd.DataFrame()
 
+# --- 6. DATA LOAD ---
+msia_tz = pytz.timezone('Asia/Kuala_Lumpur')
+waktu_msia = datetime.now(msia_tz)
+
+SHEET_REPORT_URL = "https://docs.google.com/spreadsheets/d/1cJAnZVhxY_Nqjkfo39ze9DCAIZwWd_6dIdFgw0a2j_s/export?format=csv"
+SHEET_EQUIP_URL = "https://docs.google.com/spreadsheets/d/1IvOj5FqviwhZU7tGdnuh7zK5WUf-RsjUrVVa6HalkVU/export?format=csv"
+PDF_COL = "UPLOAD REPORT" 
+
 df_raw = load_data(SHEET_REPORT_URL)
 df_equip = load_data(SHEET_EQUIP_URL)
 
-def color_status(val):
-    if val == 'APPROVED': return 'background-color: #d4edda; color: #155724;'
-    if val == 'REJECTED': return 'background-color: #f8d7da; color: #721c24;'
-    return ''
-
-# --- SIDEBAR NAVIGATION ---
-with st.sidebar:
-   
-    menu_selection = st.radio("Select Category:", ["📝 Maintenance Reports", "⚙️ Equipment Status"])
-    st.divider()
-    st.markdown(f"🕒 **Last Sync:** {waktu_msia.strftime('%H:%M:%S')}")
-    
-    if menu_selection == "📝 Maintenance Reports":
-        search_report = st.text_input("🔎 Search Site/Type:")
-        search_staff = st.text_input("👤 Search Staff Name:")
-        search_id = st.text_input("🆔 Search Document ID:") 
-    else:
-        search_report = ""
-        search_staff = ""
-        search_id = ""
+# --- 7. SIDEBAR NAVIGATION ---
+menu_selection = st.sidebar.radio("Select Category:", ["📝 Maintenance Reports", "⚙️ Equipment Status"])
+st.sidebar.divider()
+st.sidebar.markdown(f"🕒 **Last Sync:** {waktu_msia.strftime('%H:%M:%S')}")
 
 st.title("VTSNET: Maintenance & Asset Lifecycle Tracker")
 
 # --- PAGE 1: MAINTENANCE REPORTS ---
 if menu_selection == "📝 Maintenance Reports":
+    search_report = st.sidebar.text_input("🔎 Search Site/Type (MET, VHF, etc):")
+    search_staff = st.sidebar.text_input("👤 Search Staff Name:")
+    
     if not df_raw.empty:
         df = df_raw.copy()
         if search_report: df = df[df['REPORT CHECKLIST'].str.contains(search_report, case=False, na=False)]
@@ -202,7 +213,7 @@ if menu_selection == "📝 Maintenance Reports":
                                    color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}, template=plotly_theme), use_container_width=True)
         with c2:
             st.plotly_chart(px.histogram(df, x='REPORT CHECKLIST', color='STATUS', title="Reports by Type",
-                                         color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}, template=plotly_theme), use_container_width=True)
+                                           color_discrete_map={'APPROVED':'#2ecc71', 'REJECTED':'#e74c3c'}, template=plotly_theme), use_container_width=True)
 
         st.subheader("📋 Report Tracking Status")
         styled_df = df.style.map(color_status, subset=['STATUS']) if 'STATUS' in df.columns else df
@@ -245,48 +256,20 @@ elif menu_selection == "⚙️ Equipment Status":
             if st.session_state.filter_status != "ALL":
                 df_filtered = df_filtered[df_filtered[selected_month].astype(str).str.strip().str.upper() == st.session_state.filter_status]
 
-            # Charts
-            # Charts
-            col_chart1, col_chart2 = st.columns([0.4, 0.6]) # Adjust ratio sikit bagi donut ada ruang
-            
+            col_chart1, col_chart2 = st.columns([0.4, 0.6])
             with col_chart1:
-                fig_donut = px.pie(
-                    df_working, 
-                    names=selected_month, 
-                    hole=0.55, 
-                    template=plotly_theme,
-                    title="Status Overall",
-                    color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'}
-                )
-                
-                fig_donut.update_layout(
-                    title_x=0.4, # Center-kan tajuk relatif kepada donut
-                    showlegend=True,
-                    legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
-                    margin=dict(l=20, r=20, t=60, b=20)
-                )
+                fig_donut = px.pie(df_working, names=selected_month, hole=0.55, template=plotly_theme, title="Status Overall",
+                                   color_discrete_map={'OK':'#2ecc71','FAULTY':'#f1c40f','MISSING':'#e74c3c'})
                 st.plotly_chart(fig_donut, use_container_width=True)
-
             with col_chart2:
                 type_col = next((c for c in df_filtered.columns if c.lower() == 'type'), None)
                 if type_col and not df_filtered.empty:
-                    fig_type = px.bar(
-                        df_filtered.groupby([type_col, selected_month]).size().reset_index(name='count'), 
-                        x=type_col, 
-                        y='count', 
-                        color=selected_month, 
-                        template=plotly_theme,
-                        title=f"Analysis Equipment: {selected_month}",
-                        color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}, 
-                        barmode='group'
-                    )
-                    
-                    fig_type.update_layout(
-                        title_x=0.4, # Bar chart title betul-betul tengah
-                        margin=dict(l=20, r=20, t=60, b=20)
-                    )
+                    fig_type = px.bar(df_filtered.groupby([type_col, selected_month]).size().reset_index(name='count'), 
+                                      x=type_col, y='count', color=selected_month, template=plotly_theme, title="Analysis by Type",
+                                      color_discrete_map={'OK': '#2ecc71', 'FAULTY': '#f1c40f', 'MISSING': '#e74c3c'}, barmode='group')
                     st.plotly_chart(fig_type, use_container_width=True)
-            # --- INVENTORY ASSET LIST ---
+
+         # --- INVENTORY ASSET LIST ---
             st.divider()
             st.subheader(f"📦 Inventory Asset List")
             search_eq = st.text_input("🔍 Quick Search (SN, Name, IP):", key="search_eq_box")
@@ -319,3 +302,10 @@ elif menu_selection == "⚙️ Equipment Status":
                         subset=[selected_month] if selected_month in display_cols else None
                     ), use_container_width=True, hide_index=True
                 )
+
+# --- 8. FOOTER (GLOBAL) ---
+st.markdown(f"""
+    <div style="position: fixed; left: 0; bottom: 0; width: 100%; background-color: {sidebar_bg}; text-align: center; padding: 10px; z-index: 9999; border-top: 1px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
+        <p style="color: {text_color} !important;">© 2026 GreenFinder VTMS Dashboard. All rights reserved.</p>
+    </div>
+""", unsafe_allow_html=True)
