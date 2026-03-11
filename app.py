@@ -221,21 +221,8 @@ elif menu_selection == "⚙️ Equipment Status":
 elif menu_selection == "📅 Staff Schedule":
     st.subheader("📅 Staff Duty Schedule - JADUAL VTSAIS (OneDrive Live)")
     
-    # LINK MEMBERSIHKAN (Cleaned Link)
-    # Saya telah membuang parameter rtime & redeem supaya API Microsoft boleh proses dengan tepat
-    shared_url = "https://onedrive.live.com/:x:/g/personal/c3a2991b5c1e3d77/IQB3PR5cG5miIIDDrgQAAAAAAfo7GbHOFpLHjhNR0D6LX3w?rtime=f7vaXod_3kg&redeem=aHR0cHM6Ly8xZHJ2Lm1zL3gvYy9jM2EyOTkxYjVjMWUzZDc3L0lRQjNQUjVjRzVtaUlJRERyZ1FBQUFBQUFmbzdHYkhPRnBMSGpoTlIwRDZMWDN3P2U9ZXhveG40"
-
-    @st.cache_data(ttl=300)
-    def get_onedrive_direct_link(url):
-        import base64
-        try:
-            # Mengambil bahagian utama URL sebelum sebarang simbol '?' jika ada
-            clean_url = url.split('?')[0]
-            base64_url = base64.b64encode(clean_url.encode()).decode().replace('=', '').replace('/', '_').replace('+', '-')
-            return f"https://api.onedrive.com/v1.0/shares/u!{base64_url}/root/content"
-        except Exception as e:
-            st.error(f"Ralat penukaran URL: {e}")
-            return None
+    # GANTI link di bawah dengan link yang anda dapat dari Generator tadi
+    DIRECT_DOWNLOAD_URL = "https://1drv.ms/x/c/c3a2991b5c1e3d77/IQB3PR5cG5miIIDDrgQAAAAAAfo7GbHOFpLHjhNR0D6LX3w?e=93Zbgx"
 
     @st.cache_data(ttl=300)
     def load_excel_sch(url):
@@ -243,48 +230,41 @@ elif menu_selection == "📅 Staff Schedule":
             import requests
             from io import BytesIO
             
-            direct_link = get_onedrive_direct_link(url)
-            if not direct_link:
-                return pd.DataFrame()
-            
-            # Menggunakan timeout yang lebih lama sedikit untuk OneDrive
-            response = requests.get(direct_link, timeout=30)
+            # Kita guna requests untuk pastikan data ditarik dengan betul
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            response = requests.get(url, headers=headers, timeout=20)
             
             if response.status_code == 200:
-                # Membaca fail Excel menggunakan engine openpyxl
+                # Membaca fail Excel
                 df = pd.read_excel(BytesIO(response.content), engine='openpyxl')
-                # Bersihkan nama column daripada sebarang whitespace
                 df.columns = df.columns.astype(str).str.strip()
                 return df
             else:
                 st.error(f"Gagal akses OneDrive. Status Code: {response.status_code}")
-                st.info("Sila pastikan fail di OneDrive masih di set kepada 'Anyone with the link can view'.")
                 return pd.DataFrame()
         except Exception as e:
             st.error(f"⚠️ Ralat Teknikal: {e}")
             return pd.DataFrame()
 
-    # PROSES DATA
-    df_sch = load_excel_sch(shared_url)
+    if "PASTE_LINK" not in DIRECT_DOWNLOAD_URL:
+        df_sch = load_excel_sch(DIRECT_DOWNLOAD_URL)
 
-    if not df_sch.empty:
-        # Sidebar Filter untuk Staff
-        st.sidebar.subheader("Carian Jadual")
-        # Mencari column yang ada nama 'STAF' atau 'NAME' secara automatik
-        staff_col = next((c for c in df_sch.columns if 'NAME' in c.upper() or 'STAF' in c.upper()), df_sch.columns[0])
-        
-        staff_list = ["SEMUA STAF"] + sorted(df_sch[staff_col].dropna().unique().tolist())
-        sel_staff = st.sidebar.selectbox("Pilih Nama Staf:", staff_list)
+        if not df_sch.empty:
+            # Sidebar Filter
+            staff_col = next((c for c in df_sch.columns if 'NAME' in c.upper() or 'STAF' in c.upper()), df_sch.columns[0])
+            staff_list = ["SEMUA STAF"] + sorted(df_sch[staff_col].dropna().unique().tolist())
+            sel_staff = st.sidebar.selectbox("Pilih Nama Staf:", staff_list)
 
-        df_display = df_sch.copy()
-        if sel_staff != "SEMUA STAF":
-            df_display = df_display[df_display[staff_col] == sel_staff]
+            df_display = df_sch.copy()
+            if sel_staff != "SEMUA STAF":
+                df_display = df_display[df_display[staff_col] == sel_staff]
 
-        # Paparan Jadual
-        st.dataframe(df_display, use_container_width=True, hide_index=True)
-        st.success(f"✅ Jadual berjaya dikemaskini pada {datetime.now(msia_tz).strftime('%H:%M:%S')}")
+            st.dataframe(df_display, use_container_width=True, hide_index=True)
+            st.success("✅ Jadual berjaya dimuatkan.")
+        else:
+            st.warning("Fail tidak dapat dibaca. Sila pastikan link adalah Direct Download Link.")
     else:
-        st.warning("Jadual tidak dapat dipaparkan. Sila muat semula halaman atau semak akses OneDrive.")
+        st.info("Sila masukkan link Direct Download yang baru dalam kod.")
 # --- 8. FOOTER ---
 st.markdown(f"""
     <div style="position: fixed; left: 0; bottom: 0; width: 100%; background-color: {sidebar_bg}; text-align: center; padding: 10px; z-index: 9999; border-top: 1px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
