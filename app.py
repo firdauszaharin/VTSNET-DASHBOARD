@@ -146,23 +146,71 @@ if dark_mode:
         </style>
     """
 else:
-    bg_style = "radial-gradient(circle at top right, #f8faff, #eef2f7)"
-    sidebar_bg = "rgba(255, 255, 255, 0.9)"
-    text_color = "#1e293b"
+    bg_style = "linear-gradient(135deg, #eef2f6 0%, #e3e8ee 100%)"
+    sidebar_bg = "rgba(245, 247, 250, 0.96)"
+    text_color = "#243447"
     plotly_theme = "plotly_white"
-    custom_dark_css = ""
+
+    custom_dark_css = """
+        <style>
+        .stApp, .stMarkdown p, h1, h2, h3, label {
+            color: #243447 !important;
+        }
+        header[data-testid="stHeader"] {
+            background-color: rgba(0,0,0,0) !important;
+        }
+        [data-testid="stDecoration"] {
+            display: none;
+        }
+        [data-testid="stMetric"] {
+            border: 1px solid rgba(36, 52, 71, 0.08) !important;
+            background: rgba(255, 255, 255, 0.60) !important;
+            border-radius: 12px !important;
+            padding: 20px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        [data-testid="stMetricValue"] {
+            color: #243447 !important;
+            -webkit-text-fill-color: #243447 !important;
+            font-weight: 700 !important;
+        }
+        hr {
+            border-top: 1px solid rgba(36, 52, 71, 0.12) !important;
+            margin: 20px 0 !important;
+        }
+        div[data-testid="stVerticalBlock"] .stButton > button {
+            background-color: #ffffff !important;
+            color: #243447 !important;
+            border: 1px solid rgba(36, 52, 71, 0.15) !important;
+            font-weight: 700 !important;
+        }
+        div[data-testid="stVerticalBlock"] .stButton > button:hover {
+            background-color: #f2f4f7 !important;
+            color: #243447 !important;
+            border: 1px solid #7c8ea3 !important;
+        }
+        section[data-testid="stSidebar"] .stButton > button {
+            color: #243447 !important;
+            background-color: rgba(255,255,255,0.7) !important;
+            border: 1px solid rgba(36, 52, 71, 0.15) !important;
+        }
+        </style>
+    """
 
 st.markdown(custom_dark_css, unsafe_allow_html=True)
 st.markdown(f"""
     <style>
     .stApp {{ background: {bg_style}; color: {text_color}; }}
-    [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; backdrop-filter: blur(10px); }}
+    [data-testid="stSidebar"] {{
+        background-color: {sidebar_bg} !important;
+        backdrop-filter: blur(10px);
+    }}
     .main .block-container {{
         padding-top: 2rem !important;
         padding-bottom: 100px !important;
     }}
     h1 {{
-        margin-top: -80px !important;
+        margin-top: -40px !important;
         padding-top: 0px !important;
     }}
     footer {{visibility: hidden;}}
