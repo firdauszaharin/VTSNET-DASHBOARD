@@ -473,7 +473,7 @@ elif menu_selection == "⚙️ Equipment Status":
                     hole=0.55,
                     template=plotly_theme,
                     title="Status Overall",
-                    color_discrete_map={"OK": "#2ecc71", "FAULTY": "#f1c40f", "WARNING": "#e74c3c"}
+                    color_discrete_map={"OK": "#2ecc71", "FAULTY": "#e74c3c", "WARNING": "#f1c40f"}
                 )
                 st.plotly_chart(fig_donut, use_container_width=True)
 
@@ -487,7 +487,7 @@ elif menu_selection == "⚙️ Equipment Status":
                         color=selected_month,
                         template=plotly_theme,
                         title="Analysis by Type",
-                        color_discrete_map={"OK": "#2ecc71", "FAULTY": "#f1c40f", "WARNING": "#e74c3c"},
+                        color_discrete_map={"OK": "#2ecc71", "FAULTY": "#e74c3c", "WARNING": "#f1c40f"},
                         barmode="group"
                     )
                     st.plotly_chart(fig_type, use_container_width=True)
@@ -534,7 +534,7 @@ elif menu_selection == "⚙️ Equipment Status":
                 st.dataframe(
                     df_filtered[display_cols].style.map(
                         lambda x: "background-color: #D4EDDA; color: #155724;" if str(x).upper() == "OK" else
-                        ("background-color: #F8D7DA; color: #721C24;" if str(x).upper() == "MISSING" else
+                        ("background-color: #F8D7DA; color: #721C24;" if str(x).upper() == "WARNING" else
                          ("background-color: #FFF3CD; color: #856404;" if str(x).upper() == "FAULTY" else "")),
                         subset=[selected_month] if selected_month in display_cols else None
                     ),
