@@ -450,10 +450,10 @@ elif menu_selection == "⚙️ Equipment Status":
                 if st.button(f"🟢 OK: {len(df_working[status_series == 'OK'])}", use_container_width=True):
                     st.session_state.filter_status = "OK"
             with col_m2:
-                if st.button(f"🟡 FAULTY: {len(df_working[status_series == 'FAULTY'])}", use_container_width=True):
+                if st.button(f"🔴 FAULTY: {len(df_working[status_series == 'FAULTY'])}", use_container_width=True):
                     st.session_state.filter_status = "FAULTY"
             with col_m3:
-                if st.button(f"🔴 MISSING: {len(df_working[status_series == 'MISSING'])}", use_container_width=True):
+                if st.button(f"🟡 WARNING: {len(df_working[status_series == 'WARNING'])}", use_container_width=True):
                     st.session_state.filter_status = "MISSING"
             with col_m4:
                 if st.button("🔵 SHOW ALL", use_container_width=True):
@@ -473,7 +473,7 @@ elif menu_selection == "⚙️ Equipment Status":
                     hole=0.55,
                     template=plotly_theme,
                     title="Status Overall",
-                    color_discrete_map={"OK": "#2ecc71", "FAULTY": "#f1c40f", "MISSING": "#e74c3c"}
+                    color_discrete_map={"OK": "#2ecc71", "FAULTY": "#f1c40f", "WARNING": "#e74c3c"}
                 )
                 st.plotly_chart(fig_donut, use_container_width=True)
 
@@ -487,7 +487,7 @@ elif menu_selection == "⚙️ Equipment Status":
                         color=selected_month,
                         template=plotly_theme,
                         title="Analysis by Type",
-                        color_discrete_map={"OK": "#2ecc71", "FAULTY": "#f1c40f", "MISSING": "#e74c3c"},
+                        color_discrete_map={"OK": "#2ecc71", "FAULTY": "#f1c40f", "WARNING": "#e74c3c"},
                         barmode="group"
                     )
                     st.plotly_chart(fig_type, use_container_width=True)
