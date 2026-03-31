@@ -534,8 +534,8 @@ elif menu_selection == "⚙️ Equipment Status":
                 st.dataframe(
                     df_filtered[display_cols].style.map(
                         lambda x: "background-color: #D4EDDA; color: #155724;" if str(x).upper() == "OK" else
-                        ("background-color: #F8D7DA; color: #721C24;" if str(x).upper() == "WARNING" else
-                         ("background-color: #FFF3CD; color: #856404;" if str(x).upper() == "FAULTY" else "")),
+                        ("background-color: #F8D7DA; color: #721C24;" if str(x).upper() == "FAULTY" else
+                         ("background-color: #FFF3CD; color: #856404;" if str(x).upper() == "WARNING" else "")),
                         subset=[selected_month] if selected_month in display_cols else None
                     ),
                     use_container_width=True,
