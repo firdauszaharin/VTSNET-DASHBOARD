@@ -493,95 +493,56 @@ elif menu_selection == "⚙️ Equipment Status":
                     st.plotly_chart(fig_type, use_container_width=True)
 
             st.divider()
-st.subheader("📦 Inventory Asset List")
+            st.subheader("📦 Inventory Asset List")
+            search_eq = st.text_input("🔍 Quick Search (SN, Name, IP):", key="search_eq_box")
+            if search_eq:
+                df_filtered = df_filtered[
+                    df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False, na=False)).any(axis=1)
+                ]
 
-# Search Logic
-search_eq = st.text_input("🔍 Quick Search (SN, Name, IP):", key="search_eq_box")
-if search_eq:
-    df_filtered = df_filtered[
-        df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False, na=False)).any(axis=1)
-    ]
+            year_match = re.search(r"202\d", selected_month)
+            curr_yr = year_match.group(0) if year_match else "2025"
+            m_up = selected_month.upper()
 
-# Date/Quarter Logic
-year_match = re.search(r"202\d", selected_month)
-curr_yr = year_match.group(0) if year_match else "2025"
-m_up = selected_month.upper()
+            if any(m in m_up for m in ["JAN", "FEB", "MAR"]):
+                q = "Q1"
+            elif any(m in m_up for m in ["APR", "MAY", "MEI", "JUN"]):
+                q = "Q2"
+            elif any(m in m_up for m in ["JUL", "AUG", "SEP", "OGO"]):
+                q = "Q3"
+            else:
+                q = "Q4"
 
-if any(m in m_up for m in ["JAN", "FEB", "MAR"]):
-    q = "Q1"
-elif any(m in m_up for m in ["APR", "MAY", "MEI", "JUN"]):
-    q = "Q2"
-elif any(m in m_up for m in ["JUL", "AUG", "SEP", "OGO"]):
-    q = "Q3"
-else:
-    q = "Q4"
+            actual_remark_col = next(
+                (c for c in df_equip.columns if "REMARK" in c.upper() and q in c.upper() and curr_yr in c.upper()),
+                None
+            )
 
-actual_remark_col = next(
-    (c for c in df_equip.columns if "REMARK" in c.upper() and q in c.upper() and curr_yr in c.upper()),
-    None
-)
+            display_cols = []
+            standard_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
+            for col in standard_cols:
+                match = next((c for c in df_filtered.columns if c.lower() == col.lower()), None)
+                if match:
+                    display_cols.append(match)
 
-# Column Selection
-display_cols = []
-standard_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
-for col in standard_cols:
-    match = next((c for c in df_filtered.columns if c.lower() == col.lower()), None)
-    if match:
-        display_cols.append(match)
+            if selected_month in df_filtered.columns:
+                display_cols.append(selected_month)
+            if actual_remark_col:
+                display_cols.append(actual_remark_col)
 
-if selected_month in df_filtered.columns:
-    display_cols.append(selected_month)
-if actual_remark_col:
-    display_cols.append(actual_remark_col)
-
-# --- NEW: VISUALIZATION SECTION ---
-if not df_filtered.empty and selected_month in df_filtered.columns:
-    st.write("### 📊 Status Overview")
-    
-    # Count the statuses for the chart
-    status_counts = df_filtered[selected_month].value_counts().reset_index()
-    status_counts.columns = ['Status', 'Count']
-    
-    # Map Plotly colors to your specific hex codes
-    # OK = Green (#28A745), Warning = Yellow (#FFC107)
-    chart_color_map = {
-        "OK": "#28A745", 
-        "WARNING": "#FFC107", 
-        "FAULTY": "#DC3545"
-    }
-
-    fig = px.pie(
-        status_counts, 
-        values='Count', 
-        names='Status',
-        color='Status',
-        color_discrete_map=chart_color_map, # This forces the colors!
-        hole=0.4
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-# --- UPDATED DATAFRAME WITH STRIP() FOR ACCURACY ---
-if not df_filtered.empty:
-    def style_status(val):
-        clean_val = str(val).strip().upper()
-        if clean_val == "OK":
-            return f"background-color: {STATUS_COLORS['OK']}; color: {TEXT_COLORS['OK']};"
-        elif clean_val == "FAULTY":
-            return f"background-color: {STATUS_COLORS['FAULTY']}; color: {TEXT_COLORS['FAULTY']};"
-        elif clean_val == "WARNING":
-            return f"background-color: {STATUS_COLORS['WARNING']}; color: {TEXT_COLORS['WARNING']};"
-        return ""
-
-    st.dataframe(
-        df_filtered[display_cols].style.map(
-            style_status,
-            subset=[selected_month] if selected_month in display_cols else None
-        ),
-        use_container_width=True,
-        hide_index=True
-    )
-else:
-    st.warning("No equipment data available.")
+            if not df_filtered.empty:
+                st.dataframe(
+                    df_filtered[display_cols].style.map(
+                        lambda x: "background-color: #D4EDDA; color: #155724;" if str(x).upper() == "OK" else
+                        ("background-color: #F8D7DA; color: #721C24;" if str(x).upper() == "FAULTY" else
+                         ("background-color: #FFF3CD; color: #856404;" if str(x).upper() == "WARNING" else "")),
+                        subset=[selected_month] if selected_month in display_cols else None
+                    ),
+                    use_container_width=True,
+                    hide_index=True
+                )
+    else:
+        st.warning("No equipment data available.")
 
 # =========================================================
 # 9. FOOTER
