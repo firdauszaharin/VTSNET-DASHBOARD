@@ -418,44 +418,35 @@ if menu_selection == "📝 Maintenance Reports":
         st.warning("No maintenance report data available.")
 
 # =========================================================
-# PAGE 2: EQUIPMENT STATUS (KOD LENGKAP & FIXED)
+# PAGE 2: EQUIPMENT STATUS (FILTER Q1 2025, Q2 2025, ETC)
 # =========================================================
 elif menu_selection == "⚙️ Equipment Status":
     if not df_equip.empty:
         st.subheader("⚙️ Inventory & Equipment Status")
         
-        # 1. Mapping Bulan ke Quarter (Suku Tahun)
+        # 1. Mapping Suku Tahun
         q_map = {
-            "Q1 (Jan-Mar)": ["JAN", "FEB", "MAR"],
-            "Q2 (Apr-Jun)": ["APR", "MAY", "MEI", "JUN"],
-            "Q3 (Jul-Sep)": ["JUL", "AUG", "SEP", "OGO"],
-            "Q4 (Oct-Dec)": ["OCT", "NOV", "DEC", "OKT", "DIS"]
+            "Q1": ["JAN", "FEB", "MAR"],
+            "Q2": ["APR", "MAY", "MEI", "JUN"],
+            "Q3": ["JUL", "AUG", "SEP", "OGO"],
+            "Q4": ["OCT", "NOV", "DEC", "OKT", "DIS"]
         }
 
-        # Dapatkan semua column bulan yang ada tahun 2025-2027
-        all_months = [c for c in df_equip.columns if any(yr in str(c) for yr in ["2025", "2026", "2027"]) and "REMARK" not in c.upper()]
-        site_col = next((c for c in df_equip.columns if c.lower() == "site"), None)
-
-        # 2. Layout Filter (3 Kolum: Quarter, Month, Site)
+        # 2. Layout Filter: Pilih Tahun & Quarter
         f_col1, f_col2, f_col3 = st.columns(3)
-
+        
         with f_col1:
-            selected_q = st.selectbox("📂 Filter by Quarter:", ["ALL", "Q1 (Jan-Mar)", "Q2 (Apr-Jun)", "Q3 (Jul-Sep)", "Q4 (Oct-Dec)"])
-
-        # Tapis senarai bulan berdasarkan Quarter yang dipilih
-        if selected_q != "ALL":
-            relevant_months = [c for c in all_months if any(m in c.upper() for m in q_map[selected_q])]
-        else:
-            relevant_months = all_months
+            # Cari tahun yang wujud dalam headers (cth: 2025, 2026)
+            available_years = sorted(list(set(re.findall(r"202\d", " ".join(df_equip.columns)))), reverse=True)
+            if not available_years: available_years = ["2025"]
+            selected_year = st.selectbox("📅 Select Year:", available_years)
 
         with f_col2:
-            if relevant_months:
-                selected_month = st.selectbox("📅 Select Report Month:", relevant_months)
-            else:
-                st.warning("No data for this Q")
-                selected_month = all_months[0] if all_months else None
+            selected_q = st.selectbox("📂 Select Quarter:", ["Q1", "Q2", "Q3", "Q4"])
 
         df_working = df_equip.copy()
+        site_col = next((c for c in df_equip.columns if c.lower() == "site"), None)
+        
         if site_col:
             unique_sites = ["ALL SITES"] + sorted(df_working[site_col].dropna().unique().tolist())
             with f_col3:
@@ -463,113 +454,91 @@ elif menu_selection == "⚙️ Equipment Status":
             if selected_site != "ALL SITES":
                 df_working = df_working[df_working[site_col] == selected_site]
 
-        st.divider()
+        # 3. Kenalpasti Kolum Bulan yang TEPAT (Contoh: "JAN 2025")
+        # Ia akan cari kolum yang ada nama bulan Q1 DAN ada tahun 2025
+        relevant_months = [
+            c for c in df_equip.columns 
+            if any(m in c.upper() for m in q_map[selected_q]) 
+            and selected_year in str(c) 
+            and "REMARK" not in c.upper()
+        ]
         
-        # Mulakan Proses Data & Paparan Dashboard
-        if selected_month:
-            status_series = df_working[selected_month].astype(str).str.strip().str.upper()
+        if relevant_months:
+            st.info(f"Filtering data for: {', '.join(relevant_months)}")
+            
+            # Logik Status Akhir (Priority: FAULTY > WARNING > OK)
+            def get_combined_status(row):
+                statuses = [str(row[m]).strip().upper() for m in relevant_months if m in row]
+                if "FAULTY" in statuses: return "FAULTY"
+                if "WARNING" in statuses: return "WARNING"
+                if "OK" in statuses: return "OK"
+                return "PENDING"
+
+            df_working["STATUS"] = df_working.apply(get_combined_status, axis=1)
+            status_series = df_working["STATUS"]
 
             if "filter_status" not in st.session_state:
                 st.session_state.filter_status = "ALL"
 
-            # Bahagian Butang Status (Metric Buttons)
-            col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-            with col_m1:
+            # 4. Metric Buttons
+            st.divider()
+            m1, m2, m3, m4 = st.columns(4)
+            with m1:
                 if st.button(f"🟢 OK: {len(df_working[status_series == 'OK'])}", use_container_width=True):
                     st.session_state.filter_status = "OK"
-            with col_m2:
+            with m2:
                 if st.button(f"🔴 FAULTY: {len(df_working[status_series == 'FAULTY'])}", use_container_width=True):
                     st.session_state.filter_status = "FAULTY"
-            with col_m3:
-                # FIXED: Tukar "MISSING" kepada "WARNING"
+            with m3:
                 if st.button(f"🟡 WARNING: {len(df_working[status_series == 'WARNING'])}", use_container_width=True):
                     st.session_state.filter_status = "WARNING" 
-            with col_m4:
+            with m4:
                 if st.button("🔵 SHOW ALL", use_container_width=True):
                     st.session_state.filter_status = "ALL"
 
-            # Filter data berdasarkan butang yang ditekan
+            # Filter Data untuk Jadual
             df_filtered = df_working.copy()
             if st.session_state.filter_status != "ALL":
-                df_filtered = df_filtered[
-                    df_filtered[selected_month].astype(str).str.strip().str.upper() == st.session_state.filter_status
-                ]
+                df_filtered = df_filtered[df_filtered["STATUS"] == st.session_state.filter_status]
 
-            # Chart Section
-            col_chart1, col_chart2 = st.columns([0.4, 0.6])
-            with col_chart1:
-                fig_donut = px.pie(
-                    df_working,
-                    names=selected_month,
-                    hole=0.55,
-                    template=plotly_theme,
-                    title="Status Overall",
-                    color_discrete_map={"OK": "#2ecc71", "FAULTY": "#e74c3c", "WARNING": "#f1c40f"}
-                )
-                st.plotly_chart(fig_donut, use_container_width=True)
-
-            with col_chart2:
+            # 5. Visualisasi (Charts)
+            c1, c2 = st.columns([0.4, 0.6])
+            with c1:
+                st.plotly_chart(px.pie(df_working, names="STATUS", hole=0.5, template=plotly_theme,
+                                     title=f"Status Overview {selected_q} {selected_year}",
+                                     color_discrete_map={"OK": "#2ecc71", "FAULTY": "#e74c3c", "WARNING": "#f1c40f"}), use_container_width=True)
+            with c2:
                 type_col = next((c for c in df_filtered.columns if c.lower() == "type"), None)
                 if type_col and not df_filtered.empty:
-                    fig_type = px.bar(
-                        df_filtered.groupby([type_col, selected_month]).size().reset_index(name="count"),
-                        x=type_col,
-                        y="count",
-                        color=selected_month,
-                        template=plotly_theme,
-                        title="Analysis by Type",
-                        color_discrete_map={"OK": "#2ecc71", "FAULTY": "#e74c3c", "WARNING": "#f1c40f"},
-                        barmode="group"
-                    )
-                    st.plotly_chart(fig_type, use_container_width=True)
+                    st.plotly_chart(px.bar(df_filtered.groupby([type_col, "STATUS"]).size().reset_index(name="count"),
+                                     x=type_col, y="count", color="STATUS", barmode="group", template=plotly_theme,
+                                     color_discrete_map={"OK": "#2ecc71", "FAULTY": "#e74c3c", "WARNING": "#f1c40f"}), use_container_width=True)
 
+            # 6. Table Display
             st.divider()
-            st.subheader("📦 Inventory Asset List")
-            search_eq = st.text_input("🔍 Quick Search (SN, Name, IP):", key="search_eq_box")
+            search_eq = st.text_input("🔍 Search Asset:", key="search_asset_box")
             if search_eq:
-                df_filtered = df_filtered[
-                    df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False, na=False)).any(axis=1)
-                ]
+                df_filtered = df_filtered[df_filtered.astype(str).apply(lambda x: x.str.contains(search_eq, case=False, na=False)).any(axis=1)]
 
-            # Remark Logic Berdasarkan Quarter (Q)
-            year_match = re.search(r"202\d", selected_month)
-            curr_yr = year_match.group(0) if year_match else "2025"
-            m_up = selected_month.upper()
+            # Remark Column Logic (Cari kolum REMARK Q1 2025 dsb)
+            actual_remark_col = next((c for c in df_equip.columns if "REMARK" in c.upper() and selected_q in c.upper() and selected_year in c), None)
 
-            if any(m in m_up for m in ["JAN", "FEB", "MAR"]): q = "Q1"
-            elif any(m in m_up for m in ["APR", "MAY", "MEI", "JUN"]): q = "Q2"
-            elif any(m in m_up for m in ["JUL", "AUG", "SEP", "OGO"]): q = "Q3"
-            else: q = "Q4"
-
-            actual_remark_col = next(
-                (c for c in df_equip.columns if "REMARK" in c.upper() and q in c.upper() and curr_yr in c.upper()),
-                None
-            )
-
-            # Pilih Column untuk dipaparkan
-            display_cols = []
             standard_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
-            for col in standard_cols:
-                match = next((c for c in df_filtered.columns if c.lower() == col.lower()), None)
-                if match: display_cols.append(match)
+            cols_to_show = [c for c in standard_cols if any(c.lower() == x.lower() for x in df_filtered.columns)]
+            cols_to_show.append("STATUS")
+            if actual_remark_col: cols_to_show.append(actual_remark_col)
 
-            if selected_month in df_filtered.columns:
-                display_cols.append(selected_month)
-            if actual_remark_col:
-                display_cols.append(actual_remark_col)
-
-            # Papar Dataframe dengan Styling
-            if not df_filtered.empty:
-                st.dataframe(
-                    df_filtered[display_cols].style.map(
-                        lambda x: "background-color: #D4EDDA; color: #155724;" if str(x).upper() == "OK" else
-                        ("background-color: #F8D7DA; color: #721C24;" if str(x).upper() == "FAULTY" else
-                         ("background-color: #FFF3CD; color: #856404;" if str(x).upper() == "WARNING" else "")),
-                        subset=[selected_month] if selected_month in display_cols else None
-                    ),
-                    use_container_width=True,
-                    hide_index=True
-                )
+            st.dataframe(
+                df_filtered[cols_to_show].style.map(
+                    lambda x: "background-color: #D4EDDA; color: #155724;" if str(x).upper() == "OK" else
+                    ("background-color: #F8D7DA; color: #721C24;" if str(x).upper() == "FAULTY" else
+                     ("background-color: #FFF3CD; color: #856404;" if str(x).upper() == "WARNING" else "")),
+                    subset=["STATUS"]
+                ),
+                use_container_width=True, hide_index=True
+            )
+        else:
+            st.warning(f"No data columns found for {selected_q} in {selected_year}. Please check your Google Sheet column headers.")
     else:
         st.warning("No equipment data available.")
 # =========================================================
