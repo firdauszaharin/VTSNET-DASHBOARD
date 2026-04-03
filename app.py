@@ -454,7 +454,7 @@ elif menu_selection == "⚙️ Equipment Status":
                     st.session_state.filter_status = "FAULTY"
             with col_m3:
                 if st.button(f"🟡 WARNING: {len(df_working[status_series == 'WARNING'])}", use_container_width=True):
-                    st.session_state.filter_status = "MISSING"
+                    st.session_state.filter_status = "WARNING"
             with col_m4:
                 if st.button("🔵 SHOW ALL", use_container_width=True):
                     st.session_state.filter_status = "ALL"
