@@ -519,7 +519,7 @@ elif menu_selection == "⚙️ Equipment Status":
             actual_remark_col = next((c for c in df_equip.columns if "REMARK" in c.upper() and selected_q in c.upper() and selected_year in c), None)
 
             # Tentukan kolum yang akan dipaparkan
-            standard_cols = ["Site", "Type", "Equipment", "Serial No", "IP Address"]
+            standard_cols = ["Site", "Type", "Detail", "Serial No", "IP Address"]
             cols_to_show = [c for c in standard_cols if c in df_filtered.columns]
             
             # TAMBAH SEMUA BULAN DALAM QUARTER KE DALAM LIST KOLUM
