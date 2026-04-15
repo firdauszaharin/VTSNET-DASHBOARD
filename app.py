@@ -281,22 +281,22 @@ if menu_selection == "📝 Maintenance Reports":
 
     pm_checklist_options = [
         "ALL",
-        "VTSNET/PM/Q1/2ND YEAR",
-        "VTSNET/PM/Q2/2ND YEAR",
-        "VTSNET/PM/Q3/2ND YEAR",
-        "VTSNET/PM/Q4/2ND YEAR",
-        "VTSNET/PM/Q1/3RD YEAR",
-        "VTSNET/PM/Q2/3RD YEAR",
-        "VTSNET/PM/Q3/3RD YEAR",
-        "VTSNET/PM/Q4/3RD YEAR",
-        "VTSNET/PM/Q1/4TH YEAR",
-        "VTSNET/PM/Q2/4TH YEAR",
-        "VTSNET/PM/Q3/4TH YEAR",
-        "VTSNET/PM/Q4/4TH YEAR",
-        "VTSNET/PM/Q1/5TH YEAR",
-        "VTSNET/PM/Q2/5TH YEAR",
-        "VTSNET/PM/Q3/5TH YEAR",
-        "VTSNET/PM/Q4/5TH YEAR"
+        "VTSNET/PM/Q1/2ND YEAR 2026",
+        "VTSNET/PM/Q2/2ND YEAR 2026",
+        "VTSNET/PM/Q3/2ND YEAR 2026",
+        "VTSNET/PM/Q4/2ND YEAR 2026",
+        "VTSNET/PM/Q1/3RD YEAR 2027",
+        "VTSNET/PM/Q2/3RD YEAR 2027",
+        "VTSNET/PM/Q3/3RD YEAR 2027",
+        "VTSNET/PM/Q4/3RD YEAR 2027",
+        "VTSNET/PM/Q1/4TH YEAR 2028",
+        "VTSNET/PM/Q2/4TH YEAR 2028",
+        "VTSNET/PM/Q3/4TH YEAR 2028",
+        "VTSNET/PM/Q4/4TH YEAR 2028",
+        "VTSNET/PM/Q1/5TH YEAR 2029",
+        "VTSNET/PM/Q2/5TH YEAR 2029",
+        "VTSNET/PM/Q3/5TH YEAR 2029",
+        "VTSNET/PM/Q4/5TH YEAR 2029"
     ]
 
     with st.container():
