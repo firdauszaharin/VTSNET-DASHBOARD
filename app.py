@@ -259,10 +259,7 @@ waktu_msia = datetime.now(msia_tz)
 
 SHEET_REPORT_URL = "https://docs.google.com/spreadsheets/d/1cJAnZVhxY_Nqjkfo39ze9DCAIZwWd_6dIdFgw0a2j_s/export?format=csv"
 SHEET_EQUIP_URL = "https://docs.google.com/spreadsheets/d/1IvOj5FqviwhZU7tGdnuh7zK5WUf-RsjUrVVa6HalkVU/export?format=csv"
-PDF_COL = "UPLOAD REPORT
-NAMA FILE REPORT: CONTOH
-PM Q2 2026_PL SARIKEI 2
-PM Q2 2026_PL/RSS/VTS (Sitename) 1/2"
+PDF_COL = "UPLOAD REPORT NAMA FILE REPORT: CONTOH PM Q2 2026_PL SARIKEI 2 PM Q2 2026_PL/RSS/VTS (Sitename) 1/2"
 
 df_raw = load_data(SHEET_REPORT_URL)
 df_equip = load_data(SHEET_EQUIP_URL)
