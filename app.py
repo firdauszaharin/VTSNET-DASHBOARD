@@ -386,7 +386,7 @@ if menu_selection == "📝 Maintenance Reports":
                         color_discrete_map={
                             "APPROVED": "#2ecc71", 
                             "REVIEW": "#f1c40f", 
-                            "PENDING": "#f1c40f", 
+                            "PENDING": "#95a5a6", 
                             "REJECTED": "#e74c3c"
                         },
                         template=plotly_theme
@@ -414,7 +414,7 @@ if menu_selection == "📝 Maintenance Reports":
                         color_discrete_map={
                             "APPROVED": "#2ecc71", 
                             "REVIEW": "#f1c40f", 
-                            "PENDING": "#f1c40f", 
+                            "PENDING": "#95a5a6", 
                             "REJECTED": "#e74c3c"
                         },
                         template=plotly_theme
