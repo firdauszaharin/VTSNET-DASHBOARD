@@ -233,7 +233,7 @@ def color_status(val):
     val = str(val).strip().upper()
     if val == "APPROVED":
         return "background-color: #d4edda; color: #000000; font-weight: bold;"
-    if val in ["REVIEW", "PENDING"]:
+    if val == "REVIEW":
         return "background-color: #fff3cd; color: #856404; font-weight: bold;"
     if val == "REJECTED":
         return "background-color: #f8d7da; color: #000000; font-weight: bold;"
@@ -370,25 +370,17 @@ if menu_selection == "📝 Maintenance Reports":
         c1, c2 = st.columns(2)
         with c1:
             if not df.empty and status_col:
-                # 🛠️ BERSIHKAN NILAI NULL KEPADA "PENDING" SUPAYA CARTA JADI KUNING
                 df_chart = df.copy()
                 df_chart[status_col] = df_chart[status_col].fillna("PENDING").astype(str).str.strip().str.upper()
                 df_chart.loc[df_chart[status_col] == "", status_col] = "PENDING"
-                df_chart.loc[df_chart[status_col] == "NONE", status_col] = "PENDING"
-                df_chart.loc[df_chart[status_col] == "NAN", status_col] = "PENDING"
-
+                
                 st.plotly_chart(
                     px.pie(
-                        df_chart,
+                        df,
                         names=status_col,
                         hole=0.55,
                         title="Approval Overview",
-                        color_discrete_map={
-                            "APPROVED": "#2ecc71", 
-                            "REVIEW": "#f1c40f", 
-                            "PENDING": "#95a5a6", 
-                            "REJECTED": "#e74c3c"
-                        },
+                        color_discrete_map={"APPROVED": "#2ecc71", "REVIEW": "#f1c40f", "PENDING": "#f1c40f", "REJECTED": "#e74c3c"},
                         template=plotly_theme
                     ),
                     use_container_width=True
@@ -398,25 +390,13 @@ if menu_selection == "📝 Maintenance Reports":
 
         with c2:
             if not df.empty and checklist_col and status_col:
-                # 🛠️ BERSIHKAN NILAI NULL KEPADA "PENDING" UNTUK HISTOGRAM
-                df_chart = df.copy()
-                df_chart[status_col] = df_chart[status_col].fillna("PENDING").astype(str).str.strip().str.upper()
-                df_chart.loc[df_chart[status_col] == "", status_col] = "PENDING"
-                df_chart.loc[df_chart[status_col] == "NONE", status_col] = "PENDING"
-                df_chart.loc[df_chart[status_col] == "NAN", status_col] = "PENDING"
-
                 st.plotly_chart(
                     px.histogram(
-                        df_chart,
+                        df,
                         x=checklist_col,
                         color=status_col,
                         title="Reports by Type",
-                        color_discrete_map={
-                            "APPROVED": "#2ecc71", 
-                            "REVIEW": "#f1c40f", 
-                            "PENDING": "#95a5a6", 
-                            "REJECTED": "#e74c3c"
-                        },
+                        color_discrete_map={"APPROVED": "#2ecc71", "REVIEW": "#f1c40f", "PENDING": "#f1c40f", "REJECTED": "#e74c3c"},
                         template=plotly_theme
                     ),
                     use_container_width=True
@@ -526,14 +506,14 @@ elif menu_selection == "⚙️ Equipment Status":
             c1, c2 = st.columns([0.4, 0.6])
             with c1:
                 st.plotly_chart(px.pie(df_working, names="OVERALL STATUS", hole=0.5, template=plotly_theme,
-                                       title=f"Status Overview {selected_q} {selected_year}",
-                                       color_discrete_map={"OK": "#2ecc71", "FAULTY": "#e74c3c", "WARNING": "#f1c40f"}), use_container_width=True)
+                                     title=f"Status Overview {selected_q} {selected_year}",
+                                     color_discrete_map={"OK": "#2ecc71", "FAULTY": "#e74c3c", "WARNING": "#f1c40f"}), use_container_width=True)
             with c2:
                 type_col = next((c for c in df_filtered.columns if c.lower() == "type"), None)
                 if type_col and not df_filtered.empty:
                     st.plotly_chart(px.bar(df_filtered.groupby([type_col, "OVERALL STATUS"]).size().reset_index(name="count"),
-                                           x=type_col, y="count", color="OVERALL STATUS", barmode="group", template=plotly_theme,
-                                           color_discrete_map={"OK": "#2ecc71", "FAULTY": "#e74c3c", "WARNING": "#f1c40f"}), use_container_width=True)
+                                     x=type_col, y="count", color="OVERALL STATUS", barmode="group", template=plotly_theme,
+                                     color_discrete_map={"OK": "#2ecc71", "FAULTY": "#e74c3c", "WARNING": "#f1c40f"}), use_container_width=True)
 
             # 6. Table Display (Show All Months)
             st.divider()
