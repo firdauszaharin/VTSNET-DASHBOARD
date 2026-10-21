@@ -233,6 +233,8 @@ def color_status(val):
     val = str(val).strip().upper()
     if val == "APPROVED":
         return "background-color: #d4edda; color: #000000; font-weight: bold;"
+    if val == "REVIEW":
+        return "background-color: #fff3cd; color: #856404; font-weight: bold;"
     if val == "REJECTED":
         return "background-color: #f8d7da; color: #000000; font-weight: bold;"
     return ""
