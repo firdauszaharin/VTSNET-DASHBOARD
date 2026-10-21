@@ -376,7 +376,7 @@ if menu_selection == "📝 Maintenance Reports":
                         names=status_col,
                         hole=0.55,
                         title="Approval Overview",
-                        color_discrete_map={"APPROVED": "#2ecc71", "REJECTED": "#e74c3c"},
+                        color_discrete_map={"APPROVED": "#2ecc71", "REVIEW": "#f1c40f", "REJECTED": "#e74c3c"},
                         template=plotly_theme
                     ),
                     use_container_width=True
@@ -392,7 +392,7 @@ if menu_selection == "📝 Maintenance Reports":
                         x=checklist_col,
                         color=status_col,
                         title="Reports by Type",
-                        color_discrete_map={"APPROVED": "#2ecc71", "REJECTED": "#e74c3c"},
+                        color_discrete_map={"APPROVED": "#2ecc71", "REVIEW": "#f1c40f", "REJECTED": "#e74c3c"},
                         template=plotly_theme
                     ),
                     use_container_width=True
