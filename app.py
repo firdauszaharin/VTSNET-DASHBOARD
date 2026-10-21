@@ -235,6 +235,8 @@ def color_status(val):
         return "background-color: #d4edda; color: #000000; font-weight: bold;"
     if val == "REVIEW":
         return "background-color: #fff3cd; color: #856404; font-weight: bold;"
+    if val in ["PENDING", "NONE", "NAN", ""]:
+        return "background-color: #e2e3e5; color: #383d41; font-weight: bold;"
     if val == "REJECTED":
         return "background-color: #f8d7da; color: #000000; font-weight: bold;"
     return ""
@@ -327,6 +329,13 @@ if menu_selection == "📝 Maintenance Reports":
         status_col = find_col(df, "STATUS")
         pdf_col = next((c for c in df.columns if c.strip().upper() == PDF_COL.upper()), None)
 
+        # Normalisasi kolum status dalam dataframe utama supaya bersih
+        if status_col:
+            df[status_col] = df[status_col].fillna("PENDING").astype(str).str.strip().str.upper()
+            df.loc[df[status_col] == "", status_col] = "PENDING"
+            df.loc[df[status_col] == "NONE", status_col] = "PENDING"
+            df.loc[df[status_col] == "NAN", status_col] = "PENDING"
+
         if selected_pm_checklist != "ALL":
             if id_col and checklist_col:
                 df = df[
@@ -360,52 +369,88 @@ if menu_selection == "📝 Maintenance Reports":
         m1.metric("Total Reports", len(df))
         m2.metric(
             "Approved ✅",
-            len(df[df[status_col].astype(str).str.upper() == "APPROVED"]) if status_col else 0
+            len(df[df[status_col] == "APPROVED"]) if status_col else 0
         )
         m3.metric(
             "Pending ⏳",
-            len(df[~df[status_col].astype(str).str.upper().isin(["APPROVED", "REJECTED"])]) if status_col else 0
+            len(df[df[status_col] != "APPROVED"]) if status_col else 0
         )
 
         c1, c2 = st.columns(2)
+        
+        # Simpan pilihan klik carta dalam session_state
+        if "selected_chart_status" not in st.session_state:
+            st.session_state.selected_chart_status = "ALL"
+
         with c1:
             if not df.empty and status_col:
-                df_chart = df.copy()
-                df_chart[status_col] = df_chart[status_col].fillna("PENDING").astype(str).str.strip().str.upper()
-                df_chart.loc[df_chart[status_col] == "", status_col] = "PENDING"
-                
-                st.plotly_chart(
-                    px.pie(
-                        df,
-                        names=status_col,
-                        hole=0.55,
-                        title="Approval Overview",
-                        color_discrete_map={"APPROVED": "#2ecc71", "REVIEW": "#f1c40f", "PENDING": "#f1c40f", "REJECTED": "#e74c3c"},
-                        template=plotly_theme
-                    ),
-                    use_container_width=True
+                fig_pie = px.pie(
+                    df,
+                    names=status_col,
+                    hole=0.55,
+                    title="Approval Overview (Klik pada Carta untuk Filter)",
+                    color_discrete_map={
+                        "APPROVED": "#2ecc71", 
+                        "REVIEW": "#f1c40f", 
+                        "PENDING": "#95a5a6", 
+                        "REJECTED": "#e74c3c"
+                    },
+                    template=plotly_theme
                 )
+                
+                # Menggunakan on_select interaktif Streamlit untuk Pie Chart
+                event_pie = st.plotly_chart(fig_pie, use_container_width=True, on_select="rerun", selection_mode="points")
+                
+                # Logik tangkap pilihan klik pada Pie Chart
+                if event_pie and "selection" in event_pie and event_pie["selection"]["points"]:
+                    point = event_pie["selection"]["points"][0]
+                    if "label" in point:
+                        st.session_state.selected_chart_status = point["label"]
             else:
                 st.info("No data for selected filter.")
 
         with c2:
             if not df.empty and checklist_col and status_col:
-                st.plotly_chart(
-                    px.histogram(
-                        df,
-                        x=checklist_col,
-                        color=status_col,
-                        title="Reports by Type",
-                        color_discrete_map={"APPROVED": "#2ecc71", "REVIEW": "#f1c40f", "PENDING": "#f1c40f", "REJECTED": "#e74c3c"},
-                        template=plotly_theme
-                    ),
-                    use_container_width=True
+                fig_bar = px.histogram(
+                    df,
+                    x=checklist_col,
+                    color=status_col,
+                    title="Reports by Type",
+                    color_discrete_map={
+                        "APPROVED": "#2ecc71", 
+                        "REVIEW": "#f1c40f", 
+                        "PENDING": "#95a5a6", 
+                        "REJECTED": "#e74c3c"
+                    },
+                    template=plotly_theme
                 )
+                
+                # Menggunakan on_select interaktif Streamlit untuk Bar Chart
+                event_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun", selection_mode="points")
+                
+                # Logik tangkap pilihan klik pada Bar Chart
+                if event_bar and "selection" in event_bar and event_bar["selection"]["points"]:
+                    point = event_bar["selection"]["points"][0]
+                    if "customdata" in point and len(point["customdata"]) > 0:
+                        st.session_state.selected_chart_status = point["customdata"][0]
+                    elif "color" in point:
+                        st.session_state.selected_chart_status = point["color"]
             else:
                 st.info("No data for selected filter.")
 
+        # Butang Reset Filter Carta jika pengguna mahu lihat semula semua
+        if st.session_state.selected_chart_status != "ALL":
+            if st.button(f"🔄 Reset Chart Filter (Sedang paparkan: {st.session_state.selected_chart_status})"):
+                st.session_state.selected_chart_status = "ALL"
+                st.rerun()
+
+        # Tapis DataFrame mengikut status yang diklik pada carta
+        df_table = df.copy()
+        if st.session_state.selected_chart_status != "ALL" and status_col:
+            df_table = df_table[df_table[status_col] == st.session_state.selected_chart_status]
+
         st.subheader("📋 Report Tracking Status")
-        styled_df = df.style.map(color_status, subset=[status_col]) if status_col else df
+        styled_df = df_table.style.map(color_status, subset=[status_col]) if status_col else df_table
 
         column_config = {}
         if pdf_col:
@@ -506,14 +551,14 @@ elif menu_selection == "⚙️ Equipment Status":
             c1, c2 = st.columns([0.4, 0.6])
             with c1:
                 st.plotly_chart(px.pie(df_working, names="OVERALL STATUS", hole=0.5, template=plotly_theme,
-                                     title=f"Status Overview {selected_q} {selected_year}",
-                                     color_discrete_map={"OK": "#2ecc71", "FAULTY": "#e74c3c", "WARNING": "#f1c40f"}), use_container_width=True)
+                                       title=f"Status Overview {selected_q} {selected_year}",
+                                       color_discrete_map={"OK": "#2ecc71", "FAULTY": "#e74c3c", "WARNING": "#f1c40f"}), use_container_width=True)
             with c2:
                 type_col = next((c for c in df_filtered.columns if c.lower() == "type"), None)
                 if type_col and not df_filtered.empty:
                     st.plotly_chart(px.bar(df_filtered.groupby([type_col, "OVERALL STATUS"]).size().reset_index(name="count"),
-                                     x=type_col, y="count", color="OVERALL STATUS", barmode="group", template=plotly_theme,
-                                     color_discrete_map={"OK": "#2ecc71", "FAULTY": "#e74c3c", "WARNING": "#f1c40f"}), use_container_width=True)
+                                           x=type_col, y="count", color="OVERALL STATUS", barmode="group", template=plotly_theme,
+                                           color_discrete_map={"OK": "#2ecc71", "FAULTY": "#e74c3c", "WARNING": "#f1c40f"}), use_container_width=True)
 
             # 6. Table Display (Show All Months)
             st.divider()
