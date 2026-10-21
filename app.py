@@ -313,7 +313,7 @@ if menu_selection == "📝 Maintenance Reports":
             )
 
         with f2:
-            search_report = st.text_input("🔎 Search Site/Type (MET, VHF, etc):")
+            search_report = st.text_input("🔎 Search Report Checklist:")
 
         with f3:
             search_staff = st.text_input("👤 Search Team / Staff Name:")
